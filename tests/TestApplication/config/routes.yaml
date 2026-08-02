@@ -1,0 +1,9 @@
+madcoders_sylius_gift_card_admin:
+    resource: "@MadcodersSyliusGiftCardPlugin/config/routes/admin.yaml"
+    prefix: /admin
+
+madcoders_sylius_gift_card_shop:
+    resource: "@MadcodersSyliusGiftCardPlugin/config/routes/shop.yaml"
+    prefix: /{_locale}
+    requirements:
+        _locale: ^[A-Za-z]{2,4}(_([A-Za-z]{4}|[0-9]{3}))?(_([A-Za-z]{2}|[0-9]{3}))?$

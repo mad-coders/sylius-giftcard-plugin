@@ -1,0 +1,7 @@
+# Plugin configuration entry point.
+#
+# Everything the plugin contributes to the host application is imported from here, so a host
+# application only has to import this single file (see docs/INSTALLATION.md). Feature slices add
+# their own imports (resources, grids, state machine, twig hooks) as they land.
+
+parameters: ~

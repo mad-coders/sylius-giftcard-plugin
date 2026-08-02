@@ -1,0 +1,44 @@
+# Services required to run the plugin's test suite locally.
+#
+# PHP runs on the host (see the Makefile targets); these containers only provide the external
+# services the Sylius test application needs: a MySQL database and a headless Chrome for the
+# Behat @javascript suite.
+#
+#   docker compose up -d mysql     # database only (unit + non-JS Behat)
+#   docker compose up -d           # database + chrome (for @javascript Behat)
+#
+# MySQL is published on host port 3307 (not 3306) so it does not clash with a MySQL already
+# installed on the host; tests/TestApplication/.env points DATABASE_URL at that port.
+services:
+    mysql:
+        image: mysql:8.4
+        platform: linux/amd64
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        ports:
+            - "${MYSQL_PORT:-3307}:3306"
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        cap_add:
+            - SYS_NICE # prevents "mbind: Operation not permitted" errors
+        volumes:
+            - mysql_data:/var/lib/mysql
+
+    chrome:
+        image: zenika/alpine-chrome:latest
+        platform: linux/amd64
+        command:
+            - --no-sandbox
+            - --disable-gpu
+            - --disable-dev-shm-usage
+            - --remote-debugging-address=0.0.0.0
+            - --remote-debugging-port=9222
+            - --window-size=1920,1080
+        ports:
+            - "${CHROME_PORT:-9222}:9222"
+
+volumes:
+    mysql_data: {}
