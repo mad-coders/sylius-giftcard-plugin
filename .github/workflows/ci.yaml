@@ -10,9 +10,12 @@ name: CI
 # Decision recorded in docs/adr-log/0007-github-actions-ci.md.
 
 on:
+    # Only the long-lived version branches build on push; everything else is covered by the
+    # pull_request trigger. Listing every branch here as well would run the whole matrix twice for
+    # each push to a branch that has an open pull request.
     push:
-        branches-ignore:
-            - 'dependabot/**'
+        branches:
+            - '1.*'
         paths-ignore:
             - "*.md"
             - "docs/**"
