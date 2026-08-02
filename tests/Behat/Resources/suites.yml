@@ -1,0 +1,4 @@
+# Behat suite definitions contributed by the plugin. Feature slices add their suites here.
+
+default:
+    suites: ~
