@@ -17,7 +17,7 @@ final class MadcodersSyliusGiftCardPluginTest extends TestCase
         // The Sylius 2.x plugin layout keeps config/ and templates/ at the repository root rather
         // than under src/Resources/, so the bundle path must point one level above src/.
         self::assertFileExists($plugin->getPath() . '/config/config.yaml');
-        self::assertFileExists($plugin->getPath() . '/config/services.php');
+        self::assertFileExists($plugin->getPath() . '/config/services.xml');
     }
 
     public function testItExposesTheExpectedConfigurationAlias(): void

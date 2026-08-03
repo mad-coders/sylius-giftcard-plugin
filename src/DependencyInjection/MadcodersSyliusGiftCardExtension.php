@@ -9,7 +9,7 @@ use Sylius\Bundle\ResourceBundle\DependencyInjection\Extension\AbstractResourceE
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
-use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
 final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension implements PrependExtensionInterface
 {
@@ -17,14 +17,39 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
 
-        $loader->load('services.php');
+        $loader->load('services.xml');
     }
 
     public function prepend(ContainerBuilder $container): void
     {
+        $this->prependDoctrineMappings($container);
         $this->prependDoctrineMigrations($container);
+    }
+
+    /**
+     * Registers config/doctrine explicitly rather than letting DoctrineBundle auto-detect it.
+     *
+     * Auto-detection assumes a bundle's mapped classes live under `<BundleNamespace>\Entity` and
+     * derives the class name from the file name. The plugin's mapped superclasses live under
+     * `\Model` (they are models, not entities - the host application supplies the entities), so the
+     * prefix has to be stated.
+     */
+    private function prependDoctrineMappings(ContainerBuilder $container): void
+    {
+        $container->prependExtensionConfig('doctrine', [
+            'orm' => [
+                'mappings' => [
+                    'MadcodersSyliusGiftCardPlugin' => [
+                        'is_bundle' => false,
+                        'type' => 'xml',
+                        'dir' => \dirname(__DIR__, 2) . '/config/doctrine',
+                        'prefix' => 'Madcoders\SyliusGiftCardPlugin\Model',
+                    ],
+                ],
+            ],
+        ]);
     }
 
     protected function getMigrationsNamespace(): string

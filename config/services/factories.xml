@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            Decorates the resource factory Sylius generates from config/resources.yaml, so the
+            plugin's convenience constructor is available without losing the standard one (or the
+            host application's ability to override the model class).
+        -->
+        <service id="madcoders_sylius_gift_card.factory.gift_card.decorator"
+                 class="Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactory"
+                 decorates="madcoders_sylius_gift_card.factory.gift_card"
+                 decoration-priority="0">
+            <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card.decorator.inner" />
+        </service>
+    </services>
+
+</container>

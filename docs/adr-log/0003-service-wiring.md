@@ -12,7 +12,8 @@ single file makes service ids unstable and hides the tags (`sylius.order_process
 ## Decision
 
 Services are declared **explicitly in XML**, split by concern under `config/services/`, and pulled
-in by a glob from `config/services.php`:
+in by a glob from `config/services.xml` (an XML entry point rather than a PHP one: Symfony's
+`PhpFileLoader` cannot resolve XML imports on its own):
 
 ```
 config/services/
