@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            Symfony Workflow adapter. The equivalent winzou wiring lives in
+            config/state_machine/winzou/sylius_order.yaml and calls the same modifier, so whichever
+            adapter the host application uses, balances move the same way. Only one adapter is
+            active for a given graph, so these cannot both fire.
+        -->
+        <service id="madcoders_sylius_gift_card.listener.workflow.order.debit_gift_cards"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\Order\DebitGiftCardsListener">
+            <argument type="service" id="madcoders_sylius_gift_card.modifier.order_gift_card_amount" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order.completed.create" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.listener.workflow.order.credit_gift_cards"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\Order\CreditGiftCardsListener">
+            <argument type="service" id="madcoders_sylius_gift_card.modifier.order_gift_card_amount" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order.completed.cancel" />
+        </service>
+    </services>
+
+</container>

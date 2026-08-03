@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="madcoders_sylius_gift_card.provider.gift_card_configuration"
+                 class="Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProvider">
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card_configuration" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface"
+                 alias="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+    </services>
+
+</container>

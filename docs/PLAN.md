@@ -91,14 +91,21 @@ Redemption follows the Setono approach, which is the idiomatic Sylius one: **a g
 order adjustment, not a payment method.**
 
 - Adjustment type: `AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT` (`madcoders_gift_card`).
-- `OrderGiftCardProcessor` (an `OrderProcessorInterface`, registered last in the chain) removes its
-  own previous adjustments, then for each applied card adds a **negative** adjustment capped at the
-  order's remaining total, tagging it with the card's code as `originCode`. Cards therefore stack
-  and can never take the order total below zero.
-- `OrderGiftCardAmountModifier::decrement()` moves money off the card when the order is placed;
-  `increment()` puts it back when the order is cancelled. Both walk the adjustments by `originCode`,
-  so the amount actually charged is the amount actually returned.
-- Every decrement/increment writes a `GiftCardTransaction`.
+- `OrderGiftCardProcessor` is an `OrderProcessorInterface` registered at priority **-10**, below
+  every Sylius processor, so it sees the final total after items, shipping, promotions and taxes.
+  For each applied card it adds a **negative** adjustment capped at the order's *remaining* total,
+  tagged with the card's code as `originCode`. Cards therefore stack, and an order total can never
+  go below zero.
+- The adjustment type is registered with Sylius' own `OrderAdjustmentsClearer` (priority 60) by a
+  compiler pass, rather than the processor removing its own adjustments. This is load-bearing: the
+  clearer runs *before* promotions (20) and taxes (10), so a stale gift card discount can never
+  distort those calculations, and reprocessing a cart stays idempotent.
+- `OrderGiftCardAmountModifier::debit()` moves money off the cards when the order is placed;
+  `credit()` puts it back when the order is cancelled. Both work from the order's *adjustments*, so
+  the amount returned is exactly the amount charged - including when a card was only partly used
+  because the order was cheaper than its balance.
+- Every debit and credit writes a `GiftCardTransaction`, and the first debit records the redeeming
+  customer on the card.
 
 Because Sylius 2.x ships **two** state machine adapters, the transitions are wired for both:
 a `winzou_state_machine` callback block *and* Symfony Workflow event listeners
@@ -110,12 +117,15 @@ logic lives in the service; the wiring is a thin adapter. See
 
 Each phase is a pull request into `1.0`, green on the quality gate before merge.
 
+Phases 2 and 3 were swapped during delivery: redemption is the functional core of the plugin and
+depends on nothing in the admin phase, so it shipped first.
+
 | # | Phase | Scope |
 |---|---|---|
 | 0 | **Bootstrap** | Repository, composer package, test application wiring, tooling (PHPStan/ECS/Rector/PHPUnit/Behat), Makefile, CI, git hooks, docs and ADR log, this plan. |
 | 1 | **Model & persistence** | `GiftCard`, `GiftCardTransaction`, `GiftCardConfiguration`, the `Product`/`Order`/`OrderItemUnit` extension traits, Doctrine XML mapping, Sylius resource registration, repositories, first migration. |
-| 2 | **Admin** | Grids, forms and menu entries for gift cards and per-channel configuration; manual card creation and balance adjustment; code generator. |
-| 3 | **Redemption & totals** | `GiftCardApplicator`, `OrderGiftCardProcessor`, `OrderGiftCardAmountModifier`, adjustment wiring, cart/checkout form + controller, twig hooks showing the applied cards and the remaining total. |
+| 3 | **Redemption & totals** | `GiftCardApplicator`, `OrderGiftCardProcessor`, `OrderGiftCardAmountModifier`, adjustment wiring, code generator, per-channel configuration provider, state machine wiring for both adapters. |
+| 2 | **Admin** | Grids, forms and menu entries for gift cards and per-channel configuration; manual card creation and balance adjustment. |
 | 4 | **Selling gift cards** | Gift card products, card generation on payment, state machine listeners for both adapters, purchaser association, notification email. |
 | 5 | **Customer account** | "My gift cards" - cards bought and cards redeemed, remaining balance, transaction history. This is the phase that pays off the two-customer model. |
 | 6 | **Fixtures, tests & docs** | Sylius fixtures for cards and configuration, Behat features covering each user-visible flow, unit tests for every service, installation and usage documentation. |

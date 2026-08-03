@@ -2,7 +2,12 @@
 #
 # Everything the plugin contributes to the host application is imported from here, so a host
 # application only has to import this single file (see docs/INSTALLATION.md). Later feature slices
-# add their own imports (grids, state machine, twig hooks) as they land.
+# add their own imports (grids, twig hooks) as they land.
 
 imports:
     - { resource: "resources.yaml" }
+
+# The winzou state machine callbacks are NOT imported here: winzou/state-machine-bundle is optional
+# in Sylius 2.x (the Symfony Workflow adapter is the default), and importing configuration for an
+# extension the host has not registered is a hard failure. The plugin's extension prepends them only
+# when the bundle is present - see MadcodersSyliusGiftCardExtension::prependWinzouStateMachine().
