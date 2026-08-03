@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        Append-only balance ledger. Rows are never updated or deleted, which is why there is no
+        updatedAt column - see docs/adr-log/0005-two-customer-links-and-transaction-ledger.md.
+    -->
+    <mapped-superclass name="Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransaction" table="madcoders_gift_card__gift_card_transaction">
+        <id name="id" column="id" type="integer">
+            <generator strategy="AUTO" />
+        </id>
+
+        <field name="type" column="type" type="string" length="16" enum-type="Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionType" />
+        <field name="amount" column="amount" type="integer" />
+        <field name="balanceAfter" column="balance_after" type="integer" />
+        <field name="createdAt" column="created_at" type="datetime" nullable="true" />
+
+        <many-to-one field="giftCard" target-entity="Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface" inversed-by="transactions">
+            <join-column name="gift_card_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+
+        <!-- Null for a manual admin adjustment, which has no originating order. -->
+        <many-to-one field="order" target-entity="Sylius\Component\Core\Model\OrderInterface">
+            <join-column name="order_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+    </mapped-superclass>
+
+</doctrine-mapping>

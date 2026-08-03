@@ -1,3 +1,44 @@
 imports:
     - { resource: "@MadcodersSyliusGiftCardPlugin/config/config.yaml" }
     - { resource: "services_test.php" }
+
+# The plugin's models are mapped superclasses, so the application supplies the concrete entities -
+# exactly as a host application has to. See docs/INSTALLATION.md.
+doctrine:
+    orm:
+        entity_managers:
+            default:
+                mappings:
+                    TestApplication:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
+                        prefix: Tests\Madcoders\SyliusGiftCardPlugin\Entity
+
+sylius_resource:
+    resources:
+        madcoders_sylius_gift_card.gift_card:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\GiftCard\GiftCard
+        madcoders_sylius_gift_card.gift_card_transaction:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\GiftCard\GiftCardTransaction
+        madcoders_sylius_gift_card.gift_card_configuration:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\GiftCard\GiftCardConfiguration
+
+# Sylius models the plugin extends.
+sylius_order:
+    resources:
+        order:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\Order
+        order_item_unit:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\OrderItemUnit
+
+sylius_product:
+    resources:
+        product:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Product\Product

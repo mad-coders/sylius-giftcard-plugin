@@ -4,13 +4,14 @@ parameters:
     paths:
         - src
         - tests/Behat
+        # The test application's entities are the only consumers of the plugin's extension traits
+        # (ProductTrait, OrderTrait, OrderItemUnitTrait), which a host application applies to its
+        # own models. Analysing them proves the traits actually compose with the Sylius entities.
+        - tests/TestApplication/src
 
     excludePaths:
         # Makes PHPStan crash
         - 'src/DependencyInjection/Configuration.php'
-
-        # Test dependencies
-        - 'tests/TestApplication/src/**.php'
 
     ignoreErrors:
         - '/Parameter #1 \$configuration of method Symfony\\Component\\DependencyInjection\\Extension\\Extension::processConfiguration\(\) expects Symfony\\Component\\Config\\Definition\\ConfigurationInterface, Symfony\\Component\\Config\\Definition\\ConfigurationInterface\|null given\./'
@@ -18,3 +19,16 @@ parameters:
         # Untyped iterables are accepted by the Sylius PHPStan standard.
         -
             identifier: missingType.iterableValue
+
+        # Sylius' own repository types make it impossible to satisfy both ends of this:
+        # RepositoryInterface is generic in T, but the concrete
+        # Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository - which every resource
+        # repository extends - hardcodes T as ResourceInterface and is not itself generic. Naming
+        # the concrete model on our repository *interfaces* therefore makes the repository
+        # *classes* fail with generics.interfaceConflict, and leaving it off fails here. This is a
+        # limitation of the vendor's annotations, not of our code; the interfaces document their
+        # element type in the return types of their own methods.
+        -
+            identifier: missingType.generics
+            paths:
+                - src/Repository/*RepositoryInterface.php

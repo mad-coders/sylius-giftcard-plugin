@@ -1,0 +1,23 @@
+sylius_resource:
+    resources:
+        madcoders_sylius_gift_card.gift_card:
+            driver: doctrine/orm
+            classes:
+                model: Madcoders\SyliusGiftCardPlugin\Model\GiftCard
+                interface: Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface
+                repository: Madcoders\SyliusGiftCardPlugin\Repository\GiftCardRepository
+                # The plugin's GiftCardFactory decorates the default one rather than replacing it
+                # (it needs the default to build the instance) - see config/services/factories.xml.
+
+        madcoders_sylius_gift_card.gift_card_transaction:
+            driver: doctrine/orm
+            classes:
+                model: Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransaction
+                interface: Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionInterface
+
+        madcoders_sylius_gift_card.gift_card_configuration:
+            driver: doctrine/orm
+            classes:
+                model: Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration
+                interface: Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface
+                repository: Madcoders\SyliusGiftCardPlugin\Repository\GiftCardConfigurationRepository
