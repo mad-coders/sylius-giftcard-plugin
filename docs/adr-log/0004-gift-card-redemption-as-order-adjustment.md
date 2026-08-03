@@ -25,8 +25,12 @@ code in `originCode`.
 - `OrderGiftCardProcessor implements OrderProcessorInterface`, registered **last** in the
   `sylius.order_processor` chain, so it sees the final total after items, shipping, taxes and
   promotions.
-- On every run it first **removes its own previous adjustments**, then re-applies them. Processing
-  is idempotent; re-processing a cart never double-discounts.
+- Its adjustment type is added to Sylius' `OrderAdjustmentsClearer` list by a compiler pass, rather
+  than the processor removing its own adjustments. The clearer runs at priority **60** - before
+  promotions (20) and taxes (10) - so a stale gift card discount from the previous run can never
+  distort those calculations. Removing them in our own processor (at -10) would be too late:
+  everything in between would already have computed against a discounted total. Processing is
+  idempotent as a result.
 - Each card's adjustment is **capped at the order's remaining total**, so several cards stack and
   the total can never go negative.
 - `OrderGiftCardAmountModifier` moves money off the card (`decrement`) when the order is placed and

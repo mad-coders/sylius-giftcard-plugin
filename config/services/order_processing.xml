@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            Priority -10 puts this after every Sylius processor (the lowest of which, the payment
+            processor, is 0), so gift cards are applied to the final total - after shipping,
+            promotions and taxes. Its adjustments are cleared at the start of the next run by
+            RegisterGiftCardAdjustmentClearingPass, which is what keeps processing idempotent.
+        -->
+        <service id="madcoders_sylius_gift_card.order_processing.order_gift_card_processor"
+                 class="Madcoders\SyliusGiftCardPlugin\OrderProcessor\OrderGiftCardProcessor">
+            <argument type="service" id="sylius.factory.adjustment" />
+            <argument type="service" id="translator" />
+            <tag name="sylius.order_processor" priority="-10" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.modifier.order_gift_card_amount"
+                 class="Madcoders\SyliusGiftCardPlugin\Modifier\OrderGiftCardAmountModifier"
+                 public="true">
+            <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card_transaction" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Modifier\OrderGiftCardAmountModifierInterface"
+                 alias="madcoders_sylius_gift_card.modifier.order_gift_card_amount" />
+    </services>
+
+</container>

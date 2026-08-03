@@ -1,0 +1,8 @@
+madcoders_sylius_gift_card:
+    ui:
+        gift_card: Gift card
+        gift_cards: Gift cards
+        remaining_balance: Remaining balance
+        initial_amount: Initial amount
+        expires_at: Expires at
+        code: Code

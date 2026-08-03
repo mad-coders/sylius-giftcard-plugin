@@ -25,3 +25,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Doctrine mapping.
 - Doctrine XML mapping, Sylius resource registration, repositories and the first migration (written
   against the Schema API, so it runs on MySQL, MariaDB and PostgreSQL).
+- Gift card redemption: applying a card to an order produces a negative `madcoders_gift_card`
+  adjustment, capped at the order's remaining total, so cards stack and a total never goes below
+  zero. The plugin's adjustment type is registered with Sylius' adjustment clearer, so promotions
+  and taxes are never computed against an already-discounted total.
+- Balances move when the order is placed and are restored when it is cancelled, driven by the
+  adjustments actually charged and wired for **both** Sylius 2.x state machine adapters (winzou and
+  Symfony Workflow). Every movement writes a ledger entry, and the first redemption records the
+  redeeming customer on the card.
+- Gift card code generator (unambiguous alphabet, cryptographically random, collision-checked) and
+  per-channel configuration provider.

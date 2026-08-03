@@ -10,6 +10,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\Yaml\Yaml;
 
 final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension implements PrependExtensionInterface
 {
@@ -25,7 +26,31 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
     public function prepend(ContainerBuilder $container): void
     {
         $this->prependDoctrineMappings($container);
+        $this->prependWinzouStateMachine($container);
         $this->prependDoctrineMigrations($container);
+    }
+
+    /**
+     * Registers the winzou state machine callbacks, but only if that adapter is installed.
+     *
+     * Sylius 2.x supports both winzou/state-machine-bundle and Symfony Workflow, and defaults to
+     * the latter - winzou is frequently absent. Importing configuration for an unregistered
+     * extension is a hard container failure, so this cannot live in config/config.yaml. The
+     * Symfony Workflow half of the wiring is plain service tags and needs no such guard; see
+     * config/services/listeners.xml.
+     */
+    private function prependWinzouStateMachine(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('winzou_state_machine')) {
+            return;
+        }
+
+        /** @var array{winzou_state_machine?: array<string, mixed>} $config */
+        $config = Yaml::parseFile(\dirname(__DIR__, 2) . '/config/state_machine/winzou/sylius_order.yaml');
+
+        if (isset($config['winzou_state_machine'])) {
+            $container->prependExtensionConfig('winzou_state_machine', $config['winzou_state_machine']);
+        }
     }
 
     /**

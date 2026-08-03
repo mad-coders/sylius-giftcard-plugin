@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="madcoders_sylius_gift_card.applicator.gift_card"
+                 class="Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicator">
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface"
+                 alias="madcoders_sylius_gift_card.applicator.gift_card" />
+    </services>
+
+</container>
