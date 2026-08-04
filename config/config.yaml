@@ -6,6 +6,8 @@
 
 imports:
     - { resource: "resources.yaml" }
+    - { resource: "fixtures.yaml" }
+    - { resource: "twig_hooks/*.yaml" }
 
 # The winzou state machine callbacks are NOT imported here: winzou/state-machine-bundle is optional
 # in Sylius 2.x (the Symfony Workflow adapter is the default), and importing configuration for an
