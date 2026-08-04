@@ -2,7 +2,14 @@ madcoders_sylius_gift_card:
     ui:
         gift_card: Gift card
         gift_cards: Gift cards
+        gift_card_code: Gift card code
+        enter_gift_card_code: Enter your gift card code
+        apply_gift_card: Apply
+        remove: Remove
         remaining_balance: Remaining balance
         initial_amount: Initial amount
         expires_at: Expires at
         code: Code
+    gift_card:
+        code:
+            not_blank: Please enter a gift card code.

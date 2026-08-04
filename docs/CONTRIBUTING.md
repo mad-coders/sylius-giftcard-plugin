@@ -2,7 +2,10 @@
 
 ## Getting set up
 
-You need PHP 8.3+, Composer 2, Docker (for MySQL and headless Chrome) and the Symfony CLI.
+You need PHP 8.3+, **Node 20+**, Composer 2, Docker (for MySQL and headless Chrome) and the Symfony
+CLI. Node 20 is a hard requirement of Sylius' admin assets - on an older Node, `make frontend` fails
+with `The engine "node" is incompatible with this module`, and every Behat scenario then dies with a
+500 from the missing Webpack entrypoints file.
 
 ```bash
 git clone git@github.com:mad-coders/sylius-giftcard-plugin.git
@@ -82,3 +85,5 @@ before running the Make targets, e.g. on macOS with Homebrew:
 ```bash
 export PATH="/opt/homebrew/opt/php@8.4/bin:$PATH"
 ```
+
+The same applies to Node - `nvm use 22` (or any 20+) before `make frontend`.

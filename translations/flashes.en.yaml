@@ -1,0 +1,10 @@
+# Flash messages live in the "flashes" domain, not "messages": Sylius' flash template renders them
+# with |trans({}, 'flashes'), so a key in any other domain would show up as the raw key.
+madcoders_sylius_gift_card:
+    cart:
+        applied: The gift card has been applied to your cart.
+        removed: The gift card has been removed from your cart.
+        not_found: There is no gift card with this code.
+        not_redeemable: This gift card cannot be used - it may be expired, disabled or already spent.
+        channel_mismatch: This gift card cannot be used in this store.
+        code_required: Please enter a gift card code.

@@ -1,0 +1,51 @@
+# Adds gift card fixtures to Sylius' default suite, so `bin/console sylius:fixtures:load` gives a
+# shop with cards you can actually redeem.
+#
+# Priorities are negative so these run after Sylius' own fixtures: gift cards reference a channel,
+# and the partly-spent example references a customer, both of which have to exist first.
+sylius_fixtures:
+    suites:
+        default:
+            fixtures:
+                madcoders_gift_card_configuration:
+                    priority: -10
+                    options:
+                        custom:
+                            -   channel: FASHION_WEB
+                                code_length: 8
+                                code_prefix: 'GIFT-'
+                                validity_period: '1 year'
+
+                madcoders_gift_card:
+                    priority: -20
+                    options:
+                        custom:
+                            # A full card, ready to spend.
+                            -   code: 'GIFT-FULL0001'
+                                channel: FASHION_WEB
+                                initial_amount: 10000
+
+                            # A small card, so a cart can be paid for with two of them.
+                            -   code: 'GIFT-SMALL001'
+                                channel: FASHION_WEB
+                                initial_amount: 2000
+
+                            # Partly spent, and already assigned to the customer who spends it -
+                            # the state the account balance view exists to show.
+                            -   code: 'GIFT-USED0001'
+                                channel: FASHION_WEB
+                                initial_amount: 10000
+                                spent_amount: 6500
+                                redeemer: 'shop@example.com'
+
+                            # Expired, to prove expiry is enforced at redemption.
+                            -   code: 'GIFT-EXPIRED1'
+                                channel: FASHION_WEB
+                                initial_amount: 5000
+                                expires_at: '2020-01-01'
+
+                            # Disabled, same reason.
+                            -   code: 'GIFT-DISABLED'
+                                channel: FASHION_WEB
+                                initial_amount: 5000
+                                enabled: false

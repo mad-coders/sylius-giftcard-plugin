@@ -1,0 +1,15 @@
+sylius_twig_hooks:
+    hooks:
+        # Rendered between the cart form (priority 100) and the suggested products (0), which puts
+        # it *outside* Sylius' cart <form> - the gift card panel posts its own form, and nesting
+        # one form inside another is invalid HTML.
+        'sylius_shop.cart.index.content':
+            madcoders_gift_card:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/cart/gift_card.html.twig'
+                priority: 50
+
+        # A summary line showing what the applied cards take off the total.
+        'sylius_shop.cart.index.content.form.sections.general.summary':
+            madcoders_gift_card_total:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/cart/summary/gift_card_total.html.twig'
+                priority: 350

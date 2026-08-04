@@ -1,4 +1,31 @@
-# Behat suite definitions contributed by the plugin. Feature slices add their suites here.
+# Behat suite definitions contributed by the plugin.
 
 default:
-    suites: ~
+    suites:
+        madcoders_gift_card_cart:
+            contexts:
+                - sylius.behat.context.hook.doctrine_orm
+
+                - sylius.behat.context.transform.channel
+                - sylius.behat.context.transform.lexical
+                - sylius.behat.context.transform.product
+                - sylius.behat.context.transform.cart
+                - sylius.behat.context.transform.shared_storage
+
+                - sylius.behat.context.setup.channel
+                - sylius.behat.context.setup.currency
+                - sylius.behat.context.setup.locale
+                - sylius.behat.context.setup.product
+                - sylius.behat.context.setup.shipping
+                - sylius.behat.context.setup.payment
+                # The server-side cart setup, NOT sylius.behat.context.ui.shop.cart: adding to the
+                # cart through the shop UI is a Live Component action in Sylius 2.x and needs a
+                # browser, which would force this whole suite to be @javascript.
+                - sylius.behat.context.setup.cart
+
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card
+
+                - madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_cart
+
+            filters:
+                tags: "@madcoders_gift_card_cart"

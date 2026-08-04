@@ -3,6 +3,24 @@
 <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <services>
         <defaults public="true" />
-        <!-- Behat contexts and pages are registered here as feature slices land. -->
+
+        <service id="madcoders_sylius_gift_card.behat.context.setup.gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup\GiftCardContext">
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="madcoders_sylius_gift_card.fixture.example_factory.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_cart"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\GiftCardCartContext">
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.cart.gift_card" />
+            <argument type="service" id="sylius.behat.notification_checker.shop" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.cart.gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Cart\GiftCardPage"
+                 parent="sylius.behat.page.shop.page"
+                 public="false" />
     </services>
+
 </container>

@@ -1,2 +1,16 @@
-# Shop routes contributed by the plugin. Imported by the host application under the localised
-# shop route prefix (see docs/INSTALLATION.md).
+# Shop routes contributed by the plugin. Imported by the host application under the localised shop
+# route prefix (see docs/INSTALLATION.md).
+
+madcoders_sylius_gift_card_shop_cart_apply:
+    path: /gift-cards/apply
+    methods: [POST]
+    defaults:
+        _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController::applyAction
+
+madcoders_sylius_gift_card_shop_cart_remove:
+    path: /gift-cards/{code}/remove
+    methods: [GET, POST]
+    defaults:
+        _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController::removeAction
+    requirements:
+        code: .+

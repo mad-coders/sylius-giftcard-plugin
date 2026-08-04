@@ -1,0 +1,13 @@
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
+{% set cart = hookable_metadata.context.cart %}
+{% set gift_card_total = cart.getAdjustmentsTotal('madcoders_gift_card') %}
+
+{% if gift_card_total != 0 %}
+    <div class="hstack gap-2 mb-2">
+        <div>{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}:</div>
+        <div class="ms-auto text-end" {{ sylius_test_html_attribute('cart-gift-card-total') }}>
+            {{ money.convertAndFormat(gift_card_total) }}
+        </div>
+    </div>
+{% endif %}

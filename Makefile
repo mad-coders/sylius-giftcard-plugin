@@ -48,7 +48,9 @@ backend-test: ## Create the test database and run the migrations (APP_ENV=test; 
 	APP_ENV=test $(CONSOLE) doctrine:database:create --if-not-exists --no-interaction
 	APP_ENV=test $(CONSOLE) doctrine:migrations:migrate --no-interaction --allow-no-migration
 
-frontend: ## Install and build the test application assets
+frontend: ## Install and build the test application assets (needs Node 20+)
+	# Sylius' admin assets require Node >= 20; on an older Node yarn refuses the install and every
+	# page then 500s on the missing Webpack entrypoints file.
 	(cd vendor/sylius/test-application && yarn install && yarn build)
 	$(CONSOLE) assets:install --no-interaction
 

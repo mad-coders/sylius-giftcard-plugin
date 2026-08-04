@@ -35,3 +35,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   redeeming customer on the card.
 - Gift card code generator (unambiguous alphabet, cryptographically random, collision-checked) and
   per-channel configuration provider.
+- Shop cart UI: a gift card panel on the cart page to apply a code, see the applied cards and their
+  remaining balance, and remove one again, plus a summary line showing what the cards take off the
+  total. Works without JavaScript.
+- Sylius fixtures for gift cards and per-channel configuration, wired into the default suite, so
+  `bin/console sylius:fixtures:load` gives a shop with full, partly-spent, expired and disabled
+  cards to try.
+- Behat coverage of the whole redemption flow: applying, stacking, the remaining-total cap,
+  removal, and refusal of expired, disabled and unknown codes.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController" public="true">
+            <argument type="service" id="sylius.context.cart" />
+            <argument type="service" id="madcoders_sylius_gift_card.applicator.gift_card" />
+            <argument type="service" id="form.factory" />
+            <argument type="service" id="sylius.manager.order" />
+            <argument type="service" id="router" />
+        </service>
+    </services>
+
+</container>
