@@ -1,0 +1,46 @@
+{#
+    The balance ledger. Append-only, newest last, so it reads as the story of the card - which is
+    what an admin needs when a customer asks where their balance went.
+#}
+{% set gift_card = hookable_metadata.context.resource %}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">{{ 'madcoders_sylius_gift_card.ui.transactions'|trans }}</h3>
+    </div>
+
+    {% if gift_card.transactions|length == 0 %}
+        <div class="card-body text-secondary" {{ sylius_test_html_attribute('no-transactions') }}>
+            {{ 'madcoders_sylius_gift_card.ui.no_transactions'|trans }}
+        </div>
+    {% else %}
+        <table class="table card-table" {{ sylius_test_html_attribute('gift-card-transactions') }}>
+            <thead>
+                <tr>
+                    <th>{{ 'sylius.ui.date'|trans }}</th>
+                    <th>{{ 'sylius.ui.type'|trans }}</th>
+                    <th>{{ 'madcoders_sylius_gift_card.ui.amount'|trans }}</th>
+                    <th>{{ 'madcoders_sylius_gift_card.ui.balance_after'|trans }}</th>
+                    <th>{{ 'sylius.ui.order'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in gift_card.transactions %}
+                    <tr {{ sylius_test_html_attribute('gift-card-transaction') }}>
+                        <td>{{ transaction.createdAt ? transaction.createdAt|date('d-m-Y H:i') : '-' }}</td>
+                        <td>
+                            <span class="badge {{ transaction.type.value == 'credit' ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                {{ ('madcoders_sylius_gift_card.ui.transaction_type.' ~ transaction.type.value)|trans }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ (transaction.type.value == 'credit' ? '+' : '-') }}{{ transaction.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+                        </td>
+                        <td>{{ transaction.balanceAfter|sylius_format_money(gift_card.currencyCode|default('USD')) }}</td>
+                        <td>{{ transaction.order ? transaction.order.number : '-' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>

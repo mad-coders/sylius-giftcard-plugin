@@ -21,6 +21,40 @@
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Cart\GiftCardPage"
                  parent="sylius.behat.page.shop.page"
                  public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.admin.gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin\GiftCardContext">
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.index" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.create" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.show" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.adjust_balance" />
+            <argument type="service" id="sylius.behat.notification_checker.admin" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.index"
+                 class="Sylius\Behat\Page\Admin\Crud\IndexPage"
+                 parent="sylius.behat.page.admin.crud.index"
+                 public="false">
+            <argument type="string">madcoders_sylius_gift_card_admin_gift_card_index</argument>
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.create"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\CreatePage"
+                 parent="sylius.behat.page.admin.crud.create"
+                 public="false">
+            <argument type="string">madcoders_sylius_gift_card_admin_gift_card_create</argument>
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.show"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\ShowPage"
+                 parent="sylius.behat.symfony_page"
+                 public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.adjust_balance"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\AdjustBalancePage"
+                 parent="sylius.behat.symfony_page"
+                 public="false" />
     </services>
 
 </container>

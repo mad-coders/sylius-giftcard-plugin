@@ -1,0 +1,91 @@
+sylius_grid:
+    grids:
+        madcoders_sylius_gift_card_admin_gift_card:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%madcoders_sylius_gift_card.model.gift_card.class%"
+            sorting:
+                createdAt: desc
+            limits: [25, 50, 100]
+            fields:
+                code:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.code
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/code.html.twig"
+                channel:
+                    type: twig
+                    label: sylius.ui.channel
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/channel.html.twig"
+                initialAmount:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.initial_amount
+                    # path "." hands the whole gift card to the template - a money amount is
+                    # meaningless without the card's currency, and a grid field otherwise only
+                    # receives the single value.
+                    path: .
+                    sortable: initialAmount
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card/grid/field/initial_amount.html.twig"
+                amount:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.remaining_balance
+                    path: .
+                    sortable: amount
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card/grid/field/balance.html.twig"
+                expiresAt:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.expires_at
+                    path: .
+                    sortable: expiresAt
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card/grid/field/expires_at.html.twig"
+                purchaser:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.purchaser
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card/grid/field/customer.html.twig"
+                redeemer:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.redeemer
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card/grid/field/customer.html.twig"
+                enabled:
+                    type: twig
+                    label: sylius.ui.enabled
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/boolean.html.twig"
+                createdAt:
+                    type: twig
+                    label: sylius.ui.creation_date
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/date.html.twig"
+            filters:
+                code:
+                    type: string
+                    label: madcoders_sylius_gift_card.ui.code
+                channel:
+                    type: entity
+                    label: sylius.ui.channel
+                    form_options:
+                        class: "%sylius.model.channel.class%"
+                enabled:
+                    type: boolean
+                    label: sylius.ui.enabled
+            actions:
+                main:
+                    create:
+                        type: create
+                item:
+                    show:
+                        type: show
+                    update:
+                        type: update
+                    delete:
+                        type: delete

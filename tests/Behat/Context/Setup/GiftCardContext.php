@@ -10,6 +10,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
 {
@@ -70,6 +71,13 @@ final class GiftCardContext implements Context
         $this->giftCardManager->flush();
 
         $this->sharedStorage->set('gift_card', $giftCard);
+
+        // The admin scenarios address cards by code but the show page routes by id, so remember
+        // the mapping as cards are created.
+        $ids = $this->sharedStorage->has('gift_card_ids') ? $this->sharedStorage->get('gift_card_ids') : [];
+        Assert::isArray($ids);
+        $ids[(string) $giftCard->getCode()] = $giftCard->getId();
+        $this->sharedStorage->set('gift_card_ids', $ids);
 
         return $giftCard;
     }

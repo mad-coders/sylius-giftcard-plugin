@@ -1,0 +1,15 @@
+sylius_twig_hooks:
+    hooks:
+        # Sylius' CRUD show template renders the hook chain under `sylius_admin.<resource_name>`,
+        # falling back to `sylius_admin.common`. Hookables from both prefixes are merged, so these
+        # are added to the standard show page rather than replacing it.
+        #
+        # The ledger is the answer to "why is there only this much left on it" - the question an
+        # admin gets from a customer holding the card.
+        'sylius_admin.gift_card.show.content':
+            madcoders_gift_card_details:
+                template: '@MadcodersSyliusGiftCardPlugin/admin/gift_card/show/details.html.twig'
+                priority: 50
+            madcoders_gift_card_transactions:
+                template: '@MadcodersSyliusGiftCardPlugin/admin/gift_card/show/transactions.html.twig'
+                priority: 40

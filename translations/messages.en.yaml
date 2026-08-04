@@ -8,8 +8,37 @@ madcoders_sylius_gift_card:
         remove: Remove
         remaining_balance: Remaining balance
         initial_amount: Initial amount
+        amount: Amount
         expires_at: Expires at
+        expires_at_help: Leave empty to use the channel's configured validity period.
+        never_expires: Never
         code: Code
+        code_help: Leave empty to generate one from the channel's configuration.
+        code_prefix: Code prefix
+        code_prefix_help: Prepended to every generated code, for example "GIFT-".
+        code_length: Code length
+        code_length_help: Number of random characters after the prefix.
+        validity_period: Validity period
+        validity_period_help: How long a new card stays valid, for example "1 year". Leave empty for cards that never expire.
+        custom_message: Custom message
+        purchaser: Bought by
+        redeemer: Used by
+        adjust_balance: Adjust balance
+        adjustment_direction: Direction
+        add_to_balance: Add to balance
+        take_from_balance: Take from balance
+        balance_after: Balance after
+        transactions: Balance history
+        no_transactions: This gift card has not been used yet.
+        transaction_type:
+            debit: Spent
+            credit: Added
+    menu:
+        admin:
+            gift_cards: Gift cards
+            gift_card_configuration: Gift card configuration
     gift_card:
         code:
             not_blank: Please enter a gift card code.
+        amount:
+            positive: The amount must be greater than zero.

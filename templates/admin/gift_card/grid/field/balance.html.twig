@@ -1,0 +1,7 @@
+{# The remaining balance is the number an admin is actually looking for, so it is emphasised and
+   greyed out once the card is spent out. #}
+{% set spent = data.amount == 0 %}
+
+<span class="fw-bold {{ spent ? 'text-secondary' : '' }}" {{ sylius_test_html_attribute('gift-card-balance') }}>
+    {{ data.amount|sylius_format_money(data.currencyCode|default('USD')) }}
+</span>

@@ -10,6 +10,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransaction;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionType;
+use Madcoders\SyliusGiftCardPlugin\Modifier\GiftCardBalanceModifier;
 use Madcoders\SyliusGiftCardPlugin\Modifier\OrderGiftCardAmountModifier;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\Adjustment;
@@ -156,11 +157,14 @@ final class OrderGiftCardAmountModifierTest extends TestCase
 
     private function createModifier(): OrderGiftCardAmountModifier
     {
+        // The real balance modifier rather than a mock: the behaviour under test is the interplay
+        // between the adjustments and what actually lands on the card and in its ledger, which a
+        // mocked collaborator would assert away.
         /** @var FactoryInterface<GiftCardTransactionInterface> $factory */
         $factory = $this->createMock(FactoryInterface::class);
         $factory->method('createNew')->willReturnCallback(static fn (): GiftCardTransaction => new GiftCardTransaction());
 
-        return new OrderGiftCardAmountModifier($factory);
+        return new OrderGiftCardAmountModifier(new GiftCardBalanceModifier($factory));
     }
 
     /**

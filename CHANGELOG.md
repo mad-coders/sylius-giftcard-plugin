@@ -43,3 +43,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cards to try.
 - Behat coverage of the whole redemption flow: applying, stacking, the remaining-total cap,
   removal, and refusal of expired, disabled and unknown codes.
+- Admin panel: grids, create/edit forms and menu entries for gift cards and per-channel
+  configuration. Leaving the code blank on create generates one from the channel's configuration.
+- A gift card show page carrying the balance, both customer links and the full balance history, plus
+  a manual balance adjustment action that goes through the same write path as redemption - so a
+  correction is recorded in the ledger like any other change.
+- `GiftCardBalanceModifier`: the single place a balance may change, always writing the matching
+  ledger entry.
