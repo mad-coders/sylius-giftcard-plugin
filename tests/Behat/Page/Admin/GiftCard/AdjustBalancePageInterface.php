@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard;
 
-use Sylius\Behat\Page\SyliusPageInterface;
+use FriendsOfBehat\PageObjectExtension\Page\SymfonyPageInterface;
 
-interface AdjustBalancePageInterface extends SyliusPageInterface
+interface AdjustBalancePageInterface extends SymfonyPageInterface
 {
     public function adjust(string $direction, string $amount): void;
 

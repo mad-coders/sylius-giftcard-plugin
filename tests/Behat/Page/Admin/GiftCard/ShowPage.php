@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard;
 
-use Sylius\Behat\Page\SyliusPage;
+use FriendsOfBehat\PageObjectExtension\Page\SymfonyPage;
 
-final class ShowPage extends SyliusPage implements ShowPageInterface
+/**
+ * Extends the page-object-extension base directly rather than a Sylius page class: Sylius renamed
+ * Sylius\\Behat\\Page\\SymfonyPage to SyliusPage after 2.0, so neither name exists across the whole
+ * supported range. This base does, and it is what Sylius' own page classes extend.
+ */
+final class ShowPage extends SymfonyPage implements ShowPageInterface
 {
     public function getRouteName(): string
     {
