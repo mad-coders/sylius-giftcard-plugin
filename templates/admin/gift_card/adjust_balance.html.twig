@@ -1,0 +1,51 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% set prefixes = ['sylius_admin.common'] %}
+
+{% block title %}{{ 'madcoders_sylius_gift_card.ui.adjust_balance'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    {# Reuses the standard admin chrome (sidebar and navbar) so the page does not look bolted on. #}
+    {% hook 'sidebar' with { _prefixes: prefixes } %}
+
+    <div class="page-wrapper">
+        {% hook 'navbar' with { _prefixes: prefixes } %}
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            {{ 'madcoders_sylius_gift_card.ui.adjust_balance'|trans }} - <code>{{ gift_card.code }}</code>
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <p>
+                            {{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}:
+                            <strong {{ sylius_test_html_attribute('current-balance') }}>
+                                {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+                            </strong>
+                            / {{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+                        </p>
+
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                            {{ form_errors(form) }}
+                            {{ form_row(form.direction) }}
+                            {{ form_row(form.amount) }}
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('adjust-balance-button') }}>
+                                    {{ 'madcoders_sylius_gift_card.ui.adjust_balance'|trans }}
+                                </button>
+                                <a class="btn btn-link" href="{{ path('madcoders_sylius_gift_card_admin_gift_card_show', {'id': gift_card.id}) }}">
+                                    {{ 'sylius.ui.cancel'|trans }}
+                                </a>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

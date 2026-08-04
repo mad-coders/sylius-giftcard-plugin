@@ -12,6 +12,15 @@
             <argument type="service" id="sylius.manager.order" />
             <argument type="service" id="router" />
         </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Controller\Admin\AdjustGiftCardBalanceController" public="true">
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.modifier.gift_card_balance" />
+            <argument type="service" id="form.factory" />
+            <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+            <argument type="service" id="router" />
+            <argument type="service" id="twig" />
+        </service>
     </services>
 
 </container>

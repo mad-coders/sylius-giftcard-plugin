@@ -1,6 +1,8 @@
 # Flash messages live in the "flashes" domain, not "messages": Sylius' flash template renders them
 # with |trans({}, 'flashes'), so a key in any other domain would show up as the raw key.
 madcoders_sylius_gift_card:
+    admin:
+        balance_adjusted: The gift card balance has been adjusted.
     cart:
         applied: The gift card has been applied to your cart.
         removed: The gift card has been removed from your cart.

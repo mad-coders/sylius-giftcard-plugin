@@ -1,2 +1,35 @@
-# Admin routes contributed by the plugin. Imported by the host application under the admin
-# route prefix (see docs/INSTALLATION.md).
+# Admin routes contributed by the plugin. Imported by the host application under the admin route
+# prefix (see docs/INSTALLATION.md).
+
+madcoders_sylius_gift_card_admin_gift_card:
+    resource: |
+        alias: madcoders_sylius_gift_card.gift_card
+        section: admin
+        permission: true
+        templates: "@SyliusAdmin\\shared\\crud"
+        redirect: update
+        grid: madcoders_sylius_gift_card_admin_gift_card
+        form:
+            type: Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardType
+    type: sylius.resource
+
+madcoders_sylius_gift_card_admin_gift_card_adjust_balance:
+    path: /gift-cards/{id}/adjust-balance
+    methods: [GET, POST]
+    defaults:
+        _controller: Madcoders\SyliusGiftCardPlugin\Controller\Admin\AdjustGiftCardBalanceController
+    requirements:
+        id: \d+
+
+madcoders_sylius_gift_card_admin_gift_card_configuration:
+    resource: |
+        alias: madcoders_sylius_gift_card.gift_card_configuration
+        section: admin
+        permission: true
+        templates: "@SyliusAdmin\\shared\\crud"
+        except: ['show']
+        redirect: update
+        grid: madcoders_sylius_gift_card_admin_gift_card_configuration
+        form:
+            type: Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardConfigurationType
+    type: sylius.resource

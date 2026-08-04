@@ -6,12 +6,9 @@ namespace Madcoders\SyliusGiftCardPlugin\Modifier;
 
 use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
-use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionInterface;
-use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionType;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface as BaseOrderInterface;
-use Sylius\Resource\Factory\FactoryInterface;
 
 /**
  * Moves money on and off gift cards when an order is placed or cancelled.
@@ -20,14 +17,13 @@ use Sylius\Resource\Factory\FactoryInterface;
  * the amount put back on cancellation is exactly the amount that was charged - including the case
  * where a card was only partially used because the order total was smaller than its balance.
  *
- * Every balance change writes a ledger entry in the same unit of work, which is the invariant that
- * makes the customer-facing history trustworthy. See
+ * The balance itself moves through {@see GiftCardBalanceModifierInterface}, the single write path
+ * that always records a ledger entry alongside the change. See
  * docs/adr-log/0005-two-customer-links-and-transaction-ledger.md.
  */
 final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountModifierInterface
 {
-    /** @param FactoryInterface<GiftCardTransactionInterface> $giftCardTransactionFactory */
-    public function __construct(private FactoryInterface $giftCardTransactionFactory)
+    public function __construct(private GiftCardBalanceModifierInterface $giftCardBalanceModifier)
     {
     }
 
@@ -53,8 +49,7 @@ final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountM
                 continue;
             }
 
-            $giftCard->debit($amount);
-            $this->recordTransaction($giftCard, $order, GiftCardTransactionType::Debit, $amount);
+            $this->giftCardBalanceModifier->debit($giftCard, $amount, $order);
 
             if ($customer instanceof CustomerInterface) {
                 // First redemption decides whose card this is from now on.
@@ -84,8 +79,7 @@ final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountM
                 continue;
             }
 
-            $giftCard->credit($amount);
-            $this->recordTransaction($giftCard, $order, GiftCardTransactionType::Credit, $amount);
+            $this->giftCardBalanceModifier->credit($giftCard, $amount, $order);
         }
     }
 
@@ -122,20 +116,5 @@ final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountM
         }
 
         return null;
-    }
-
-    private function recordTransaction(
-        GiftCardInterface $giftCard,
-        BaseOrderInterface $order,
-        GiftCardTransactionType $type,
-        int $amount,
-    ): void {
-        $transaction = $this->giftCardTransactionFactory->createNew();
-        $transaction->setType($type);
-        $transaction->setAmount($amount);
-        $transaction->setOrder($order);
-        $transaction->setBalanceAfter($giftCard->getAmount());
-
-        $giftCard->addTransaction($transaction);
     }
 }

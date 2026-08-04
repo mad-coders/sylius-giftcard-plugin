@@ -1,0 +1,48 @@
+{% set gift_card = hookable_metadata.context.resource %}
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title">
+            <code {{ sylius_test_html_attribute('gift-card-code') }}>{{ gift_card.code }}</code>
+        </h3>
+        <a class="btn btn-outline-primary"
+           href="{{ path('madcoders_sylius_gift_card_admin_gift_card_adjust_balance', {'id': gift_card.id}) }}"
+           {{ sylius_test_html_attribute('adjust-balance-link') }}>
+            {{ 'madcoders_sylius_gift_card.ui.adjust_balance'|trans }}
+        </a>
+    </div>
+
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}</dt>
+            <dd class="col-8 fw-bold" {{ sylius_test_html_attribute('gift-card-balance') }}>
+                {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+            </dd>
+
+            <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.initial_amount'|trans }}</dt>
+            <dd class="col-8">{{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD')) }}</dd>
+
+            <dt class="col-4">{{ 'sylius.ui.channel'|trans }}</dt>
+            <dd class="col-8">{{ gift_card.channel ? gift_card.channel.name : '-' }}</dd>
+
+            <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.expires_at'|trans }}</dt>
+            <dd class="col-8">
+                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.never_expires'|trans }}
+            </dd>
+
+            {# The two customer links are the point of the model: who paid, and who is spending it. #}
+            <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.purchaser'|trans }}</dt>
+            <dd class="col-8" {{ sylius_test_html_attribute('gift-card-purchaser') }}>
+                {{ gift_card.purchaser ? gift_card.purchaser.email : '-' }}
+            </dd>
+
+            <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.redeemer'|trans }}</dt>
+            <dd class="col-8" {{ sylius_test_html_attribute('gift-card-redeemer') }}>
+                {{ gift_card.redeemer ? gift_card.redeemer.email : '-' }}
+            </dd>
+
+            <dt class="col-4">{{ 'sylius.ui.enabled'|trans }}</dt>
+            <dd class="col-8">{{ (gift_card.enabled ? 'sylius.ui.yes' : 'sylius.ui.no')|trans }}</dd>
+        </dl>
+    </div>
+</div>

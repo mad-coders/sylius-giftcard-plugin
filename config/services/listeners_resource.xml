@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            Fills in the code, currency and expiry an admin should not have to type when creating a
+            gift card by hand. Bound to the resource controller's pre_create event, so it runs for
+            the admin form but not for cards created programmatically with everything already set.
+        -->
+        <service id="madcoders_sylius_gift_card.listener.prepare_gift_card_on_create"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\PrepareGiftCardOnCreateListener">
+            <argument type="service" id="madcoders_sylius_gift_card.generator.gift_card_code" />
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <tag name="kernel.event_listener" event="madcoders_sylius_gift_card.gift_card.pre_create" method="__invoke" />
+        </service>
+    </services>
+
+</container>

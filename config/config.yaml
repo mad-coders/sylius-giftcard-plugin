@@ -7,6 +7,7 @@
 imports:
     - { resource: "resources.yaml" }
     - { resource: "fixtures.yaml" }
+    - { resource: "grids/**/*.yaml" }
     - { resource: "twig_hooks/*.yaml" }
 
 # The winzou state machine callbacks are NOT imported here: winzou/state-machine-bundle is optional
