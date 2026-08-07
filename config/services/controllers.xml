@@ -21,6 +21,12 @@
             <argument type="service" id="router" />
             <argument type="service" id="twig" />
         </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Controller\Shop\AccountGiftCardController" public="true">
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
+            <argument type="service" id="twig" />
+        </service>
     </services>
 
 </container>

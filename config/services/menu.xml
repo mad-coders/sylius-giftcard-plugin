@@ -8,6 +8,10 @@
         <service id="madcoders_sylius_gift_card.menu.admin" class="Madcoders\SyliusGiftCardPlugin\Menu\AdminMenuListener">
             <tag name="kernel.event_listener" event="sylius.menu.admin.main" method="__invoke" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.menu.shop.account" class="Madcoders\SyliusGiftCardPlugin\Menu\ShopAccountMenuListener">
+            <tag name="kernel.event_listener" event="sylius.menu.shop.account" method="__invoke" />
+        </service>
     </services>
 
 </container>

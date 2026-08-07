@@ -1,0 +1,6 @@
+{% extends '@SyliusShop/account/common/index.html.twig' %}
+
+{% set prefixes = ['madcoders_sylius_gift_card.account.gift_card_show'] %}
+{% set attrs = { gift_card } %}
+
+{% block title %}{{ gift_card.code }} | {{ parent() }}{% endblock %}

@@ -1,0 +1,83 @@
+{#
+    Two lists, because a gift card has two people: the one who paid for it and the one spending it.
+    "Cards I use" comes first - that is the list with a balance somebody is watching.
+#}
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
+{% set redeemed = hookable_metadata.context.redeemed_gift_cards|default([]) %}
+{% set purchased = hookable_metadata.context.purchased_gift_cards|default([]) %}
+
+<h1 class="h3 mb-4">{{ 'madcoders_sylius_gift_card.ui.my_gift_cards'|trans }}</h1>
+
+<section class="mb-5" {{ sylius_test_html_attribute('redeemed-gift-cards') }}>
+    <h2 class="h5 mb-3">{{ 'madcoders_sylius_gift_card.ui.gift_cards_i_use'|trans }}</h2>
+
+    {% if redeemed|length == 0 %}
+        <p class="text-secondary" {{ sylius_test_html_attribute('no-redeemed-gift-cards') }}>
+            {{ 'madcoders_sylius_gift_card.ui.no_gift_cards_used'|trans }}
+        </p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.code'|trans }}</th>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}</th>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.expires_at'|trans }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gift_card in redeemed %}
+                        <tr {{ sylius_test_html_attribute('redeemed-gift-card') }}>
+                            <td><code {{ sylius_test_html_attribute('gift-card-code') }}>{{ gift_card.code }}</code></td>
+                            <td class="fw-bold" {{ sylius_test_html_attribute('gift-card-balance') }}>
+                                {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+                            </td>
+                            <td>
+                                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.never_expires'|trans }}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ path('madcoders_sylius_gift_card_shop_account_show', {'id': gift_card.id}) }}"
+                                   {{ sylius_test_html_attribute('show-gift-card') }}>
+                                    {{ 'madcoders_sylius_gift_card.ui.balance_history'|trans }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+
+<section {{ sylius_test_html_attribute('purchased-gift-cards') }}>
+    <h2 class="h5 mb-3">{{ 'madcoders_sylius_gift_card.ui.gift_cards_i_bought'|trans }}</h2>
+
+    {% if purchased|length == 0 %}
+        <p class="text-secondary" {{ sylius_test_html_attribute('no-purchased-gift-cards') }}>
+            {{ 'madcoders_sylius_gift_card.ui.no_gift_cards_bought'|trans }}
+        </p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.code'|trans }}</th>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.initial_amount'|trans }}</th>
+                        <th>{{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gift_card in purchased %}
+                        <tr {{ sylius_test_html_attribute('purchased-gift-card') }}>
+                            <td><code {{ sylius_test_html_attribute('gift-card-code') }}>{{ gift_card.code }}</code></td>
+                            <td>{{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD')) }}</td>
+                            <td>{{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>

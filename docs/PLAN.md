@@ -129,7 +129,7 @@ depends on nothing in the admin phase, so it shipped first.
 | 2 | **Admin** | Grids, forms and menu entries for gift cards and per-channel configuration; manual card creation, a show page with the balance ledger, and balance adjustment. |
 | 4 | **Selling gift cards** | Gift card products, card generation on payment, state machine listeners for both adapters, purchaser association. The notification email moved to phase 6 - it needs the account view's templates. |
 | 5 | **Customer account** | "My gift cards" - cards bought and cards redeemed, remaining balance, transaction history. This is the phase that pays off the two-customer model. |
-| 6 | **Docs & polish** | Behat features for the remaining flows, usage documentation, translations beyond English. |
+| 6 | **Docs & polish** | The gift card notification email (deferred from phase 4 - it needs the account templates), usage documentation, translations beyond English. |
 
 Deferred beyond 1.0: PDF gift cards, API Platform resources, bulk generation/import, partial
 refunds back onto a card.
