@@ -75,13 +75,13 @@ final readonly class GiftCardCheckoutContext implements Context
      */
     public function thisOrderShouldHaveNothingLeftToPay(): void
     {
+        // The order keeps its value - the goods still cost what they cost - and the payment is what
+        // goes to zero. That is the whole difference between a gift card and a discount.
         $order = $this->refreshedOrder();
 
-        Assert::same($order->getTotal(), 0);
-        Assert::null(
-            $order->getLastPayment(),
-            'A fully covered order should carry no payment - the customer has nothing to pay.',
-        );
+        $payment = $order->getLastPayment();
+        Assert::notNull($payment, 'The order should still carry a payment, for zero.');
+        Assert::same($payment->getAmount(), 0);
     }
 
     /**

@@ -25,4 +25,20 @@ interface OrderInterface extends BaseOrderInterface
     public function addGiftCard(GiftCardInterface $giftCard): void;
 
     public function removeGiftCard(GiftCardInterface $giftCard): void;
+
+    /**
+     * How much of this order the applied gift cards cover, as a positive amount in minor units.
+     *
+     * Not derivable from getAdjustmentsTotal(): the gift card adjustments are neutral - they record
+     * coverage without moving the order total - and Sylius excludes neutral adjustments from that
+     * sum by design.
+     */
+    public function getGiftCardTotal(): int;
+
+    /**
+     * What the customer actually has to pay: the order total less what the gift cards cover.
+     *
+     * The order total is untouched by gift cards, because a card is money rather than a discount.
+     */
+    public function getAmountToPay(): int;
 }

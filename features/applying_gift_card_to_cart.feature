@@ -10,12 +10,14 @@ Feature: Paying with a gift card
         And I have product "PHP T-Shirt" added to the cart
 
     @ui
-    Scenario: Applying a gift card reduces the cart total
+    Scenario: Applying a gift card leaves less to pay, without discounting the order
         Given the store has a gift card "GIFT-40" worth "$40.00"
         When I apply the gift card "GIFT-40"
         Then I should be notified that the gift card has been applied
         And the gift card "GIFT-40" should be applied to my cart
-        And my cart total should be "$60.00"
+        # The goods still cost what they cost - a gift card is money, not a discount.
+        And my cart total should be "$100.00"
+        And I should have "$60.00" left to pay
 
     @ui
     Scenario: Applying two gift cards stacks them
@@ -25,13 +27,15 @@ Feature: Paying with a gift card
         And I apply the gift card "GIFT-25"
         Then the gift card "GIFT-40" should be applied to my cart
         And the gift card "GIFT-25" should be applied to my cart
-        And my cart total should be "$35.00"
+        And my cart total should be "$100.00"
+        And I should have "$35.00" left to pay
 
     @ui
     Scenario: A gift card worth more than the cart only covers what is owed
         Given the store has a gift card "GIFT-500" worth "$500.00"
         When I apply the gift card "GIFT-500"
-        Then my cart total should be "$0.00"
+        Then my cart total should be "$100.00"
+        And I should have "$0.00" left to pay
         And the gift cards should reduce my cart by "-$100.00"
 
     @ui
@@ -68,4 +72,4 @@ Feature: Paying with a gift card
         Given the store has a gift card "GIFT-PART" worth "$50.00" with "$15.00" left
         When I apply the gift card "GIFT-PART"
         Then the gift card "GIFT-PART" should be applied to my cart
-        And my cart total should be "$85.00"
+        And I should have "$85.00" left to pay

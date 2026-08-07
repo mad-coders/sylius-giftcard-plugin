@@ -44,14 +44,28 @@ an admin can reinstate them.
 A customer enters a code in the gift card panel on the cart. A card can be applied when it is
 enabled, not expired, has a balance left, and belongs to the order's channel.
 
-An applied card becomes a **negative order adjustment**, not a payment. That means:
+**A gift card is money, not a discount.** The order stays worth what the goods are worth; the card
+comes off what the customer has to pay. So a 100 order paid with a 40 card is still a 100 order, and
+the customer pays 60.
 
-- gift cards compose with promotions, shipping and taxes, because they are applied to the final
-  total after all of them;
+That distinction is not cosmetic:
+
+- **tax** is owed on the value of the goods sold, and the tax on the card was already settled when
+  it was bought - discounting the order would reduce the taxable base a second time;
+- **reporting and refunds** see an order worth what was actually sold;
+- **promotions** calculate against the real total, so paying with a card cannot switch off a
+  "spend over X" promotion.
+
+Beyond that:
+
 - several cards **stack**;
 - a card is only ever charged **what is still owed** - applying a 500 card to a 100 order takes 100
   from it and leaves 400;
-- an order total never goes below zero.
+- the amount to pay never goes below zero.
+
+Read the split with `Order::getAmountToPay()` and `Order::getGiftCardTotal()`. **`getTotal()` is
+the value of the goods, not what the customer pays** - a host application showing "you pay" must use
+`getAmountToPay()`.
 
 The balance moves off the card when the order is placed, and back onto it if the order is
 cancelled - by exactly the amount that was charged, including when the card was only partly used.

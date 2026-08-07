@@ -1,6 +1,8 @@
 # 0004 - Redemption as an order adjustment
 
-**Status:** accepted
+**Status:** superseded in part by [0010](0010-gift-card-as-tender.md), which replaces the
+discount mechanism below with tender against the payment. The state machine wiring and the use of a
+coded adjustment as the per-card record still stand.
 
 ## Context
 

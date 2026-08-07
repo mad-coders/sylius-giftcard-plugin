@@ -7,6 +7,7 @@ namespace Madcoders\SyliusGiftCardPlugin\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface as GiftCardAdjustmentInterface;
 use Sylius\Component\Core\Model\Order;
 
 /**
@@ -69,6 +70,22 @@ trait OrderTrait
 
         $this->giftCards->removeElement($giftCard);
         $giftCard->removeAppliedOrder($this);
+    }
+
+    public function getGiftCardTotal(): int
+    {
+        $total = 0;
+
+        foreach ($this->getAdjustments(GiftCardAdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT) as $adjustment) {
+            $total += abs($adjustment->getAmount());
+        }
+
+        return $total;
+    }
+
+    public function getAmountToPay(): int
+    {
+        return max(0, $this->getTotal() - $this->getGiftCardTotal());
     }
 
     protected function initializeGiftCards(): void

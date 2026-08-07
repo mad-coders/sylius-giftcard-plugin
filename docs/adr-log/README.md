@@ -18,3 +18,4 @@ Consequences / Rules).
 | [0007](0007-github-actions-ci.md) | CI on GitHub Actions with a Sylius/Symfony/database matrix |
 | [0008](0008-conventional-commits.md) | Conventional Commits and the trunkless `1.0` branch model |
 | [0009](0009-no-pdf-in-1-0.md) | No PDF gift cards in 1.0 |
+| [0010](0010-gift-card-as-tender.md) | A gift card is tender, not a discount (supersedes 0004's mechanism) |
