@@ -110,11 +110,12 @@ final readonly class AccountGiftCardContext implements Context
      */
     public function iShouldBeRefusedAccess(): void
     {
-        $statusCode = $this->session->getStatusCode();
-
-        Assert::true(
-            in_array($statusCode, [403, 404], true),
-            sprintf('Expected the page to be refused, got status %d.', $statusCode),
+        // 403 specifically. Accepting 404 as well would let this pass if the page simply stopped
+        // existing - a routing mistake would then read as a working authorization check.
+        Assert::same(
+            $this->session->getStatusCode(),
+            403,
+            sprintf('Expected the page to be forbidden, got status %d.', $this->session->getStatusCode()),
         );
     }
 }

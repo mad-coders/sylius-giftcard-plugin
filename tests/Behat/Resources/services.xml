@@ -22,6 +22,16 @@
                  parent="sylius.behat.page.shop.page"
                  public="false" />
 
+        <service id="madcoders_sylius_gift_card.behat.context.ui.shop.checkout_summary"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\CheckoutSummaryContext">
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.checkout.summary" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.checkout.summary"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Checkout\SummaryPage"
+                 parent="sylius.behat.page.shop.page"
+                 public="false" />
+
         <service id="madcoders_sylius_gift_card.behat.context.ui.admin.gift_card"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin\GiftCardContext">
             <argument type="service" id="sylius.behat.shared_storage" />
@@ -47,6 +57,16 @@
                  public="false">
             <argument type="string">madcoders_sylius_gift_card_admin_gift_card_create</argument>
         </service>
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.admin.order_gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin\OrderGiftCardContext">
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.order.show" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.order.show"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Order\ShowPage"
+                 parent="sylius.behat.symfony_page"
+                 public="false" />
 
         <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.update"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\UpdatePage"

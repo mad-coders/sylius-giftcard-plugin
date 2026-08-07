@@ -27,3 +27,11 @@ sylius_twig_hooks:
             madcoders_gift_card:
                 template: '@MadcodersSyliusGiftCardPlugin/admin/product/form/sections/general/gift_card.html.twig'
                 priority: 350
+
+        # What the gift cards covered, and what was actually charged. Priority -100 puts it below
+        # the promotion total (0), so it reads last - after every line that makes up the order
+        # total, which is what it qualifies.
+        'sylius_admin.order.show.content.sections.summary':
+            madcoders_gift_card_total:
+                template: '@MadcodersSyliusGiftCardPlugin/admin/order/summary/gift_card_total.html.twig'
+                priority: -100

@@ -1,0 +1,31 @@
+{#
+    What the gift cards cover, and what the customer will actually be charged.
+
+    Rendered into Sylius' shared order summary table, which is what the checkout summary page and
+    the account order page both build on - and into the checkout sidebar that the addressing,
+    shipping and payment steps show.
+
+    Without it every one of those pages ends at "Order total", which under the tender model is the
+    full price of the goods: a customer paying partly with a card would be told to expect a charge
+    much larger than the one that reaches their card. See docs/adr-log/0010-gift-card-as-tender.md.
+#}
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
+{% set order = hookable_metadata.context.order %}
+{% set gift_card_total = order.giftCardTotal is defined ? order.giftCardTotal : 0 %}
+
+{% if gift_card_total > 0 %}
+    <tr>
+        <td>{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}:</td>
+        <td class="text-end" {{ sylius_test_html_attribute('checkout-gift-card-total') }}>
+            -{{ money.convertAndFormat(gift_card_total) }}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="h5">{{ 'madcoders_sylius_gift_card.ui.amount_to_pay'|trans }}:</td>
+        <td class="h5 text-end" {{ sylius_test_html_attribute('checkout-amount-to-pay') }}>
+            {{ money.convertAndFormat(order.amountToPay) }}
+        </td>
+    </tr>
+{% endif %}
