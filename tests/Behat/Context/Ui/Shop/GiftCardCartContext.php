@@ -90,7 +90,7 @@ final class GiftCardCartContext implements Context
     }
 
     /**
-     * @Then the gift cards should reduce my cart by :amount
+     * @Then my gift cards should cover :amount of my cart
      */
     public function theGiftCardsShouldReduceMyCartBy(string $amount): void
     {

@@ -1,8 +1,8 @@
 @madcoders_gift_card_cart
-Feature: Paying with a gift card
+Feature: Applying a gift card to my cart
     In order to spend a gift card I was given
     As a Customer
-    I want to apply it to my cart and see what it takes off the total
+    I want to apply it to my cart and see how much of it they cover
 
     Background:
         Given the store operates on a single channel in "United States"
@@ -36,7 +36,7 @@ Feature: Paying with a gift card
         When I apply the gift card "GIFT-500"
         Then my cart total should be "$100.00"
         And I should have "$0.00" left to pay
-        And the gift cards should reduce my cart by "-$100.00"
+        And my gift cards should cover "-$100.00" of my cart
 
     @ui
     Scenario: Removing a gift card restores the cart total
@@ -93,3 +93,25 @@ Feature: Paying with a gift card
         And I apply the gift card "GIFT-40"
         When I apply the gift card "GIFT-40"
         Then I should have "$60.00" left to pay
+
+    @ui
+    Scenario: The checkout summary tells me what I will actually be charged
+        # The last page before paying. Its "Order total" is the full price of the goods, so without
+        # the gift card lines the customer is told to expect a charge far larger than the one that
+        # will reach their card.
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has a gift card "GIFT-40" worth "$40.00"
+        And I apply the gift card "GIFT-40"
+        And I have proceeded through checkout process
+        When I look at the checkout summary
+        Then the summary should show "-$40.00" covered by my gift cards
+        And the summary should tell me I will be charged "$60.00"
+
+    @ui
+    Scenario: The checkout summary of a cart with no gift card is untouched
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And I have proceeded through checkout process
+        When I look at the checkout summary
+        Then the summary should say nothing about gift cards

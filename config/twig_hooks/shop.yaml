@@ -15,6 +15,24 @@ sylius_twig_hooks:
                 # Below the order total (100), so "you pay" reads after the total it modifies.
                 priority: 50
 
+        # The same split wherever Sylius shows an order's totals to a customer.
+        #
+        # `sylius_shop.shared.order.show.summary.table_summary` is the prefix the checkout summary
+        # page and the account order page both merge in, so one hookable covers both. The checkout
+        # sidebar on the addressing, shipping and payment steps is a separate table with the same
+        # row shape, so it reuses the same template.
+        #
+        # Priority -100 in each puts these lines below the order total they qualify.
+        'sylius_shop.shared.order.show.summary.table_summary':
+            madcoders_gift_card_total:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/order/summary/gift_card_total.html.twig'
+                priority: -100
+
+        'sylius_shop.checkout.common.sidebar.summary.total':
+            madcoders_gift_card_total:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/order/summary/gift_card_total.html.twig'
+                priority: -100
+
         # Account pages. The prefix is merged with `sylius_shop.account.common`, so the account
         # breadcrumbs and menu still render around this content.
         'madcoders_sylius_gift_card.account.gift_card_index.index.content.main':

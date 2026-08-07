@@ -26,7 +26,14 @@ default:
 
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card
 
+                # The checkout sidebar renders on the summary page, so getting there needs
+                # Sylius' own checkout setup on top of the cart the gift card was applied to.
+                - sylius.behat.context.transform.shipping_method
+                - sylius.behat.context.transform.payment
+                - sylius.behat.context.setup.checkout
+
                 - madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_cart
+                - madcoders_sylius_gift_card.behat.context.ui.shop.checkout_summary
 
             filters:
                 tags: "@madcoders_gift_card_cart"
@@ -85,6 +92,37 @@ default:
 
             filters:
                 tags: "@madcoders_gift_card_checkout"
+
+        madcoders_gift_card_order_view:
+            contexts:
+                - sylius.behat.context.hook.doctrine_orm
+
+                - sylius.behat.context.transform.channel
+                - sylius.behat.context.transform.lexical
+                - sylius.behat.context.transform.product
+                - sylius.behat.context.transform.customer
+                - sylius.behat.context.transform.order
+                - sylius.behat.context.transform.payment
+                - sylius.behat.context.transform.shipping_method
+                - sylius.behat.context.transform.address
+                - sylius.behat.context.transform.shared_storage
+
+                - sylius.behat.context.setup.channel
+                - sylius.behat.context.setup.currency
+                - sylius.behat.context.setup.locale
+                - sylius.behat.context.setup.product
+                - sylius.behat.context.setup.shipping
+                - sylius.behat.context.setup.payment
+                - sylius.behat.context.setup.order
+                - sylius.behat.context.setup.admin_security
+
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card_checkout
+
+                - madcoders_sylius_gift_card.behat.context.ui.admin.order_gift_card
+
+            filters:
+                tags: "@madcoders_gift_card_order_view"
 
         madcoders_gift_card_account:
             contexts:

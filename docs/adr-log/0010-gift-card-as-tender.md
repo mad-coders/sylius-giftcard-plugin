@@ -60,4 +60,11 @@ amount owed.
 3. The order processor must stay **below** Sylius' payment processor and **above** nothing that
    sizes the payment. `OrderProcessorPriorityTest` enforces both ends against Sylius' own
    configuration.
-4. Anything showing the customer what they pay uses `getAmountToPay()`, never `getTotal()`.
+4. Anything showing the customer what they pay uses `getAmountToPay()`, never `getTotal()`. That
+   means every surface Sylius renders an order total on, not just the cart: the checkout sidebar,
+   the checkout summary, the account order page and the admin order view all carry the split. A new
+   display surface is not done until it does too.
+5. Sylius' own payment state resolver and after-checkout payment processor both compare against
+   `getTotal()`, so both are decorated. Anything else in Sylius that sizes or judges a payment from
+   the order total needs the same treatment - a gift card order will otherwise look unpaid, or be
+   charged for money it has already handed over.

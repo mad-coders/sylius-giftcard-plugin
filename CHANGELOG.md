@@ -7,19 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The gift card split - what the cards cover, and what is actually owed - is now shown on every
+  surface Sylius renders an order total on: the checkout sidebar, the checkout summary page, the
+  account order page and the admin order view. Previously only the cart showed it, so a customer
+  part-paying with a card was told at checkout to expect a charge much larger than the one that
+  would reach their card. The admin order view also names each card by code.
+
+- `GiftCardInterface::refund()` and `GiftCardBalanceModifierInterface::refund()`, for giving back
+  money an order took off a card. They differ from `credit()` only in not being capped at the card's
+  face value; that cap exists to catch a mistyped admin top-up and has no business refusing a refund.
+  A host application that reimplements `GiftCardInterface` or the modifier must implement them.
+
 ### Changed
 
 - A gift card's code can no longer be edited once the card has been issued; the admin form shows it
   read-only. The code is bearer money the customer is already holding, and it is the only link
   between an order and the card that paid for it - renaming an issued card invalidated the code in
   the customer's hand and silently stranded every refund for orders that used it.
-
-### Added
-
-- `GiftCardInterface::refund()` and `GiftCardBalanceModifierInterface::refund()`, for giving back
-  money an order took off a card. They differ from `credit()` only in not being capped at the card's
-  face value; that cap exists to catch a mistyped admin top-up and has no business refusing a refund.
-  A host application that reimplements `GiftCardInterface` or the modifier must implement them.
 
 ### Fixed
 

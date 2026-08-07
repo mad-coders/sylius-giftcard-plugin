@@ -1,0 +1,46 @@
+{#
+    What gift cards covered on this order, and what was actually charged.
+
+    The order total stays at the full value of the goods - a card changes who pays, not the price -
+    so without this an administrator looking at a part-paid order cannot tell why the payment is
+    smaller than the total, or which card covered the difference.
+
+    Each card is listed by code, because that is the only handle an administrator has for tracing a
+    balance back to the order that spent it.
+#}
+{% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
+
+{% set order = hookable_metadata.context.resource %}
+{% set gift_card_total = order.giftCardTotal is defined ? order.giftCardTotal : 0 %}
+{% set gift_card_adjustment = constant('Madcoders\\SyliusGiftCardPlugin\\Model\\AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT') %}
+
+{% if gift_card_total > 0 %}
+    <tr>
+        <td>
+            <strong>{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}:</strong>
+        </td>
+        <td class="text-end" {{ sylius_test_html_attribute('gift-card-total') }}>
+            {{ money.format(-gift_card_total, order.currencyCode) }}
+        </td>
+    </tr>
+
+    {% for adjustment in order.getAdjustments(gift_card_adjustment) %}
+        <tr class="text-muted" {{ sylius_test_html_attribute('gift-card', adjustment.originCode) }}>
+            <td>
+                <div class="ps-2">&bull; {{ adjustment.originCode }}:</div>
+            </td>
+            <td class="text-end">
+                {{ money.format(adjustment.amount, order.currencyCode) }}
+            </td>
+        </tr>
+    {% endfor %}
+
+    <tr>
+        <td>
+            <strong>{{ 'madcoders_sylius_gift_card.ui.amount_to_pay'|trans }}:</strong>
+        </td>
+        <td class="text-end" {{ sylius_test_html_attribute('amount-to-pay') }}>
+            {{ money.format(order.amountToPay, order.currencyCode) }}
+        </td>
+    </tr>
+{% endif %}
