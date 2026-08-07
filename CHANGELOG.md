@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0-RC.2] - 2026-08-08
+
+Second release candidate. A source review after RC.1 found four ways an order settled with a gift
+card could lose money or get stuck, all of them silent. Anyone running RC.1 should upgrade.
+
+The worst of them: an order settled with a gift card never reached `paid`. Since `paid` is the
+transition that issues purchased gift cards and emails their codes, a customer who bought a card and
+paid for part of it with another one was charged, received nothing, and their order could never be
+fulfilled.
+
+The gift card split is now shown on every surface Sylius renders an order total on, not just the
+cart. A host application showing an amount due must still read `Order::getAmountToPay()` rather than
+`getTotal()` - see `docs/adr-log/0010-gift-card-as-tender.md`, whose rules 4 and 5 now spell out
+where that applies and which Sylius services compare against the total.
+
+Known limitations are unchanged from RC.1: no PDF gift cards, no API Platform resources, no bulk
+generation or import, no partial refunds back onto a card, and a card's face value comes from the
+product's price rather than being chosen by the customer.
+
 ### Added
 
 - The gift card split - what the cards cover, and what is actually owed - is now shown on every
@@ -188,5 +207,6 @@ the order being placed also leaves its coverage on that order rather than the or
   separately from the cards you bought, plus a balance history page per card. A customer can only
   see cards they are linked to.
 
-[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.1...1.0
+[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.2...1.0
+[1.0.0-RC.2]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.1...v1.0.0-RC.2
 [1.0.0-RC.1]: https://github.com/mad-coders/sylius-giftcard-plugin/releases/tag/v1.0.0-RC.1
