@@ -1,0 +1,85 @@
+@madcoders_gift_card_checkout
+Feature: Paying for an order with a gift card
+    In order to actually spend what is on my card
+    As a Customer
+    I want the balance to move when the order is placed, and to come back if it is cancelled
+
+    Background:
+        Given the store operates on a single channel in "United States"
+        And the store has a product "PHP T-Shirt" priced at "$100.00"
+        And the store ships everywhere for free
+        And the store allows paying offline
+
+    @ui
+    Scenario: Placing the order takes the money off the card and charges only the rest
+        Given there is a customer "holder@example.com" that placed an order "#00001"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        When the customer chose "Free" shipping method to "United States" with "Offline" payment
+        Then the total of this order should be "$60.00"
+        # The load-bearing assertion. If the gift card processor ever runs after Sylius' payment
+        # processor, the card is still debited but the customer is charged the full $100.
+        And the payment for this order should be "$60.00"
+        And the gift card "GIFT-40" should be worth "$0.00"
+        And the gift card "GIFT-40" should have 1 entry in its balance history
+
+    @ui
+    Scenario: Spending a card records me as the one using it
+        Given there is a customer "holder@example.com" that placed an order "#00002"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        When the customer chose "Free" shipping method to "United States" with "Offline" payment
+        Then the gift card "GIFT-40" should be used by "holder@example.com"
+
+    @ui
+    Scenario: A card larger than the order is only charged what was owed
+        Given there is a customer "holder@example.com" that placed an order "#00003"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer chose "Free" shipping method to "United States"
+        And the gift card "GIFT-500" worth "$500.00" is applied to this order
+        When this order is placed
+        Then this order should have nothing left to pay
+        And the gift card "GIFT-500" should be worth "$400.00"
+
+    @ui
+    Scenario: A card that exactly covers the order leaves nothing to pay
+        Given there is a customer "holder@example.com" that placed an order "#00004"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer chose "Free" shipping method to "United States"
+        And the gift card "GIFT-100" worth "$100.00" is applied to this order
+        When this order is placed
+        Then this order should have nothing left to pay
+        And the gift card "GIFT-100" should be worth "$0.00"
+
+    @ui
+    Scenario: Two cards on one order are each charged only what they covered
+        Given there is a customer "holder@example.com" that placed an order "#00005"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer chose "Free" shipping method to "United States"
+        And the gift card "GIFT-70" worth "$70.00" is applied to this order
+        And the gift card "GIFT-50" worth "$50.00" is applied to this order
+        When this order is placed
+        Then this order should have nothing left to pay
+        # The second card is only charged the $30 still owed - the first covered the rest.
+        And the gift card "GIFT-70" should be worth "$0.00"
+        And the gift card "GIFT-50" should be worth "$20.00"
+
+    @ui
+    Scenario: Cancelling the order puts the money back on the card
+        Given there is a customer "holder@example.com" that placed an order "#00006"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the order "#00006" was cancelled
+        Then the gift card "GIFT-40" should be worth "$40.00"
+        And the gift card "GIFT-40" should have 2 entries in its balance history
+
+    @ui
+    Scenario: Cancelling gives back only what was actually charged
+        Given there is a customer "holder@example.com" that placed an order "#00007"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer chose "Free" shipping method to "United States"
+        And the gift card "GIFT-500" worth "$500.00" is applied to this order
+        And this order is placed
+        When the order "#00007" was cancelled
+        Then the gift card "GIFT-500" should be worth "$500.00"

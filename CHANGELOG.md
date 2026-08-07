@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A checkout Behat suite covering the path nothing exercised before: a gift card applied to a real
+  order that is then placed. It asserts the **payment amount**, which is what catches a gift card
+  processor running in the wrong place, plus the balance moving, the ledger entry, the redeemer
+  being recorded, several cards on one order, and the balance coming back on cancellation.
+- A fully covered order now has a documented outcome: Sylius removes the payment entirely rather
+  than sending the customer to a gateway for zero.
+
 ### Fixed
 
 - **Customers were charged the full order total while their gift card was still debited.** The
