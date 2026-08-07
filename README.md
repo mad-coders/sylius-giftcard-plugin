@@ -8,8 +8,12 @@ customers track what is left on them.</p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue.svg" alt="License"></a>
 </p>
 
-> **Status: in development.** The 1.0 line is being built phase by phase - see
-> [`docs/PLAN.md`](docs/PLAN.md) for the roadmap and what has landed.
+> **Status: 1.0.0-RC.1.** Feature-complete and green across the supported Sylius, Symfony and
+> database matrix. Being a release candidate it wants real-world use before a stable tag - see
+> [`CHANGELOG.md`](CHANGELOG.md) for what is in it and what is deliberately left out.
+
+Requires `"minimum-stability": "RC"` (or `composer require madcoders/sylius-giftcard-plugin:^1.0@RC`)
+until 1.0.0 is tagged.
 
 ## What it does
 
@@ -46,15 +50,17 @@ and `OrderItemUnit`.
 
 ## How redemption works
 
-A gift card is **an order adjustment, not a payment method**. When a card is applied to an order,
-the plugin's order processor adds a negative adjustment of type `madcoders_gift_card`, capped at the
-order's remaining total and tagged with the card's code. When the order is placed the balance is
-moved off the card; when it is cancelled it is moved back - always by exactly the amount that was
-actually charged.
+**A gift card is money, not a discount.** The order stays worth what the goods are worth; the card
+comes off what the customer has to pay. A 100 order paid with a 40 card is still a 100 order, and
+the customer pays 60.
 
-This is the same approach as [Setono's gift card plugin](https://github.com/Setono/SyliusGiftCardPlugin),
-and it means everything that already reads `Order::getTotal()` keeps working. The reasoning is in
-[`docs/adr-log/0004-gift-card-redemption-as-order-adjustment.md`](docs/adr-log/0004-gift-card-redemption-as-order-adjustment.md).
+That matters beyond bookkeeping: tax is owed on the value of the goods sold and was already settled
+on the card when it was bought, refunds and reporting see an order worth what was actually sold, and
+a card cannot switch off a "spend over X" promotion by moving the total it tests.
+
+Read the split with `Order::getAmountToPay()` and `Order::getGiftCardTotal()`. **`getTotal()` is the
+value of the goods, not what the customer pays.** The reasoning is in
+[`docs/adr-log/0010-gift-card-as-tender.md`](docs/adr-log/0010-gift-card-as-tender.md).
 
 ## Development
 
