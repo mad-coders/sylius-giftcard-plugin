@@ -56,7 +56,7 @@ jobs:
                 run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             -   name: Cache Composer dependencies
-                uses: actions/cache@v4
+                uses: actions/cache@v6
                 with:
                     path: ${{ steps.composer-cache.outputs.dir }}
                     key: composer-static-${{ hashFiles('composer.json') }}
@@ -67,6 +67,13 @@ jobs:
 
             -   name: Install dependencies
                 run: composer update --no-interaction --no-progress --prefer-dist
+
+            -   name: Security advisories
+                # composer.lock is not committed (this is a library), so dependencies resolve fresh
+                # on every run - this is what turns a newly published advisory into a build failure
+                # rather than something nobody notices. Abandoned packages are not advisories and
+                # must not fail the build.
+                run: composer audit --abandoned=ignore
 
             -   name: PHPStan
                 run: vendor/bin/phpstan analyse -c phpstan.neon --no-progress
@@ -138,7 +145,7 @@ jobs:
                 run: vendor/bin/behat --colors --strict -vvv --no-interaction -f progress || vendor/bin/behat --colors --strict -vvv --no-interaction -f progress --rerun
 
             -   name: Upload Behat logs
-                uses: actions/upload-artifact@v4
+                uses: actions/upload-artifact@v7
                 if: failure()
                 with:
                     name: "Behat logs - Sylius ${{ matrix.sylius }} - PHP ${{ matrix.php }} - ${{ matrix.database }} - ${{ github.run_id }}"
