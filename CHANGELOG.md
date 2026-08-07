@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A failed or cancelled payment no longer asks the customer for the gift card money a second time.
+  Sylius replaces such a payment with one for `Order::getTotal()`, which under the tender model is
+  the full value of the goods, while the cards were already debited when the order was placed.
+  `sylius.order_processing.order_payment_processor.after_checkout` is now decorated to size the
+  replacement from `Order::getAmountToPay()`, less anything already captured.
+
 - An order settled with a gift card now reaches the `paid` payment state. Sylius' resolver compares
   completed payments against `Order::getTotal()`, which the tender model deliberately leaves at the
   full value of the goods, so a part-paid order stuck at `partially_paid` and a fully covered one at

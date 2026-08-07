@@ -103,3 +103,26 @@ Feature: Paying for an order with a gift card
         And the customer chose "Free" shipping method to "United States" with "Offline" payment
         When the order "#00009" is already paid
         Then this order should be fully paid
+
+    @ui
+    Scenario: Retrying a failed payment does not charge me for the gift card money again
+        # When a payment fails, Sylius replaces it with a fresh one sized from the order total. The
+        # card was debited when the order was placed, so without a correction the customer is asked
+        # to hand over the same $40 a second time - and nothing anywhere throws.
+        Given there is a customer "holder@example.com" that placed an order "#00010"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the payment for this order fails
+        Then the customer should be asked to pay "$60.00" to retry
+        And the gift card "GIFT-40" should be worth "$0.00"
+        And the gift card "GIFT-40" should have 1 entry in its balance history
+
+    @ui
+    Scenario: Retrying a failed payment on a fully covered order asks for nothing
+        Given there is a customer "holder@example.com" that placed an order "#00011"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-100" worth "$100.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the payment for this order fails
+        Then the customer should be asked to pay "$0.00" to retry

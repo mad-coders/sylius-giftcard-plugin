@@ -16,8 +16,10 @@ use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Core\OrderPaymentStates;
+use Sylius\Component\Payment\PaymentTransitions;
 use Webmozart\Assert\Assert;
 
 /**
@@ -69,6 +71,36 @@ final readonly class GiftCardCheckoutContext implements Context
         );
 
         $this->giftCardManager->flush();
+    }
+
+    /**
+     * @When the payment for this order fails
+     */
+    public function thePaymentForThisOrderFails(): void
+    {
+        $order = $this->order();
+
+        $payment = $order->getLastPayment();
+        Assert::notNull($payment, 'The order has no payment to fail.');
+
+        // Sylius reacts to this by replacing the payment with a fresh one, sized from the order
+        // total. The cards were already debited when the order was placed, so this is where a
+        // customer could be charged the same money twice.
+        $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL);
+
+        $this->giftCardManager->flush();
+    }
+
+    /**
+     * @Then the customer should be asked to pay :amount to retry
+     */
+    public function theCustomerShouldBeAskedToPayToRetry(string $amount): void
+    {
+        $order = $this->refreshedOrder();
+
+        $payment = $order->getLastPayment(PaymentInterface::STATE_NEW);
+        Assert::notNull($payment, 'Sylius did not create a payment for the customer to retry with.');
+        Assert::same($payment->getAmount(), self::toMinorUnits($amount));
     }
 
     /**
