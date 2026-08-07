@@ -51,6 +51,16 @@
 
         <service id="Madcoders\SyliusGiftCardPlugin\Operator\OrderGiftCardOperatorInterface"
                  alias="madcoders_sylius_gift_card.operator.order_gift_card" />
+
+        <service id="madcoders_sylius_gift_card.mailer.gift_card_email_sender"
+                 class="Madcoders\SyliusGiftCardPlugin\Mailer\GiftCardEmailSender"
+                 public="true">
+            <argument type="service" id="sylius.email_sender" />
+            <argument type="service" id="madcoders_sylius_gift_card.operator.order_gift_card" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Mailer\GiftCardEmailSenderInterface"
+                 alias="madcoders_sylius_gift_card.mailer.gift_card_email_sender" />
     </services>
 
 </container>

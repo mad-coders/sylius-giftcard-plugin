@@ -41,6 +41,12 @@ madcoders_sylius_gift_card:
         no_gift_cards_used: You are not using any gift cards yet.
         no_gift_cards_bought: You have not bought any gift cards.
         balance_history: Balance history
+    emails:
+        gift_cards_purchased:
+            subject: Your gift cards
+            heading: Your gift cards are ready
+            intro: 'Thank you for your purchase. Your gift card codes are below.'
+            how_to_use: Enter the code in your cart to spend it. You can follow the remaining balance in your account.
     menu:
         admin:
             gift_cards: Gift cards

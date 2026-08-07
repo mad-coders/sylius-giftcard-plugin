@@ -1,0 +1,65 @@
+madcoders_sylius_gift_card:
+    emails:
+        gift_cards_purchased:
+            heading: Twoje karty podarunkowe są gotowe
+            how_to_use: Wpisz kod w koszyku, aby go wykorzystać. Pozostałe środki
+                możesz śledzić na swoim koncie.
+            intro: Dziękujemy za zakup. Poniżej znajdziesz kody swoich kart podarunkowych.
+            subject: Twoje karty podarunkowe
+    gift_card:
+        amount:
+            positive: Kwota musi być większa od zera.
+        code:
+            not_blank: Wpisz kod karty podarunkowej.
+    menu:
+        admin:
+            gift_card_configuration: Konfiguracja kart podarunkowych
+            gift_cards: Karty podarunkowe
+        shop:
+            account:
+                gift_cards: Moje karty podarunkowe
+    ui:
+        add_to_balance: Dodaj do salda
+        adjust_balance: Koryguj saldo
+        adjustment_direction: Kierunek
+        amount: Kwota
+        apply_gift_card: Zastosuj
+        balance_after: Saldo po operacji
+        balance_history: Historia salda
+        code: Kod
+        code_help: Pozostaw puste, aby wygenerować kod na podstawie konfiguracji kanału.
+        code_length: Długość kodu
+        code_length_help: Liczba losowych znaków po prefiksie.
+        code_prefix: Prefiks kodu
+        code_prefix_help: Dodawany przed każdym wygenerowanym kodem, na przykład "GIFT-".
+        custom_message: Wiadomość
+        enter_gift_card_code: Wpisz kod karty podarunkowej
+        expires_at: Wygasa
+        expires_at_help: Pozostaw puste, aby użyć okresu ważności skonfigurowanego
+            dla kanału.
+        gift_card: Karta podarunkowa
+        gift_card_code: Kod karty podarunkowej
+        gift_cards: Karty podarunkowe
+        gift_cards_i_bought: Karty, które kupiłem
+        gift_cards_i_use: Karty, których używam
+        initial_amount: Wartość początkowa
+        is_gift_card: Ten produkt jest kartą podarunkową
+        is_gift_card_help: Zakup wygeneruje kartę podarunkową dla każdej sztuki, o
+            wartości zapłaconej za tę sztukę.
+        my_gift_cards: Moje karty podarunkowe
+        never_expires: Nigdy
+        no_gift_cards_bought: Nie kupiłeś jeszcze żadnej karty podarunkowej.
+        no_gift_cards_used: Nie używasz jeszcze żadnej karty podarunkowej.
+        no_transactions: Ta karta podarunkowa nie była jeszcze używana.
+        purchaser: Kupujący
+        redeemer: Używający
+        remaining_balance: Pozostałe środki
+        remove: Usuń
+        take_from_balance: Odejmij od salda
+        transaction_type:
+            credit: Dodano
+            debit: Wydano
+        transactions: Historia salda
+        validity_period: Okres ważności
+        validity_period_help: Jak długo nowa karta pozostaje ważna, na przykład "1
+            year". Pozostaw puste dla kart bezterminowych.

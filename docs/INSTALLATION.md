@@ -218,7 +218,32 @@ This creates `madcoders_gift_card__gift_card`, `madcoders_gift_card__gift_card_t
 adds the `gift_card` column to `sylius_product`. The migration is written against the Schema API, so
 it runs on MySQL, MariaDB and PostgreSQL alike.
 
-## 8. Configure a channel **(pending)**
+## 8. Configure a channel
 
-Gift cards are channel-scoped, and each channel needs a `GiftCardConfiguration` (code format and
-validity period). The admin screen for this lands with the admin phase - see `docs/PLAN.md`.
+Gift cards are channel-scoped. Give each channel a configuration under
+*Marketing > Gift card configuration* in the admin - code prefix, code length and validity period.
+A channel without one still works; the model defaults apply.
+
+## What the plugin registers for you
+
+These need no configuration on your side, but are worth knowing about:
+
+- **An order processor** at priority `-10`, which turns applied gift cards into order adjustments
+  after every Sylius processor has run.
+- **The `madcoders_gift_card` adjustment type** added to Sylius' `OrderAdjustmentsClearer`, so a
+  stale gift card discount can never distort promotions or taxes.
+- **State machine wiring for both adapters.** The Symfony Workflow listeners are plain service tags.
+  The `winzou_state_machine` callbacks are prepended only if you have that bundle installed, so
+  either adapter works without configuration.
+- **An email**, `madcoders_gift_cards_purchased`. Override its subject or template by redefining
+  that code under `sylius_mailer.emails`.
+- **Admin and account menu entries**, added through Sylius' menu events.
+
+## Overriding
+
+Every service has an interface-named alias, so decorating or replacing one is standard Symfony. The
+models, repositories, factories and forms are Sylius resources, so they are overridden through
+`sylius_resource` configuration in the usual way. Templates are overridden by placing a file at the
+same path under your application's `templates/bundles/MadcodersSyliusGiftCardPlugin/`.
+
+See `docs/USAGE.md` for how the plugin behaves once installed.

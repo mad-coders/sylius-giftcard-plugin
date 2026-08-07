@@ -29,6 +29,13 @@
             <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" />
         </service>
 
+        <!-- Runs after the issuing listener, so the email has codes to carry. -->
+        <service id="madcoders_sylius_gift_card.listener.workflow.order_payment.send_gift_cards"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\OrderPayment\SendGiftCardsListener">
+            <argument type="service" id="madcoders_sylius_gift_card.mailer.gift_card_email_sender" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" priority="-100" />
+        </service>
+
         <service id="madcoders_sylius_gift_card.listener.workflow.order.disable_bought_gift_cards"
                  class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\Order\DisableBoughtGiftCardsListener">
             <argument type="service" id="madcoders_sylius_gift_card.operator.order_gift_card" />

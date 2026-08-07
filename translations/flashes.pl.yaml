@@ -1,0 +1,11 @@
+madcoders_sylius_gift_card:
+    admin:
+        balance_adjusted: Saldo karty podarunkowej zostało skorygowane.
+    cart:
+        applied: Karta podarunkowa została zastosowana w koszyku.
+        channel_mismatch: Tej karty podarunkowej nie można użyć w tym sklepie.
+        code_required: Wpisz kod karty podarunkowej.
+        not_found: Nie ma karty podarunkowej o takim kodzie.
+        not_redeemable: Tej karty podarunkowej nie można użyć - mogła wygasnąć, zostać
+            wyłączona lub wykorzystana.
+        removed: Karta podarunkowa została usunięta z koszyka.

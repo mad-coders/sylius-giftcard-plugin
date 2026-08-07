@@ -1,0 +1,10 @@
+# Registers the plugin's emails with Sylius' mailer.
+#
+# Prepended by the plugin's extension rather than imported from config/config.yaml: configuring an
+# extension the host has not registered is a hard container failure, and this targets another
+# bundle. A host application overrides the subject or template by redefining the same code.
+sylius_mailer:
+    emails:
+        madcoders_gift_cards_purchased:
+            subject: madcoders_sylius_gift_card.emails.gift_cards_purchased.subject
+            template: "@MadcodersSyliusGiftCardPlugin/email/gift_cards_purchased.html.twig"
