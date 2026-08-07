@@ -99,6 +99,18 @@ your application.
 Mail failures do not fail the payment: an order that is paid stays paid, and the codes remain
 visible in the customer's account.
 
+## Demo data
+
+The plugin ships a `madcoders_gift_card` fixtures suite with a full card, a small one, a partly
+spent one, an expired one and a disabled one - enough to try every path by hand:
+
+```bash
+bin/console sylius:fixtures:load madcoders_gift_card
+```
+
+It is deliberately a separate suite rather than an addition to Sylius' `default` one: installing a
+plugin should not change what `sylius:fixtures:load` does to your shop.
+
 ## Translations
 
 English and Polish ship with the plugin. Add a locale by copying

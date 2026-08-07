@@ -9,9 +9,11 @@ use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Admin\Crud\IndexPageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Component\Core\Model\ProductInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\AdjustBalancePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\CreatePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\ShowPageInterface;
+use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Product\UpdatePageInterface as ProductUpdatePageInterface;
 use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
@@ -22,6 +24,7 @@ final class GiftCardContext implements Context
         private readonly CreatePageInterface $createPage,
         private readonly ShowPageInterface $showPage,
         private readonly AdjustBalancePageInterface $adjustBalancePage,
+        private readonly ProductUpdatePageInterface $productUpdatePage,
         private readonly NotificationCheckerInterface $notificationChecker,
     ) {
     }
@@ -153,6 +156,22 @@ final class GiftCardContext implements Context
             'The gift card balance has been adjusted.',
             NotificationType::success(),
         );
+    }
+
+    /**
+     * @When I edit the product :product and save it unchanged
+     */
+    public function iEditTheProductAndSaveItUnchanged(ProductInterface $product): void
+    {
+        $this->productUpdatePage->open(['id' => $product->getId()]);
+
+        Assert::true(
+            $this->productUpdatePage->hasGiftCardField(),
+            'The product form has no gift card field. Because the field is mapped, an unrendered '
+            . 'checkbox submits as absent and silently clears the flag on every save.',
+        );
+
+        $this->productUpdatePage->saveUnchanged();
     }
 
     private function getGiftCardIdByCode(string $code): int

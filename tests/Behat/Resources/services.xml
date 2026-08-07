@@ -29,6 +29,7 @@
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.create" />
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.show" />
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.adjust_balance" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.product.update" />
             <argument type="service" id="sylius.behat.notification_checker.admin" />
         </service>
 
@@ -85,6 +86,22 @@
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Account\GiftCardShowPage"
                  parent="sylius.behat.page.shop.page"
                  public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.product.update"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Product\UpdatePage"
+                 parent="sylius.behat.symfony_page"
+                 public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.context.setup.gift_card_checkout"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup\GiftCardCheckoutContext">
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="madcoders_sylius_gift_card.fixture.example_factory.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.applicator.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.modifier.gift_card_balance" />
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+        </service>
     </services>
 
 </container>

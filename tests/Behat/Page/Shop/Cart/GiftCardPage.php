@@ -29,10 +29,10 @@ final class GiftCardPage extends ShopPage implements GiftCardPageInterface
             $codeElement = $row->find('css', '[data-test-applied-gift-card-code]');
 
             if (null !== $codeElement && trim($codeElement->getText()) === $code) {
-                $removeLink = $row->find('css', '[data-test-remove-gift-card]');
+                $removeButton = $row->find('css', '[data-test-remove-gift-card]');
 
-                if (null !== $removeLink) {
-                    $removeLink->click();
+                if (null !== $removeButton) {
+                    $removeButton->press();
 
                     return;
                 }

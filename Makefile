@@ -62,11 +62,13 @@ db-reset: ## Drop and recreate the database, then run the migrations
 	$(CONSOLE) doctrine:database:create --no-interaction
 	$(CONSOLE) doctrine:migrations:migrate --no-interaction --allow-no-migration
 
-fixtures: ## (Re)load the default Sylius + gift card fixtures
+fixtures: ## (Re)load the default Sylius fixtures plus the plugin's demo gift cards
 	$(CONSOLE) sylius:fixtures:load default --no-interaction
+	$(CONSOLE) sylius:fixtures:load madcoders_gift_card --no-interaction
 
-fixtures-test: ## Load the default fixtures into the test database (used by CI)
+fixtures-test: ## Load the fixtures into the test database (used by CI)
 	APP_ENV=test $(CONSOLE) sylius:fixtures:load default --no-interaction
+	APP_ENV=test $(CONSOLE) sylius:fixtures:load madcoders_gift_card --no-interaction
 
 serve: ## Serve the DEV application on http://127.0.0.1:8080 (dev database)
 	APP_ENV=dev $(CONSOLE) cache:clear

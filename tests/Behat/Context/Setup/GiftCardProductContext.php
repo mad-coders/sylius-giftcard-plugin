@@ -8,6 +8,7 @@ use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
 use Madcoders\SyliusGiftCardPlugin\Model\ProductInterface as GiftCardProductInterface;
 use Sylius\Component\Core\Model\ProductInterface;
+use Webmozart\Assert\Assert;
 
 final readonly class GiftCardProductContext implements Context
 {
@@ -30,5 +31,22 @@ final readonly class GiftCardProductContext implements Context
         $product->setGiftCard(true);
 
         $this->productManager->flush();
+    }
+
+    /**
+     * @Then the product :product should still be a gift card product
+     */
+    public function theProductShouldStillBeAGiftCardProduct(ProductInterface $product): void
+    {
+        // Re-read rather than trust the in-memory object: the bug this guards against is a form
+        // submit writing false, which only shows up once the entity comes back from the database.
+        $this->productManager->clear();
+
+        $reloaded = $this->productManager->getRepository($product::class)->find($product->getId());
+        Assert::isInstanceOf($reloaded, GiftCardProductInterface::class);
+        Assert::true(
+            $reloaded->isGiftCard(),
+            'The product stopped being a gift card product - most likely a form submit cleared the flag.',
+        );
     }
 }

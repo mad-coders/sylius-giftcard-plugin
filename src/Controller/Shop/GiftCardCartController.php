@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * Applies and removes gift cards on the current cart.
@@ -33,6 +35,7 @@ final readonly class GiftCardCartController
         private FormFactoryInterface $formFactory,
         private ObjectManager $orderManager,
         private UrlGeneratorInterface $urlGenerator,
+        private CsrfTokenManagerInterface $csrfTokenManager,
     ) {
     }
 
@@ -90,11 +93,15 @@ final readonly class GiftCardCartController
             return $this->redirectToCart();
         }
 
+        if (!$this->isCsrfTokenValid('madcoders_sylius_gift_card_remove', (string) $request->request->get('_token'))) {
+            return $this->redirectToCart();
+        }
+
         try {
             $this->giftCardApplicator->remove($cart, $code);
         } catch (GiftCardNotFoundException) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.not_found');
-
+            // Deliberately the same outcome as a successful removal: the card was not on this cart,
+            // and saying whether the code exists at all would leak which codes are real.
             return $this->redirectToCart();
         }
 
@@ -122,6 +129,11 @@ final readonly class GiftCardCartController
         if ($session instanceof Session) {
             $session->getFlashBag()->add($type, $message);
         }
+    }
+
+    private function isCsrfTokenValid(string $id, string $token): bool
+    {
+        return $this->csrfTokenManager->isTokenValid(new CsrfToken($id, $token));
     }
 
     private function redirectToCart(): RedirectResponse
