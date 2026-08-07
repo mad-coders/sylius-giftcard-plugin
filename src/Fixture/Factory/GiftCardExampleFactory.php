@@ -7,6 +7,7 @@ namespace Madcoders\SyliusGiftCardPlugin\Fixture\Factory;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
+use Madcoders\SyliusGiftCardPlugin\Modifier\GiftCardBalanceModifierInterface;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\AbstractExampleFactory;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
@@ -37,6 +38,7 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         private readonly RepositoryInterface $customerRepository,
         private readonly GiftCardCodeGeneratorInterface $giftCardCodeGenerator,
         private readonly GiftCardConfigurationProviderInterface $giftCardConfigurationProvider,
+        private readonly GiftCardBalanceModifierInterface $giftCardBalanceModifier,
     ) {
         $this->optionsResolver = new OptionsResolver();
 
@@ -97,11 +99,12 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         $giftCard->setExpiresAt($expiresAt ?? $configuration?->calculateExpiryDate());
 
         // Fixtures need to describe a partly-spent card - that is the interesting state for the
-        // account page - but the balance is deliberately not settable, so spend it down through
-        // the same path a real redemption uses.
+        // account page. Spending it down goes through the balance modifier rather than the model
+        // directly, so the card gets a ledger entry too: a fixture must not be able to produce a
+        // balance with no history, which is a state real usage can never reach.
         $spentAmount = min($spentAmount, $initialAmount);
         if ($spentAmount > 0) {
-            $giftCard->debit($spentAmount);
+            $this->giftCardBalanceModifier->debit($giftCard, $spentAmount);
         }
 
         if (null !== $redeemer) {

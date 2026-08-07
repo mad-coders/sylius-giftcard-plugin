@@ -66,6 +66,24 @@
             <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.shop.account_gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\AccountGiftCardContext">
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.account.gift_card_index" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.account.gift_card_show" />
+            <argument type="service" id="behat.mink.default_session" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.account.gift_card_index"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Account\GiftCardIndexPage"
+                 parent="sylius.behat.page.shop.page"
+                 public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.account.gift_card_show"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Account\GiftCardShowPage"
+                 parent="sylius.behat.page.shop.page"
+                 public="false" />
     </services>
 
 </container>

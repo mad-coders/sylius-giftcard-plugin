@@ -1,0 +1,48 @@
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
+{% set gift_card = hookable_metadata.context.gift_card %}
+
+<h1 class="h3 mb-1"><code {{ sylius_test_html_attribute('gift-card-code') }}>{{ gift_card.code }}</code></h1>
+
+<p class="mb-4">
+    {{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}:
+    <strong {{ sylius_test_html_attribute('gift-card-balance') }}>
+        {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+    </strong>
+    <span class="text-secondary">
+        / {{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+    </span>
+</p>
+
+<h2 class="h5 mb-3">{{ 'madcoders_sylius_gift_card.ui.balance_history'|trans }}</h2>
+
+{% if gift_card.transactions|length == 0 %}
+    <p class="text-secondary" {{ sylius_test_html_attribute('no-transactions') }}>
+        {{ 'madcoders_sylius_gift_card.ui.no_transactions'|trans }}
+    </p>
+{% else %}
+    <div class="table-responsive">
+        <table class="table" {{ sylius_test_html_attribute('gift-card-transactions') }}>
+            <thead>
+                <tr>
+                    <th>{{ 'sylius.ui.date'|trans }}</th>
+                    <th>{{ 'sylius.ui.type'|trans }}</th>
+                    <th>{{ 'madcoders_sylius_gift_card.ui.amount'|trans }}</th>
+                    <th>{{ 'madcoders_sylius_gift_card.ui.balance_after'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in gift_card.transactions %}
+                    <tr {{ sylius_test_html_attribute('gift-card-transaction') }}>
+                        <td>{{ transaction.createdAt ? transaction.createdAt|date('d-m-Y H:i') : '-' }}</td>
+                        <td>{{ ('madcoders_sylius_gift_card.ui.transaction_type.' ~ transaction.type.value)|trans }}</td>
+                        <td>
+                            {{ (transaction.type.value == 'credit' ? '+' : '-') }}{{ transaction.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
+                        </td>
+                        <td>{{ transaction.balanceAfter|sylius_format_money(gift_card.currencyCode|default('USD')) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

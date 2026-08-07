@@ -13,3 +13,15 @@ sylius_twig_hooks:
             madcoders_gift_card_total:
                 template: '@MadcodersSyliusGiftCardPlugin/shop/cart/summary/gift_card_total.html.twig'
                 priority: 350
+
+        # Account pages. The prefix is merged with `sylius_shop.account.common`, so the account
+        # breadcrumbs and menu still render around this content.
+        'madcoders_sylius_gift_card.account.gift_card_index.index.content.main':
+            gift_cards:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/account/gift_card/index/main.html.twig'
+                priority: 0
+
+        'madcoders_sylius_gift_card.account.gift_card_show.index.content.main':
+            gift_card:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/account/gift_card/show/main.html.twig'
+                priority: 0

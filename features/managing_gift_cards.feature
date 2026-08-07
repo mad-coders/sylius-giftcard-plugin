@@ -30,12 +30,14 @@ Feature: Managing gift cards
 
     @ui
     Scenario: Topping up a gift card records it in the balance history
+        # Two entries, not one: the card was already partly spent, and that spending has its own
+        # ledger entry - a balance can never exist without the history explaining it.
         Given the store has a gift card "GIFT-TOPUP1" worth "$50.00" with "$20.00" left
         When I view the gift card "GIFT-TOPUP1"
         And I add "10.00" to its balance
         Then I should be notified that the balance has been adjusted
         And its remaining balance should be "$30.00"
-        And its balance history should have 1 entries
+        And its balance history should have 2 entries
 
     @ui
     Scenario: Taking money off a gift card records it in the balance history

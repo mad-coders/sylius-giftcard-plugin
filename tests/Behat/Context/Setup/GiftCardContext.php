@@ -10,6 +10,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
@@ -55,6 +56,37 @@ final class GiftCardContext implements Context
 
         $this->createGiftCard($code, $amount, [
             'spent_amount' => $initialAmount - self::toMinorUnits($remaining),
+        ]);
+    }
+
+    /**
+     * @Given the store has a gift card :code worth :amount used by :customer
+     */
+    public function theStoreHasAGiftCardWorthUsedBy(string $code, string $amount, CustomerInterface $customer): void
+    {
+        $this->createGiftCard($code, $amount, ['redeemer' => $customer]);
+    }
+
+    /**
+     * @Given the store has a gift card :code worth :amount bought by :customer
+     */
+    public function theStoreHasAGiftCardWorthBoughtBy(string $code, string $amount, CustomerInterface $customer): void
+    {
+        $this->createGiftCard($code, $amount, ['purchaser' => $customer]);
+    }
+
+    /**
+     * @Given the store has a gift card :code worth :amount with :remaining left used by :customer
+     */
+    public function theStoreHasAGiftCardWorthWithLeftUsedBy(
+        string $code,
+        string $amount,
+        string $remaining,
+        CustomerInterface $customer,
+    ): void {
+        $this->createGiftCard($code, $amount, [
+            'spent_amount' => self::toMinorUnits($amount) - self::toMinorUnits($remaining),
+            'redeemer' => $customer,
         ]);
     }
 

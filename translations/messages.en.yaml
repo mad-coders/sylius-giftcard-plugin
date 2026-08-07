@@ -35,10 +35,19 @@ madcoders_sylius_gift_card:
         transaction_type:
             debit: Spent
             credit: Added
+        my_gift_cards: My gift cards
+        gift_cards_i_use: Gift cards I use
+        gift_cards_i_bought: Gift cards I bought
+        no_gift_cards_used: You are not using any gift cards yet.
+        no_gift_cards_bought: You have not bought any gift cards.
+        balance_history: Balance history
     menu:
         admin:
             gift_cards: Gift cards
             gift_card_configuration: Gift card configuration
+        shop:
+            account:
+                gift_cards: My gift cards
     gift_card:
         code:
             not_blank: Please enter a gift card code.

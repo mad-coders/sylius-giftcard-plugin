@@ -14,3 +14,19 @@ madcoders_sylius_gift_card_shop_cart_remove:
         _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController::removeAction
     requirements:
         code: .+
+
+# Account pages. Sylius' security config protects `%sylius.security.shop_regex%/account`, so these
+# are behind ROLE_USER without the plugin configuring anything.
+madcoders_sylius_gift_card_shop_account_index:
+    path: /account/gift-cards
+    methods: [GET]
+    defaults:
+        _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\AccountGiftCardController::indexAction
+
+madcoders_sylius_gift_card_shop_account_show:
+    path: /account/gift-cards/{id}
+    methods: [GET]
+    defaults:
+        _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\AccountGiftCardController::showAction
+    requirements:
+        id: \d+
