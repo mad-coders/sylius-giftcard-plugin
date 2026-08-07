@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- An order settled with a gift card now reaches the `paid` payment state. Sylius' resolver compares
+  completed payments against `Order::getTotal()`, which the tender model deliberately leaves at the
+  full value of the goods, so a part-paid order stuck at `partially_paid` and a fully covered one at
+  `awaiting_payment`. Neither could be fulfilled, and because `paid` is what issues purchased gift
+  cards and emails their codes, a customer who bought a card and paid for it partly with another one
+  was charged and received nothing. `sylius.state_resolver.order_payment` is now decorated to compare
+  against `Order::getAmountToPay()` instead; everything else is left to Sylius.
+
 ## [1.0.0-RC.1] - 2026-08-07
 
 First release candidate. Gift cards can be sold, redeemed, administered and tracked by the customers

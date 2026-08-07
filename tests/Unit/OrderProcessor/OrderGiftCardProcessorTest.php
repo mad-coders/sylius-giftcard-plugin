@@ -139,6 +139,37 @@ final class OrderGiftCardProcessorTest extends TestCase
         self::assertCount(0, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
     }
 
+    public function testItLeavesAPlacedOrderAlone(): void
+    {
+        // canBeProcessed() is false once the order leaves the cart. Without that guard, reprocessing
+        // a placed or cancelled order would rebuild its coverage and re-settle a payment that has
+        // already been taken - corrupting an order nobody is looking at any more.
+        $order = $this->createOrder(10_000);
+        $order->addGiftCard($this->createGiftCard('GIFT-A', 3_000));
+        $order->setState(Order::STATE_NEW);
+
+        $this->createProcessor()->process($order);
+
+        self::assertCount(0, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
+        self::assertSame(10_000, self::paymentAmountOf($order), 'the payment must not be re-settled');
+    }
+
+    public function testItSettlesThePaymentThatCheckoutIsUsing(): void
+    {
+        // The processor only ever looks at a cart-state payment. Anything else belongs to an order
+        // that has already been placed.
+        $order = $this->createOrder(10_000);
+        $order->addGiftCard($this->createGiftCard('GIFT-A', 3_000));
+
+        $payment = $order->getLastPayment();
+        self::assertNotNull($payment);
+        self::assertSame(Payment::STATE_CART, $payment->getState());
+
+        $this->createProcessor()->process($order);
+
+        self::assertSame(7_000, $payment->getAmount());
+    }
+
     private function createProcessor(): OrderGiftCardProcessor
     {
         return new OrderGiftCardProcessor($this->createAdjustmentFactory(), new IdentityTranslator());

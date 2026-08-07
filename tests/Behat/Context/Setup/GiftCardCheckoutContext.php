@@ -17,6 +17,7 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
+use Sylius\Component\Core\OrderPaymentStates;
 use Webmozart\Assert\Assert;
 
 /**
@@ -68,6 +69,24 @@ final readonly class GiftCardCheckoutContext implements Context
         );
 
         $this->giftCardManager->flush();
+    }
+
+    /**
+     * @Then this order should be fully paid
+     */
+    public function thisOrderShouldBeFullyPaid(): void
+    {
+        // Sylius decides the payment state by comparing completed payments against the order total.
+        // Under the tender model the total stays at full value while the payment is reduced, so
+        // without a resolver that knows about gift cards the order sticks at partially_paid - and
+        // the `pay` transition that issues purchased cards and sends their codes never fires.
+        $order = $this->refreshedOrder();
+
+        Assert::same(
+            $order->getPaymentState(),
+            OrderPaymentStates::STATE_PAID,
+            sprintf('The order is "%s" rather than paid.', (string) $order->getPaymentState()),
+        );
     }
 
     /**

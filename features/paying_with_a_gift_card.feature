@@ -81,3 +81,25 @@ Feature: Paying for an order with a gift card
         And the customer chose "Free" shipping method to "United States" with "Offline" payment
         When the order "#00007" was cancelled
         Then the gift card "GIFT-500" should be worth "$500.00"
+
+    @ui
+    Scenario: An order part-paid by a gift card still counts as fully paid
+        # Sylius decides the payment state by comparing completed payments against the order total,
+        # which a gift card deliberately does not reduce. Without a resolver that understands the
+        # split, the order sticks at partially_paid forever: it can never be fulfilled, and the
+        # `pay` transition that issues purchased gift cards and emails their codes never fires.
+        Given there is a customer "holder@example.com" that placed an order "#00008"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the order "#00008" is already paid
+        Then this order should be fully paid
+
+    @ui
+    Scenario: An order covered entirely by a gift card still counts as fully paid
+        Given there is a customer "holder@example.com" that placed an order "#00009"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-100" worth "$100.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the order "#00009" is already paid
+        Then this order should be fully paid
