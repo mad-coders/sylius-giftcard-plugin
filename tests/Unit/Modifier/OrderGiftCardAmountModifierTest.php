@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Modifier;
 
+use Madcoders\SyliusGiftCardPlugin\Exception\InvalidGiftCardAmountException;
 use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCard;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
@@ -172,6 +173,49 @@ final class OrderGiftCardAmountModifierTest extends TestCase
         $this->createModifier()->debit($order);
 
         self::assertSame(5_000, $giftCard->getAmount());
+    }
+
+    public function testCancellingAnOrderStillRefundsACardAnAdminToppedUpAfterwards(): void
+    {
+        // A goodwill top-up between placing and cancelling used to make the refund exceed the card's
+        // face value, and the model refused it - so the exception escaped the workflow listener and
+        // cancelling the order 500d. The customer is owed the money either way.
+        $giftCard = $this->createGiftCard('GIFT-A', 10_000);
+        $order = $this->createOrder(['GIFT-A' => 4_000], [$giftCard]);
+
+        $modifier = $this->createModifier();
+        $modifier->debit($order);
+        self::assertSame(6_000, $giftCard->getAmount());
+
+        // Admin puts the spent 4000 back as goodwill, taking the card to its full face value.
+        (new GiftCardBalanceModifier($this->transactionFactory()))->credit($giftCard, 4_000);
+        self::assertSame(10_000, $giftCard->getAmount());
+
+        $modifier->credit($order);
+
+        self::assertSame(14_000, $giftCard->getAmount(), 'the goodwill and the refund are both real money');
+    }
+
+    public function testAGoodwillTopUpIsStillCappedAtTheFaceValue(): void
+    {
+        // The cap is what stops a mistyped admin adjustment turning a $100 card into a $100,000 one.
+        // Exempting refunds must not quietly exempt top-ups too.
+        $giftCard = $this->createGiftCard('GIFT-A', 10_000);
+        $giftCard->debit(4_000);
+
+        $this->expectException(InvalidGiftCardAmountException::class);
+
+        (new GiftCardBalanceModifier($this->transactionFactory()))->credit($giftCard, 5_000);
+    }
+
+    /** @return FactoryInterface<GiftCardTransactionInterface> */
+    private function transactionFactory(): FactoryInterface
+    {
+        /** @var FactoryInterface<GiftCardTransactionInterface> $factory */
+        $factory = $this->createMock(FactoryInterface::class);
+        $factory->method('createNew')->willReturnCallback(static fn (): GiftCardTransaction => new GiftCardTransaction());
+
+        return $factory;
     }
 
     private function createModifier(): OrderGiftCardAmountModifier

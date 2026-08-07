@@ -126,3 +126,17 @@ Feature: Paying for an order with a gift card
         And the customer chose "Free" shipping method to "United States" with "Offline" payment
         When the payment for this order fails
         Then the customer should be asked to pay "$0.00" to retry
+
+    @ui
+    Scenario: Cancelling still refunds a card an administrator topped up in the meantime
+        # The refund would take the card above its face value, which the model refuses in order to
+        # catch a mistyped admin adjustment. Applying that rule to a refund made cancelling the
+        # order fail outright with a 500, and left the customer out of pocket.
+        Given there is a customer "holder@example.com" that placed an order "#00012"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-100" worth "$100.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        And an administrator topped the gift card "GIFT-100" up by "$100.00"
+        When the order "#00012" was cancelled
+        Then the gift card "GIFT-100" should be worth "$200.00"
+        And the gift card "GIFT-100" should have 3 entries in its balance history

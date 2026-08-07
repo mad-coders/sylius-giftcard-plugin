@@ -172,6 +172,17 @@ final readonly class GiftCardCheckoutContext implements Context
     }
 
     /**
+     * @Given an administrator topped the gift card :code up by :amount
+     */
+    public function anAdministratorToppedTheGiftCardUpBy(string $code, string $amount): void
+    {
+        // Goodwill, or a correction. It goes through the same modifier the admin screen uses.
+        $this->giftCardBalanceModifier->credit($this->giftCard($code), self::toMinorUnits($amount));
+
+        $this->giftCardManager->flush();
+    }
+
+    /**
      * @Then the gift card :code should be worth :balance
      */
     public function theGiftCardShouldBeWorth(string $code, string $balance): void
