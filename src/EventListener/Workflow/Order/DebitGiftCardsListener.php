@@ -11,9 +11,7 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
 /**
  * Symfony Workflow adapter for the `sylius_order` "create" transition (the order being placed).
  *
- * Sylius 2.x supports two state machine adapters and the host application chooses, so the same
- * modifier is also reachable from a winzou callback - see config/state_machine/winzou/. This class
- * holds no logic beyond unwrapping the event.
+ * Holds no logic beyond unwrapping the event and delegating.
  */
 final readonly class DebitGiftCardsListener
 {

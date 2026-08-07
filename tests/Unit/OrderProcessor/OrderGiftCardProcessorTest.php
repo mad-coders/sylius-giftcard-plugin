@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\Adjustment;
 use Sylius\Component\Core\Model\OrderItem;
 use Sylius\Component\Core\Model\OrderItemUnit;
+use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Order\Factory\AdjustmentFactoryInterface;
 use Symfony\Component\Translation\IdentityTranslator;
 use Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\Order;
@@ -33,14 +34,17 @@ final class OrderGiftCardProcessorTest extends TestCase
         self::assertCount(0, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
     }
 
-    public function testItDiscountsTheOrderByTheGiftCardBalance(): void
+    public function testItLeavesTheOrderTotalAloneAndSettlesThePaymentInstead(): void
     {
+        // The heart of the tender model: the goods still cost what they cost. A gift card changes
+        // who pays, not the price - so the total is untouched and the payment is what drops.
         $order = $this->createOrder(10_000);
         $order->addGiftCard($this->createGiftCard('GIFT-A', 3_000));
 
         $this->createProcessor()->process($order);
 
-        self::assertSame(7_000, $order->getTotal());
+        self::assertSame(10_000, $order->getTotal(), 'a gift card must not discount the order');
+        self::assertSame(7_000, self::paymentAmountOf($order));
     }
 
     public function testTheAdjustmentCarriesTheGiftCardCodeSoItCanBeTracedBack(): void
@@ -67,24 +71,27 @@ final class OrderGiftCardProcessorTest extends TestCase
 
         $this->createProcessor()->process($order);
 
-        self::assertSame(4_500, $order->getTotal());
+        self::assertSame(10_000, $order->getTotal());
+        self::assertSame(4_500, self::paymentAmountOf($order));
         self::assertCount(2, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
     }
 
-    public function testAGiftCardWorthMoreThanTheOrderOnlyTakesWhatIsOwed(): void
+    public function testAGiftCardWorthMoreThanTheOrderOnlyCoversWhatIsOwed(): void
     {
-        // Otherwise the shop would hand back the difference as a negative total, and the card would
-        // lose more balance than the customer actually spent.
+        // Otherwise the card would lose more balance than the customer actually spent, and the
+        // payment would go negative.
         $order = $this->createOrder(4_000);
         $order->addGiftCard($this->createGiftCard('GIFT-A', 10_000));
 
         $this->createProcessor()->process($order);
 
-        self::assertSame(0, $order->getTotal());
+        self::assertSame(4_000, $order->getTotal());
+        self::assertSame(0, self::paymentAmountOf($order), 'there is nothing left to pay');
 
         $adjustment = $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT)->first();
         self::assertNotFalse($adjustment);
-        self::assertSame(-4_000, $adjustment->getAmount());
+        self::assertSame(-4_000, $adjustment->getAmount(), 'only what was owed is taken from the card');
+        self::assertTrue($adjustment->isNeutral(), 'the record must not move the order total');
     }
 
     public function testOnceTheOrderIsCoveredNoFurtherCardIsCharged(): void
@@ -95,7 +102,7 @@ final class OrderGiftCardProcessorTest extends TestCase
 
         $this->createProcessor()->process($order);
 
-        self::assertSame(0, $order->getTotal());
+        self::assertSame(0, self::paymentAmountOf($order));
         self::assertCount(
             1,
             $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT),
@@ -118,7 +125,7 @@ final class OrderGiftCardProcessorTest extends TestCase
 
         $this->createProcessor()->process($order);
 
-        self::assertSame(10_000, $order->getTotal());
+        self::assertSame(10_000, self::paymentAmountOf($order), 'nothing was covered');
         self::assertCount(0, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
     }
 
@@ -142,10 +149,19 @@ final class OrderGiftCardProcessorTest extends TestCase
         $factory = $this->createMock(AdjustmentFactoryInterface::class);
         $factory
             ->method('createWithData')
-            ->willReturnCallback(static function (string $type, string $label, int $amount): Adjustment {
+            // Honours $neutral: the whole point of the tender model is that the adjustment records
+            // what a card covers WITHOUT moving the order total, and a mock that drops the flag
+            // would let a regression pass.
+            ->willReturnCallback(static function (
+                string $type,
+                string $label,
+                int $amount,
+                bool $neutral = false,
+            ): Adjustment {
                 $adjustment = new Adjustment();
                 $adjustment->setType($type);
                 $adjustment->setLabel($label);
+                $adjustment->setNeutral($neutral);
                 $adjustment->setAmount($amount);
 
                 return $adjustment;
@@ -169,7 +185,22 @@ final class OrderGiftCardProcessorTest extends TestCase
 
         self::assertSame($unitPrice, $order->getTotal(), 'the fixture order should cost what the test expects');
 
+        // Sylius' payment processor runs before this one and has already sized the payment from the
+        // order total; the gift card processor settles that payment.
+        $payment = new Payment();
+        $payment->setCurrencyCode('USD');
+        $payment->setAmount($order->getTotal());
+        $order->addPayment($payment);
+
         return $order;
+    }
+
+    private static function paymentAmountOf(Order $order): int
+    {
+        $payment = $order->getLastPayment();
+        self::assertNotNull($payment, 'the fixture order should carry a payment');
+
+        return $payment->getAmount();
     }
 
     private function createGiftCard(string $code, int $amount): GiftCardInterface

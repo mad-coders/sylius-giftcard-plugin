@@ -10,24 +10,26 @@ use PHPUnit\Framework\TestCase;
  * Guards where the gift card order processor sits in Sylius' processor chain.
  *
  * This is configuration rather than code, but getting it wrong costs real money and does so
- * silently. Sylius' payment processor sets the payment amount from Order::getTotal(); a gift card
- * processor running after it leaves the payment holding the pre-discount total, so the customer is
- * charged full price while their card is still debited, and nothing throws.
+ * silently. A gift card settles against the payment Sylius' payment processor has already sized
+ * from the order total, so it has to run below it; and it has to run below taxes so that what it
+ * settles against is the real amount owed.
  *
  * Both priorities are read from the real XML - ours and Sylius' - so the test fails if either side
  * moves, including when a Sylius upgrade renumbers its own chain.
  */
 final class OrderProcessorPriorityTest extends TestCase
 {
-    public function testItRunsBeforeSyliusPaymentProcessor(): void
+    public function testItRunsAfterSyliusPaymentProcessorSoItCanSettleThePayment(): void
     {
-        // The chain is a priority queue, highest first.
-        self::assertGreaterThan(
+        // The chain is a priority queue, highest first. Sylius' payment processor sets the payment
+        // from the order total; this one then takes what the gift cards cover off that payment. It
+        // therefore has to run *after* it - the opposite of what a discount would need.
+        self::assertLessThan(
             self::syliusPriority('sylius.order_processing.order_payment_processor.checkout'),
             self::giftCardPriority(),
-            'The gift card processor must run BEFORE Sylius\' payment processor, which sets the '
-            . 'payment amount from the order total. Otherwise the customer is charged the '
-            . 'undiscounted total while their gift card is still debited.',
+            'The gift card processor must run after Sylius\' payment processor, whose amount it '
+            . 'settles. Running before it would leave the payment holding the full total, so the '
+            . 'customer is charged in full while their card is still debited.',
         );
     }
 
@@ -36,7 +38,7 @@ final class OrderProcessorPriorityTest extends TestCase
         self::assertLessThan(
             self::syliusPriority('sylius.order_processing.order_taxes_processor'),
             self::giftCardPriority(),
-            'The gift card processor must run after taxes, so a card is applied to what the '
+            'The gift card processor must run after taxes, so a card settles against what the '
             . 'customer actually owes.',
         );
     }

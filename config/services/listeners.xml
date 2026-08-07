@@ -6,10 +6,9 @@
 
     <services>
         <!--
-            Symfony Workflow adapter. The equivalent winzou wiring lives in
-            config/state_machine/winzou/sylius_order.yaml and calls the same modifier, so whichever
-            adapter the host application uses, balances move the same way. Only one adapter is
-            active for a given graph, so these cannot both fire.
+            Symfony Workflow listeners. Sylius 2.x defaults to that adapter and does not install
+            winzou/state-machine at all - it is only a `suggest` - so there is one wiring here
+            rather than two, and it is the one CI exercises.
         -->
         <service id="madcoders_sylius_gift_card.listener.workflow.order.debit_gift_cards"
                  class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\Order\DebitGiftCardsListener">

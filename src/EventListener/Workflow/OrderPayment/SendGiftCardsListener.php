@@ -11,8 +11,8 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
 /**
  * Emails the purchased gift card codes once the order is paid.
  *
- * Registered at a lower priority than the issuing listener so the cards exist by the time this
- * runs. The winzou equivalent is ordered by being listed after it in the callback block.
+ * Registered at a lower priority than the issuing listener, so the cards exist by the time this
+ * runs.
  */
 final readonly class SendGiftCardsListener
 {
