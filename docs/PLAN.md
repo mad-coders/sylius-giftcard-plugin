@@ -127,7 +127,7 @@ depends on nothing in the admin phase, so it shipped first.
 | 3 | **Redemption & totals** | `GiftCardApplicator`, `OrderGiftCardProcessor`, `OrderGiftCardAmountModifier`, adjustment wiring, code generator, per-channel configuration provider, state machine wiring for both adapters. |
 | 3b | **Cart UI, fixtures & Behat** | Shop-side apply/remove panel on the cart, gift card and configuration fixtures in the default suite, Behat coverage of the redemption flow. |
 | 2 | **Admin** | Grids, forms and menu entries for gift cards and per-channel configuration; manual card creation, a show page with the balance ledger, and balance adjustment. |
-| 4 | **Selling gift cards** | Gift card products, card generation on payment, state machine listeners for both adapters, purchaser association, notification email. |
+| 4 | **Selling gift cards** | Gift card products, card generation on payment, state machine listeners for both adapters, purchaser association. The notification email moved to phase 6 - it needs the account view's templates. |
 | 5 | **Customer account** | "My gift cards" - cards bought and cards redeemed, remaining balance, transaction history. This is the phase that pays off the two-customer model. |
 | 6 | **Docs & polish** | Behat features for the remaining flows, usage documentation, translations beyond English. |
 

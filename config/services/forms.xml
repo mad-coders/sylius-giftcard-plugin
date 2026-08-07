@@ -32,6 +32,11 @@
                  class="Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardAdjustBalanceType">
             <tag name="form.type" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.form.extension.type.product"
+                 class="Madcoders\SyliusGiftCardPlugin\Form\Extension\ProductTypeExtension">
+            <tag name="form.type_extension" extended-type="Sylius\Bundle\ProductBundle\Form\Type\ProductType" />
+        </service>
     </services>
 
 </container>

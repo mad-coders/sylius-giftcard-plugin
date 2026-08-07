@@ -22,6 +22,18 @@
             <argument type="service" id="madcoders_sylius_gift_card.modifier.order_gift_card_amount" />
             <tag name="kernel.event_listener" event="workflow.sylius_order.completed.cancel" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.listener.workflow.order_payment.issue_gift_cards"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\OrderPayment\IssueGiftCardsListener">
+            <argument type="service" id="madcoders_sylius_gift_card.operator.order_gift_card" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.listener.workflow.order.disable_bought_gift_cards"
+                 class="Madcoders\SyliusGiftCardPlugin\EventListener\Workflow\Order\DisableBoughtGiftCardsListener">
+            <argument type="service" id="madcoders_sylius_gift_card.operator.order_gift_card" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order.completed.cancel" />
+        </service>
     </services>
 
 </container>

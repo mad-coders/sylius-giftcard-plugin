@@ -16,6 +16,9 @@
                  decoration-priority="0">
             <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card.decorator.inner" />
         </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactoryInterface"
+                 alias="madcoders_sylius_gift_card.factory.gift_card" />
     </services>
 
 </container>

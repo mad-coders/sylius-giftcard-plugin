@@ -30,6 +30,8 @@ madcoders_sylius_gift_card:
         balance_after: Balance after
         transactions: Balance history
         no_transactions: This gift card has not been used yet.
+        is_gift_card: This product is a gift card
+        is_gift_card_help: Buying it issues a gift card per unit, worth what was paid for that unit.
         transaction_type:
             debit: Spent
             credit: Added

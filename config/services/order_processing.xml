@@ -38,6 +38,19 @@
 
         <service id="Madcoders\SyliusGiftCardPlugin\Modifier\OrderGiftCardAmountModifierInterface"
                  alias="madcoders_sylius_gift_card.modifier.order_gift_card_amount" />
+
+        <!-- Gift cards bought on an order, as opposed to spent on one. -->
+        <service id="madcoders_sylius_gift_card.operator.order_gift_card"
+                 class="Madcoders\SyliusGiftCardPlugin\Operator\OrderGiftCardOperator"
+                 public="true">
+            <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.generator.gift_card_code" />
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Operator\OrderGiftCardOperatorInterface"
+                 alias="madcoders_sylius_gift_card.operator.order_gift_card" />
     </services>
 
 </container>

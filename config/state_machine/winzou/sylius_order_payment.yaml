@@ -1,0 +1,17 @@
+# winzou_state_machine adapter wiring for gift cards bought on an order.
+#
+# Prepended by the plugin's extension only when winzou/state-machine-bundle is installed - see
+# MadcodersSyliusGiftCardExtension::prependWinzouStateMachine(). The Symfony Workflow equivalent is
+# in config/services/listeners.xml and calls the same operator.
+winzou_state_machine:
+    sylius_order_payment:
+        callbacks:
+            after:
+                madcoders_gift_card_issue:
+                    on: ["pay"]
+                    do: ["@madcoders_sylius_gift_card.operator.order_gift_card", "generate"]
+                    args: ["object"]
+                madcoders_gift_card_enable:
+                    on: ["pay"]
+                    do: ["@madcoders_sylius_gift_card.operator.order_gift_card", "enable"]
+                    args: ["object"]

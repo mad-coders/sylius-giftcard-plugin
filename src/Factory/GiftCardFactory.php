@@ -17,10 +17,8 @@ use Sylius\Resource\Factory\FactoryInterface;
  * Codes are *not* assigned here - that needs the generator, which needs to check the repository for
  * collisions, and keeping it out of the factory lets a caller create a card with a code they were
  * given (an imported batch, a fixture) without fighting a generated one.
- *
- * @implements FactoryInterface<GiftCardInterface>
  */
-final readonly class GiftCardFactory implements FactoryInterface
+final readonly class GiftCardFactory implements GiftCardFactoryInterface
 {
     /** @param FactoryInterface<GiftCardInterface> $decoratedFactory */
     public function __construct(private FactoryInterface $decoratedFactory)

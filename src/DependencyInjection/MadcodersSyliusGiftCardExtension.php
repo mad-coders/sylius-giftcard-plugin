@@ -45,11 +45,15 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
             return;
         }
 
-        /** @var array{winzou_state_machine?: array<string, mixed>} $config */
-        $config = Yaml::parseFile(\dirname(__DIR__, 2) . '/config/state_machine/winzou/sylius_order.yaml');
+        $files = glob(\dirname(__DIR__, 2) . '/config/state_machine/winzou/*.yaml');
 
-        if (isset($config['winzou_state_machine'])) {
-            $container->prependExtensionConfig('winzou_state_machine', $config['winzou_state_machine']);
+        foreach ($files === false ? [] : $files as $file) {
+            /** @var array{winzou_state_machine?: array<string, mixed>} $config */
+            $config = Yaml::parseFile($file);
+
+            if (isset($config['winzou_state_machine'])) {
+                $container->prependExtensionConfig('winzou_state_machine', $config['winzou_state_machine']);
+            }
         }
     }
 
