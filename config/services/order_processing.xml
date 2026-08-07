@@ -24,6 +24,18 @@
         </service>
 
         <!--
+            When a payment fails or is cancelled, Sylius replaces it with one for the full order
+            total. The cards were debited when the order was placed, so without this the customer
+            would be asked to pay that money a second time. The processor above cannot help: it only
+            runs while the order is a cart.
+        -->
+        <service id="madcoders_sylius_gift_card.order_processing.retry_payment_processor"
+                 class="Madcoders\SyliusGiftCardPlugin\OrderProcessor\GiftCardAwareRetryPaymentProcessor"
+                 decorates="sylius.order_processing.order_payment_processor.after_checkout">
+            <argument type="service" id="madcoders_sylius_gift_card.order_processing.retry_payment_processor.inner" />
+        </service>
+
+        <!--
             The single write path for a gift card balance: it moves the amount and records the
             ledger entry together, so no caller can change one without the other.
         -->
