@@ -68,6 +68,13 @@ jobs:
             -   name: Install dependencies
                 run: composer update --no-interaction --no-progress --prefer-dist
 
+            -   name: Security advisories
+                # composer.lock is not committed (this is a library), so dependencies resolve fresh
+                # on every run - this is what turns a newly published advisory into a build failure
+                # rather than something nobody notices. Abandoned packages are not advisories and
+                # must not fail the build.
+                run: composer audit --abandoned=ignore
+
             -   name: PHPStan
                 run: vendor/bin/phpstan analyse -c phpstan.neon --no-progress
 
