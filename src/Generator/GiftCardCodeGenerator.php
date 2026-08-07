@@ -12,8 +12,9 @@ use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardRepositoryInterface;
 final readonly class GiftCardCodeGenerator implements GiftCardCodeGeneratorInterface
 {
     /**
-     * Deliberately excludes the characters people confuse when reading a code off a card or an
-     * email: 0/O, 1/I/L, and 5/S. A code nobody can type back in is worse than a shorter one.
+     * Deliberately excludes the letters people confuse when reading a code off a card or an email -
+     * O, I, L and S - which leaves 0, 1 and 5 unambiguous, so the digits stay. A code nobody can
+     * type back in is worse than a slightly shorter one.
      */
     private const string ALPHABET = '23456789ABCDEFGHJKMNPQRTUVWXYZ';
 

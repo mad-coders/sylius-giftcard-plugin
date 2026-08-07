@@ -96,8 +96,11 @@ final readonly class OrderGiftCardProcessor implements OrderProcessorInterface
      */
     private function settlePayment(OrderInterface $order, int $amountLeftToPay): void
     {
-        $payment = $order->getLastPayment(PaymentInterface::STATE_CART)
-            ?? $order->getLastPayment(PaymentInterface::STATE_NEW);
+        // Only cart-state payments: process() is guarded by canBeProcessed(), which is true only
+        // while the ORDER is still a cart, and Sylius' checkout payment processor targets payments
+        // in the cart state. A payment that has advanced past that belongs to a placed order, which
+        // this processor never touches.
+        $payment = $order->getLastPayment(PaymentInterface::STATE_CART);
 
         if (null === $payment) {
             return;

@@ -121,6 +121,27 @@ final class GiftCardCartContext implements Context
     }
 
     /**
+     * @When I refresh the cart
+     */
+    public function iRefreshTheCart(): void
+    {
+        // open() unconditionally, not openCartIfNeeded(): the point is to reprocess the cart, and a
+        // page object that thinks it is already open would skip the request.
+        $this->giftCardPage->open();
+    }
+
+    /**
+     * @Then I should be notified that the gift card cannot be used in this store
+     */
+    public function iShouldBeNotifiedThatTheGiftCardCannotBeUsedInThisStore(): void
+    {
+        $this->notificationChecker->checkNotification(
+            'This gift card cannot be used in this store.',
+            NotificationType::failure(),
+        );
+    }
+
+    /**
      * @Then I should be notified that the gift card does not exist
      */
     public function iShouldBeNotifiedThatTheGiftCardDoesNotExist(): void

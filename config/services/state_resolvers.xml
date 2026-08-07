@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            Decorates Sylius' payment state resolver, which compares completed payments against the
+            order total. A gift card does not reduce that total, so without this an order settled
+            with a card never reaches `paid` - and the `pay` transition is what issues purchased
+            gift cards and emails their codes.
+        -->
+        <service id="madcoders_sylius_gift_card.state_resolver.order_payment"
+                 class="Madcoders\SyliusGiftCardPlugin\StateResolver\GiftCardAwareOrderPaymentStateResolver"
+                 decorates="sylius.state_resolver.order_payment">
+            <argument type="service" id="madcoders_sylius_gift_card.state_resolver.order_payment.inner" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+        </service>
+    </services>
+
+</container>
