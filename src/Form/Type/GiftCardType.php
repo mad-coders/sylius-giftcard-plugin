@@ -55,8 +55,24 @@ final class GiftCardType extends AbstractResourceType
         // value change under orders that already reference it. So the field only exists while the
         // card is new; editing an existing card cannot touch it. Use the balance adjustment action
         // to correct a balance.
+        //
+        // The code is immutable for the same reason and one more: it is the only link between an
+        // order and the card it was paid with, since that is what the adjustment records. Renaming
+        // an issued card would strand every order that used it - cancelling one would silently
+        // refund nothing - and would invalidate the code already printed on the customer's card.
         $builder->addEventListener(FormEvents::PRE_SET_DATA, static function (FormEvent $event): void {
             $giftCard = $event->getData();
+
+            if ($giftCard instanceof GiftCardInterface && null !== $giftCard->getCode()) {
+                // Disabled rather than removed: the admin still needs to see which card they are
+                // editing, and a disabled field keeps its stored value whatever is submitted.
+                $event->getForm()->add('code', TextType::class, [
+                    'label' => 'madcoders_sylius_gift_card.ui.code',
+                    'required' => false,
+                    'disabled' => true,
+                    'help' => 'madcoders_sylius_gift_card.ui.code_immutable_help',
+                ]);
+            }
 
             if ($giftCard instanceof GiftCardInterface && null !== $giftCard->getInitialAmount()) {
                 return;

@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- A gift card's code can no longer be edited once the card has been issued; the admin form shows it
+  read-only. The code is bearer money the customer is already holding, and it is the only link
+  between an order and the card that paid for it - renaming an issued card invalidated the code in
+  the customer's hand and silently stranded every refund for orders that used it.
+
 ### Added
 
 - `GiftCardInterface::refund()` and `GiftCardBalanceModifierInterface::refund()`, for giving back

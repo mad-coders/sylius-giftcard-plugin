@@ -13,6 +13,7 @@ use Sylius\Component\Core\Model\ProductInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\AdjustBalancePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\CreatePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\ShowPageInterface;
+use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\UpdatePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Product\UpdatePageInterface as ProductUpdatePageInterface;
 use Webmozart\Assert\Assert;
 
@@ -23,6 +24,7 @@ final class GiftCardContext implements Context
         private readonly IndexPageInterface $indexPage,
         private readonly CreatePageInterface $createPage,
         private readonly ShowPageInterface $showPage,
+        private readonly UpdatePageInterface $updatePage,
         private readonly AdjustBalancePageInterface $adjustBalancePage,
         private readonly ProductUpdatePageInterface $productUpdatePage,
         private readonly NotificationCheckerInterface $notificationChecker,
@@ -182,5 +184,47 @@ final class GiftCardContext implements Context
         Assert::keyExists($ids, $code, sprintf('No gift card with code "%s" was created in this scenario.', $code));
 
         return $ids[$code];
+    }
+
+    /**
+     * @When I want to edit the gift card :code
+     */
+    public function iWantToEditTheGiftCard(string $code): void
+    {
+        $this->updatePage->open(['id' => $this->getGiftCardIdByCode($code)]);
+    }
+
+    /**
+     * @Then I should not be able to change its code
+     */
+    public function iShouldNotBeAbleToChangeItsCode(): void
+    {
+        // A code is bearer money: the customer is holding it, and it is the only link between an
+        // order and the card that paid for it. Renaming an issued card would invalidate the one in
+        // their hand and silently strand every refund.
+        Assert::false(
+            $this->updatePage->isCodeEditable(),
+            'The code can still be edited on an issued gift card.',
+        );
+    }
+
+    /**
+     * @Then its code should still be :code
+     */
+    public function itsCodeShouldStillBe(string $code): void
+    {
+        Assert::same($this->updatePage->getCode(), $code);
+    }
+
+    /**
+     * @Then I should not be able to change its initial amount
+     */
+    public function iShouldNotBeAbleToChangeItsInitialAmount(): void
+    {
+        // The face value is what orders were priced against; it cannot move under them.
+        Assert::false(
+            $this->updatePage->isInitialAmountEditable(),
+            'The initial amount can still be edited on an issued gift card.',
+        );
     }
 }
