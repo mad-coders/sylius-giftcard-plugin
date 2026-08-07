@@ -36,6 +36,15 @@ final readonly class GiftCardBalanceModifier implements GiftCardBalanceModifierI
         $this->recordTransaction($giftCard, GiftCardTransactionType::Credit, $amount, $order);
     }
 
+    public function refund(GiftCardInterface $giftCard, int $amount, ?BaseOrderInterface $order = null): void
+    {
+        $giftCard->refund($amount);
+
+        // Recorded as a credit: the ledger tracks where the money went, and a refund is money going
+        // back onto the card like any other. Only the face-value cap differs.
+        $this->recordTransaction($giftCard, GiftCardTransactionType::Credit, $amount, $order);
+    }
+
     private function recordTransaction(
         GiftCardInterface $giftCard,
         GiftCardTransactionType $type,

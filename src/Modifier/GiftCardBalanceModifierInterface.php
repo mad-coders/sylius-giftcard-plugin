@@ -26,7 +26,19 @@ interface GiftCardBalanceModifierInterface
     public function debit(GiftCardInterface $giftCard, int $amount, ?BaseOrderInterface $order = null): void;
 
     /**
+     * Puts money on a card that it did not previously hold, capped at its face value.
+     *
      * @throws InvalidGiftCardAmountException
      */
     public function credit(GiftCardInterface $giftCard, int $amount, ?BaseOrderInterface $order = null): void;
+
+    /**
+     * Gives back money an order took off a card, which the face-value cap does not apply to.
+     *
+     * Only ever called with an amount the ledger shows the order debited; see
+     * {@see GiftCardInterface::refund()} for why the two are separate.
+     *
+     * @throws InvalidGiftCardAmountException
+     */
+    public function refund(GiftCardInterface $giftCard, int $amount, ?BaseOrderInterface $order = null): void;
 }

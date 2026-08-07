@@ -84,7 +84,10 @@ final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountM
                 continue;
             }
 
-            $this->giftCardBalanceModifier->credit($giftCard, $amount, $order);
+            // refund(), not credit(): the face-value cap guards admin top-ups against a typo, and
+            // applying it here would make a card that was topped up after being spent unable to
+            // take its own money back - cancelling the order would fail outright.
+            $this->giftCardBalanceModifier->refund($giftCard, $amount, $order);
         }
     }
 

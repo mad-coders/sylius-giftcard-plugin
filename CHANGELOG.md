@@ -7,7 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `GiftCardInterface::refund()` and `GiftCardBalanceModifierInterface::refund()`, for giving back
+  money an order took off a card. They differ from `credit()` only in not being capped at the card's
+  face value; that cap exists to catch a mistyped admin top-up and has no business refusing a refund.
+  A host application that reimplements `GiftCardInterface` or the modifier must implement them.
+
 ### Fixed
+
+- Cancelling an order no longer fails outright when an administrator topped the gift card up in the
+  meantime. The refund would take the card above its face value, the model refused it, and the
+  exception escaped the workflow listener as a 500 - leaving the order uncancelled and the customer
+  out of pocket. Refunds now go through `refund()` rather than `credit()`.
 
 - A failed or cancelled payment no longer asks the customer for the gift card money a second time.
   Sylius replaces such a payment with one for `Order::getTotal()`, which under the tender model is

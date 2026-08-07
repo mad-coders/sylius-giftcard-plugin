@@ -63,12 +63,31 @@ interface GiftCardInterface extends ResourceInterface, TimestampableInterface, T
     public function debit(int $amount): void;
 
     /**
-     * Puts money back on the card.
+     * Puts money on the card that it did not previously hold - a goodwill top-up.
+     *
+     * Capped at the card's face value, which is what stops a mistyped admin adjustment turning a
+     * $50 card into a $50,000 one. Returning money the card actually spent is {@see self::refund()}
+     * instead, and is deliberately not capped.
      *
      * @throws InvalidGiftCardAmountException if the
      *         amount is not positive or would take the balance above the initial amount
      */
     public function credit(int $amount): void;
+
+    /**
+     * Gives back money that was taken off this card.
+     *
+     * Unlike {@see self::credit()} this is not capped at the face value, because the cap describes
+     * how much may be *given* to a card, not how much may be *returned* to it. A card topped up by
+     * an admin after being spent would otherwise be unable to take its own refund, and cancelling
+     * that order would fail outright.
+     *
+     * Callers must have proof the money was taken - the plugin only ever refunds what the ledger
+     * records this order as having debited.
+     *
+     * @throws InvalidGiftCardAmountException if the amount is not positive
+     */
+    public function refund(int $amount): void;
 
     public function getExpiresAt(): ?\DateTimeInterface;
 

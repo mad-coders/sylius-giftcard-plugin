@@ -159,6 +159,14 @@ class GiftCard implements GiftCardInterface, \Stringable
         $this->amount += $amount;
     }
 
+    public function refund(int $amount): void
+    {
+        // No face-value cap here, and that is the whole point of the method - see the interface.
+        $this->assertPositive($amount);
+
+        $this->amount += $amount;
+    }
+
     public function getExpiresAt(): ?\DateTimeInterface
     {
         return $this->expiresAt;
