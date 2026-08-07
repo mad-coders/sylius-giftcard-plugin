@@ -55,6 +55,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the customer who bought it. Cancelling the order takes the cards out of circulation.
 - Issuing is wired for both Sylius 2.x state machine adapters, on the order payment `pay`
   transition.
+- A notification email listing the codes bought on an order, sent to the buyer when the order is
+  paid. Mail failures do not fail the payment.
+- Polish translations alongside English, for both the `messages` and `flashes` domains.
+- `docs/USAGE.md` describing how the plugin behaves once installed, and an expanded
+  `docs/INSTALLATION.md` covering what the plugin registers and how to override it.
 - "My gift cards" in the customer account: the cards you use (with their remaining balance) listed
   separately from the cards you bought, plus a balance history page per card. A customer can only
   see cards they are linked to.

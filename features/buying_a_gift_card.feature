@@ -20,6 +20,7 @@ Feature: Buying a gift card
         Then 1 gift card should have been issued to "buyer@example.com"
         And the gift card issued to "buyer@example.com" should be worth "$50.00"
         And the gift card issued to "buyer@example.com" should be usable
+        And "buyer@example.com" should have been emailed the code of their gift card
 
     @ui
     Scenario: No gift card is issued before the order is paid

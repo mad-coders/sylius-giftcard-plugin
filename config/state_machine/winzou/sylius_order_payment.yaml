@@ -15,3 +15,7 @@ winzou_state_machine:
                     on: ["pay"]
                     do: ["@madcoders_sylius_gift_card.operator.order_gift_card", "enable"]
                     args: ["object"]
+                madcoders_gift_card_send:
+                    on: ["pay"]
+                    do: ["@madcoders_sylius_gift_card.mailer.gift_card_email_sender", "sendGiftCardsFromOrder"]
+                    args: ["object"]

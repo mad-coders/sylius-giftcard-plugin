@@ -65,6 +65,7 @@
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\BoughtGiftCardContext">
             <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+            <argument type="service" id="sylius.behat.email_checker" />
         </service>
 
         <service id="madcoders_sylius_gift_card.behat.context.ui.shop.account_gift_card"

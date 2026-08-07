@@ -66,7 +66,7 @@ make test           # phpunit + behat
 make help           # every available target
 ```
 
-Contributor guide: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). Working on this with an AI agent?
+Usage guide: [`docs/USAGE.md`](docs/USAGE.md). Contributor guide: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). Working on this with an AI agent?
 Start from [`AGENTS.md`](AGENTS.md).
 
 The primary branch is **`1.0`** - this repository has no `main` or `master`, following the Sylius

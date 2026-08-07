@@ -27,6 +27,7 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
     {
         $this->prependDoctrineMappings($container);
         $this->prependWinzouStateMachine($container);
+        $this->prependMailerEmails($container);
         $this->prependDoctrineMigrations($container);
     }
 
@@ -54,6 +55,26 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
             if (isset($config['winzou_state_machine'])) {
                 $container->prependExtensionConfig('winzou_state_machine', $config['winzou_state_machine']);
             }
+        }
+    }
+
+    /**
+     * Registers the plugin's emails with Sylius' mailer, if that bundle is installed.
+     *
+     * Same reasoning as the winzou wiring: configuring an extension the host has not registered is
+     * a hard container failure, so it cannot live in config/config.yaml.
+     */
+    private function prependMailerEmails(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('sylius_mailer')) {
+            return;
+        }
+
+        /** @var array{sylius_mailer?: array<string, mixed>} $config */
+        $config = Yaml::parseFile(\dirname(__DIR__, 2) . '/config/mailer.yaml');
+
+        if (isset($config['sylius_mailer'])) {
+            $container->prependExtensionConfig('sylius_mailer', $config['sylius_mailer']);
         }
     }
 
