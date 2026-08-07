@@ -55,6 +55,17 @@
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\AdjustBalancePage"
                  parent="sylius.behat.symfony_page"
                  public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.context.setup.gift_card_product"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup\GiftCardProductContext">
+            <argument type="service" id="sylius.manager.product" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.shop.bought_gift_card"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\BoughtGiftCardContext">
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+        </service>
     </services>
 
 </container>

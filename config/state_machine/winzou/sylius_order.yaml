@@ -16,3 +16,7 @@ winzou_state_machine:
                     on: ["cancel"]
                     do: ["@madcoders_sylius_gift_card.modifier.order_gift_card_amount", "credit"]
                     args: ["object"]
+                madcoders_gift_card_disable_bought:
+                    on: ["cancel"]
+                    do: ["@madcoders_sylius_gift_card.operator.order_gift_card", "disable"]
+                    args: ["object"]

@@ -50,3 +50,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   correction is recorded in the ledger like any other change.
 - `GiftCardBalanceModifier`: the single place a balance may change, always writing the matching
   ledger entry.
+- Selling gift cards: a product can be marked as a gift card in the admin, and paying for an order
+  issues one card per purchased unit, carrying what was actually paid for that unit and linked to
+  the customer who bought it. Cancelling the order takes the cards out of circulation.
+- Issuing is wired for both Sylius 2.x state machine adapters, on the order payment `pay`
+  transition.
