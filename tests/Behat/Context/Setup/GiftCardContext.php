@@ -60,6 +60,14 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @Given the store has a gift card :code worth :amount in the :channel channel
+     */
+    public function theStoreHasAGiftCardWorthInTheChannel(string $code, string $amount, ChannelInterface $channel): void
+    {
+        $this->createGiftCard($code, $amount, ['channel' => $channel]);
+    }
+
+    /**
      * @Given the store has a gift card :code worth :amount used by :customer
      */
     public function theStoreHasAGiftCardWorthUsedBy(string $code, string $amount, CustomerInterface $customer): void

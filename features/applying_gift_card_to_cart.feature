@@ -73,3 +73,23 @@ Feature: Paying with a gift card
         When I apply the gift card "GIFT-PART"
         Then the gift card "GIFT-PART" should be applied to my cart
         And I should have "$85.00" left to pay
+
+    @ui
+    Scenario: Changing the cart after applying a card does not double the discount
+        # Guards RegisterGiftCardAdjustmentClearingPass, which fails silently if Sylius renames the
+        # clearing-types parameter: the previous run's coverage survives and compounds on every
+        # reprocess. Nothing else touches the cart after a card is applied.
+        Given the store has a gift card "GIFT-40" worth "$40.00"
+        And the store has a product "PHP Mug" priced at "$100.00"
+        And I apply the gift card "GIFT-40"
+        When I have product "PHP Mug" added to the cart
+        And I refresh the cart
+        Then my cart total should be "$200.00"
+        And I should have "$160.00" left to pay
+
+    @ui
+    Scenario: Applying the same card twice does not count it twice
+        Given the store has a gift card "GIFT-40" worth "$40.00"
+        And I apply the gift card "GIFT-40"
+        When I apply the gift card "GIFT-40"
+        Then I should have "$60.00" left to pay
