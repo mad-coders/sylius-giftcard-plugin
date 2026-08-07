@@ -94,6 +94,25 @@ final class OrderGiftCardAmountModifierTest extends TestCase
         self::assertSame(5_000, $giftCard->getAmount());
     }
 
+    public function testCancellingGivesBackOnlyWhatWasActuallyTakenNotWhatWasIntended(): void
+    {
+        // The adjustment says 2000, but the card had been spent elsewhere so only 500 could be
+        // taken. Crediting the adjustment would hand back 2000 and leave the card worth more than
+        // it ever held - money created out of a race.
+        $giftCard = $this->createGiftCard('GIFT-A', 5_000);
+        $order = $this->createOrder(['GIFT-A' => 2_000], [$giftCard]);
+
+        $giftCard->debit(4_500);
+
+        $modifier = $this->createModifier();
+        $modifier->debit($order);
+        self::assertSame(0, $giftCard->getAmount());
+
+        $modifier->credit($order);
+
+        self::assertSame(500, $giftCard->getAmount(), 'only the 500 this order took comes back');
+    }
+
     public function testItDebitsOnlyWhatIsLeftIfTheCardWasSpentElsewhereMeanwhile(): void
     {
         // The adjustment was capped against the balance when the cart was processed, but another

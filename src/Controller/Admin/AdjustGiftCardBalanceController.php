@@ -16,8 +16,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 
 /**
@@ -37,11 +39,20 @@ final readonly class AdjustGiftCardBalanceController
         private ObjectManager $giftCardManager,
         private UrlGeneratorInterface $urlGenerator,
         private Environment $twig,
+        private AuthorizationCheckerInterface $authorizationChecker,
+        private string $requiredRole,
     ) {
     }
 
     public function __invoke(Request $request, int $id): Response
     {
+        // Checked here, not left to the firewall alone: this action moves money, and a host that
+        // imports the admin routes under a different prefix would otherwise expose it. Hosts with a
+        // finer permission model can raise the required role - see docs/INSTALLATION.md.
+        if (!$this->authorizationChecker->isGranted($this->requiredRole)) {
+            throw new AccessDeniedHttpException('You are not allowed to adjust gift card balances.');
+        }
+
         // The resource repository is typed to ResourceInterface, so narrow it here rather than
         // letting a misconfigured resource class surface as a confusing error further down.
         $giftCard = $this->giftCardRepository->find($id);

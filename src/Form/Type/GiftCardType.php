@@ -15,6 +15,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Positive;
 
 /**
  * The admin create/edit form for a gift card.
@@ -66,6 +68,12 @@ final class GiftCardType extends AbstractResourceType
                 // The card's currency comes from its channel, so the widget shows no symbol
                 // rather than a hardcoded (and probably wrong) one.
                 'currency' => false,
+                // Without these, a blank or zero amount reaches setInitialAmount(), which throws -
+                // and the admin gets a 500 instead of being told what is wrong.
+                'constraints' => [
+                    new NotBlank(message: 'madcoders_sylius_gift_card.gift_card.initial_amount.not_blank'),
+                    new Positive(message: 'madcoders_sylius_gift_card.gift_card.initial_amount.positive'),
+                ],
             ]);
         });
     }

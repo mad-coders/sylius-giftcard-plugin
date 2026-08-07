@@ -26,7 +26,9 @@ final readonly class GiftCardCodeGenerator implements GiftCardCodeGeneratorInter
     public function generate(?GiftCardConfigurationInterface $configuration = null): string
     {
         $codeLength = $configuration?->getCodeLength() ?? GiftCardConfiguration::DEFAULT_CODE_LENGTH;
-        $codeLength = max(1, $codeLength);
+        // Same floor the configuration enforces, applied again here because the generator is
+        // public API and can be called with a configuration a host built by hand.
+        $codeLength = max(GiftCardConfiguration::MINIMUM_CODE_LENGTH, $codeLength);
         $prefix = $configuration?->getCodePrefix() ?? '';
 
         for ($attempt = 0; $attempt < self::MAX_ATTEMPTS; ++$attempt) {

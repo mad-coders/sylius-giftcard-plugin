@@ -18,7 +18,7 @@ madcoders_sylius_gift_card:
         code_prefix: Code prefix
         code_prefix_help: Prepended to every generated code, for example "GIFT-".
         code_length: Code length
-        code_length_help: Number of random characters after the prefix.
+        code_length_help: 'Number of random characters after the prefix. Minimum 12 - a shorter code is guessable, and a gift card code is money.'
         validity_period: Validity period
         validity_period_help: How long a new card stays valid, for example "1 year". Leave empty for cards that never expire.
         custom_message: Custom message
@@ -55,8 +55,15 @@ madcoders_sylius_gift_card:
         shop:
             account:
                 gift_cards: My gift cards
+    gift_card_configuration:
+        code_length:
+            too_short: 'The code length must be at least 12 characters - a shorter code is guessable.'
     gift_card:
         code:
             not_blank: Please enter a gift card code.
+            unique: A gift card with this code already exists.
+        initial_amount:
+            not_blank: Please enter the amount the gift card is worth.
+            positive: The amount must be greater than zero.
         amount:
             positive: The amount must be greater than zero.

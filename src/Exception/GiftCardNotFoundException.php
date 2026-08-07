@@ -8,7 +8,7 @@ final class GiftCardNotFoundException extends GiftCardException
 {
     public function __construct(private readonly string $giftCardCode)
     {
-        parent::__construct(sprintf('There is no gift card with code "%s".', $giftCardCode));
+        parent::__construct(sprintf('There is no gift card with code "%s".', self::maskCode($giftCardCode)));
     }
 
     public function getGiftCardCode(): string

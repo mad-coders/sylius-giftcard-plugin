@@ -60,6 +60,9 @@ class GiftCard implements GiftCardInterface, \Stringable
 
     public function __toString(): string
     {
+        // Deliberately the code: this is what admin grids, choice lists and Doctrine error messages
+        // render, and a masked value there would be useless. Exception messages mask it instead -
+        // see GiftCardException::maskCode().
         return (string) $this->code;
     }
 

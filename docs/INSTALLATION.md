@@ -239,6 +239,17 @@ These need no configuration on your side, but are worth knowing about:
   that code under `sylius_mailer.emails`.
 - **Admin and account menu entries**, added through Sylius' menu events.
 
+## Authorization
+
+Admin actions that move money check the role in the
+`madcoders_sylius_gift_card.admin_role` parameter, which defaults to
+`ROLE_ADMINISTRATION_ACCESS`. Override it if your application has a finer permission model:
+
+```yaml
+parameters:
+    madcoders_sylius_gift_card.admin_role: 'ROLE_GIFT_CARD_MANAGER'
+```
+
 ## Overriding
 
 Every service has an interface-named alias, so decorating or replacing one is standard Symfony. The

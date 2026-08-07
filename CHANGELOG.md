@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Cancelling an order could inflate a gift card.** The credit was taken from the order's
+  adjustment - what the order *intended* to take - rather than from the ledger's record of what it
+  actually took. When a debit had been clamped because the card was spent elsewhere in between, the
+  cancellation handed back more than was ever charged. It now credits the outstanding debit recorded
+  against that order, netting off credits already given, so a repeated cancellation is a no-op.
+- The admin balance adjustment now checks authorization itself rather than relying only on the
+  firewall, since it moves money. The required role is the
+  `madcoders_sylius_gift_card.admin_role` parameter.
+- The admin gift card form validates its amount, and a duplicate code is reported as a form error.
+  Previously a blank amount, a zero amount or a code already in use produced a 500.
+- Gift card codes are configured with a minimum length of 12 characters, enforced in the model as
+  well as the form. A shorter code space is guessable, and the misconfiguration was not visible
+  until codes were already issued.
+- Exception messages mask gift card codes. They reach application logs and error trackers, which
+  retain them for months, and a code is bearer money.
+- Added interface-named aliases for the repositories and the order processor, so host code can
+  autowire the plugin's contracts.
+
 ### Changed
 
 - **A gift card is now tender rather than a discount.** It no longer reduces the order total; the
