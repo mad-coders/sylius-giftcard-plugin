@@ -6,6 +6,7 @@ madcoders_sylius_gift_card:
         enter_gift_card_code: Enter your gift card code
         apply_gift_card: Apply
         remove: Remove
+        amount_to_pay: Left to pay
         remaining_balance: Remaining balance
         initial_amount: Initial amount
         amount: Amount

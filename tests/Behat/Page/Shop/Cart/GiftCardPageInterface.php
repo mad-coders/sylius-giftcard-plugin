@@ -17,6 +17,8 @@ interface GiftCardPageInterface extends ShopPageInterface
 
     public function getGiftCardBalance(string $code): string;
 
+    public function getAmountToPay(): string;
+
     public function getGiftCardTotal(): string;
 
     public function hasGiftCardTotal(): bool;

@@ -1,13 +1,27 @@
+{#
+    What the gift cards cover, and what is left to pay.
+
+    Shown next to the order total rather than replacing it: the goods still cost what they cost, and
+    the card is money against that - so the customer sees both numbers, which is also what they will
+    see on the order afterwards.
+#}
 {% import "@SyliusShop/shared/macro/money.html.twig" as money %}
 
 {% set cart = hookable_metadata.context.cart %}
-{% set gift_card_total = cart.getAdjustmentsTotal('madcoders_gift_card') %}
+{% set gift_card_total = cart.giftCardTotal is defined ? cart.giftCardTotal : 0 %}
 
-{% if gift_card_total != 0 %}
+{% if gift_card_total > 0 %}
     <div class="hstack gap-2 mb-2">
         <div>{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}:</div>
         <div class="ms-auto text-end" {{ sylius_test_html_attribute('cart-gift-card-total') }}>
-            {{ money.convertAndFormat(gift_card_total) }}
+            -{{ money.convertAndFormat(gift_card_total) }}
+        </div>
+    </div>
+
+    <div class="hstack gap-2 mb-2 fw-bold">
+        <div>{{ 'madcoders_sylius_gift_card.ui.amount_to_pay'|trans }}:</div>
+        <div class="ms-auto text-end" {{ sylius_test_html_attribute('cart-amount-to-pay') }}>
+            {{ money.convertAndFormat(cart.amountToPay) }}
         </div>
     </div>
 {% endif %}

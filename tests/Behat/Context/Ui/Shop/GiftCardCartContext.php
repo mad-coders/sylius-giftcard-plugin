@@ -80,6 +80,16 @@ final class GiftCardCartContext implements Context
     }
 
     /**
+     * @Then I should have :amount left to pay
+     */
+    public function iShouldHaveLeftToPay(string $amount): void
+    {
+        $this->openCartIfNeeded();
+
+        Assert::same($this->giftCardPage->getAmountToPay(), $amount);
+    }
+
+    /**
      * @Then the gift cards should reduce my cart by :amount
      */
     public function theGiftCardsShouldReduceMyCartBy(string $amount): void

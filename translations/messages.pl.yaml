@@ -23,6 +23,7 @@ madcoders_sylius_gift_card:
         adjust_balance: Koryguj saldo
         adjustment_direction: Kierunek
         amount: Kwota
+        amount_to_pay: Do zapłaty
         apply_gift_card: Zastosuj
         balance_after: Saldo po operacji
         balance_history: Historia salda

@@ -12,7 +12,8 @@ sylius_twig_hooks:
         'sylius_shop.cart.index.content.form.sections.general.summary':
             madcoders_gift_card_total:
                 template: '@MadcodersSyliusGiftCardPlugin/shop/cart/summary/gift_card_total.html.twig'
-                priority: 350
+                # Below the order total (100), so "you pay" reads after the total it modifies.
+                priority: 50
 
         # Account pages. The prefix is merged with `sylius_shop.account.common`, so the account
         # breadcrumbs and menu still render around this content.

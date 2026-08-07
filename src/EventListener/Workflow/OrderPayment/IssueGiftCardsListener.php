@@ -13,8 +13,7 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
  * gift card becomes real.
  *
  * Generation waits for payment rather than for the order being placed, so an unpaid order never
- * hands out spendable codes. The equivalent winzou wiring is in
- * config/state_machine/winzou/sylius_order_payment.yaml and calls the same operator.
+ * hands out spendable codes.
  */
 final readonly class IssueGiftCardsListener
 {

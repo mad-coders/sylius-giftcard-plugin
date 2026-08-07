@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **A gift card is now tender rather than a discount.** It no longer reduces the order total; the
+  order stays worth what the goods are worth and the card comes off what the customer has to pay.
+  This keeps the tax base at the full sale value (tax on the card was settled when it was bought),
+  keeps reporting and refunds honest, and stops a card switching off a "spend over X" promotion.
+  `Order::getAmountToPay()` and `Order::getGiftCardTotal()` expose the split - **a host application
+  showing "you pay" must use `getAmountToPay()`, not `getTotal()`**. See
+  `docs/adr-log/0010-gift-card-as-tender.md`.
+- **Removed the winzou state machine wiring.** Sylius 2.x does not install winzou/state-machine - it
+  is only a composer `suggest` - the default adapter is Symfony Workflow, and CI never exercised the
+  winzou path. It was untested surface carried for no supported configuration.
+
 ### Added
 
 - A checkout Behat suite covering the path nothing exercised before: a gift card applied to a real

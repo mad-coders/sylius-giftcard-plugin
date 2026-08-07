@@ -74,6 +74,11 @@ final class GiftCardPage extends ShopPage implements GiftCardPageInterface
         throw new \InvalidArgumentException(sprintf('There is no applied gift card with code "%s" on the cart.', $code));
     }
 
+    public function getAmountToPay(): string
+    {
+        return trim($this->getElement('amount_to_pay')->getText());
+    }
+
     public function getGiftCardTotal(): string
     {
         return trim($this->getElement('gift_card_total')->getText());
@@ -106,6 +111,7 @@ final class GiftCardPage extends ShopPage implements GiftCardPageInterface
             'apply_gift_card_button' => '[data-test-apply-gift-card-button]',
             'gift_card_code_input' => '[data-test-gift-card-code-input]',
             'gift_card_panel' => '[data-test-gift-card-panel]',
+            'amount_to_pay' => '[data-test-cart-amount-to-pay]',
             'gift_card_total' => '[data-test-cart-gift-card-total]',
             'order_total' => '[data-test-cart-grand-total]',
         ]);
