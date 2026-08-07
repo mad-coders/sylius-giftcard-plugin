@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0-RC.1] - 2026-08-07
+
+First release candidate. Feature-complete against the 1.0 plan: gift cards can be sold, redeemed,
+administered and tracked by the customers they belong to. Tested against Sylius 2.0, 2.1 and 2.2 on
+Symfony 6.4 and 7.4, with MySQL, MariaDB and PostgreSQL.
+
+Known limitations, deferred beyond 1.0: no PDF gift cards, no API Platform resources, no bulk
+generation or import, no partial refunds back onto a card, and a gift card's face value comes from
+the product's price rather than being chosen by the customer at purchase.
+
 ### Added
 
 - Project bootstrap: composer package, Sylius 2.x test application wiring, plugin bundle and
@@ -63,3 +73,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - "My gift cards" in the customer account: the cards you use (with their remaining balance) listed
   separately from the cards you bought, plus a balance history page per card. A customer can only
   see cards they are linked to.
+
+[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.1...1.0
+[1.0.0-RC.1]: https://github.com/mad-coders/sylius-giftcard-plugin/releases/tag/v1.0.0-RC.1

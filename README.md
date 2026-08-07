@@ -8,8 +8,13 @@ customers track what is left on them.</p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue.svg" alt="License"></a>
 </p>
 
-> **Status: in development.** The 1.0 line is being built phase by phase - see
-> [`docs/PLAN.md`](docs/PLAN.md) for the roadmap and what has landed.
+> **Status: 1.0.0-RC.1.** Feature-complete against the 1.0 plan and green across the supported
+> Sylius, Symfony and database matrix. Being a release candidate, it wants real-world use before a
+> stable tag - see [`CHANGELOG.md`](CHANGELOG.md) for what is in it and what is deliberately left
+> out.
+
+Requires `"minimum-stability": "RC"` (or `composer require madcoders/sylius-giftcard-plugin:^1.0@RC`)
+until 1.0.0 is tagged.
 
 ## What it does
 
