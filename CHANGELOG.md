@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0-RC.1] - 2026-08-07
+
+First release candidate. Gift cards can be sold, redeemed, administered and tracked by the customers
+they belong to, across Sylius 2.0, 2.1 and 2.2 on Symfony 6.4 and 7.4, with MySQL, MariaDB and
+PostgreSQL.
+
+A gift card is treated as **money against the amount to pay**, not a discount on the order total.
+A host application showing an amount due must read `Order::getAmountToPay()`, not `getTotal()` -
+see `docs/adr-log/0010-gift-card-as-tender.md`.
+
+A source review before this candidate found and fixed two defects that would have cost real money -
+customers charged the full total while their card was debited, and every product save silently
+clearing its gift card flag - plus an anonymous code-enumeration hole. Those are listed under Fixed
+below, with the tests that catch them.
+
+Known limitations, deferred beyond 1.0: no PDF gift cards, no API Platform resources, no bulk
+generation or import, no partial refunds back onto a card, and a card's face value comes from the
+product's price rather than being chosen by the customer. A card drained between being applied and
+the order being placed also leaves its coverage on that order rather than the order being re-priced.
+
 ### Fixed
 
 - **Cancelling an order could inflate a gift card.** The credit was taken from the order's
@@ -126,3 +146,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - "My gift cards" in the customer account: the cards you use (with their remaining balance) listed
   separately from the cards you bought, plus a balance history page per card. A customer can only
   see cards they are linked to.
+
+[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.1...1.0
+[1.0.0-RC.1]: https://github.com/mad-coders/sylius-giftcard-plugin/releases/tag/v1.0.0-RC.1
