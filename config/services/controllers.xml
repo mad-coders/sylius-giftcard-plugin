@@ -21,6 +21,8 @@
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
             <argument type="service" id="router" />
             <argument type="service" id="twig" />
+            <argument type="service" id="security.authorization_checker" />
+            <argument>%madcoders_sylius_gift_card.admin_role%</argument>
         </service>
 
         <service id="Madcoders\SyliusGiftCardPlugin\Controller\Shop\AccountGiftCardController" public="true">

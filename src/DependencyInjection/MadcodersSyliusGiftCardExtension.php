@@ -21,6 +21,16 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
 
         $loader->load('services.xml');
+
+        // Validation lives in its own directory rather than alongside the Doctrine mapping, so a
+        // host overriding one does not have to take the other.
+        $container->prependExtensionConfig('framework', [
+            'validation' => [
+                'mapping' => [
+                    'paths' => [\dirname(__DIR__, 2) . '/config/validation'],
+                ],
+            ],
+        ]);
     }
 
     public function prepend(ContainerBuilder $container): void

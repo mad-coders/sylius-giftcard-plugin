@@ -9,4 +9,10 @@
         <import resource="services/*.xml" />
     </imports>
 
+    <parameters>
+        <!-- The role required for gift card admin actions that move money. A host with a finer
+             permission model can override this parameter. -->
+        <parameter key="madcoders_sylius_gift_card.admin_role">ROLE_ADMINISTRATION_ACCESS</parameter>
+    </parameters>
+
 </container>

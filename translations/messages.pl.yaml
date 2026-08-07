@@ -11,6 +11,14 @@ madcoders_sylius_gift_card:
             positive: Kwota musi być większa od zera.
         code:
             not_blank: Wpisz kod karty podarunkowej.
+            unique: Karta podarunkowa o tym kodzie już istnieje.
+        initial_amount:
+            not_blank: Podaj wartość karty podarunkowej.
+            positive: Kwota musi być większa od zera.
+    gift_card_configuration:
+        code_length:
+            too_short: Długość kodu musi wynosić co najmniej 12 znaków - krótszy kod
+                da się odgadnąć.
     menu:
         admin:
             gift_card_configuration: Konfiguracja kart podarunkowych
@@ -30,7 +38,8 @@ madcoders_sylius_gift_card:
         code: Kod
         code_help: Pozostaw puste, aby wygenerować kod na podstawie konfiguracji kanału.
         code_length: Długość kodu
-        code_length_help: Liczba losowych znaków po prefiksie.
+        code_length_help: Liczba losowych znaków po prefiksie. Minimum 12 - krótszy
+            kod da się odgadnąć, a kod karty to pieniądze.
         code_prefix: Prefiks kodu
         code_prefix_help: Dodawany przed każdym wygenerowanym kodem, na przykład "GIFT-".
         custom_message: Wiadomość

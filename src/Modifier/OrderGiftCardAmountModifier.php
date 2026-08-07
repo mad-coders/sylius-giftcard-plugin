@@ -6,6 +6,8 @@ namespace Madcoders\SyliusGiftCardPlugin\Modifier;
 
 use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionInterface;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTransactionType;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface as BaseOrderInterface;
@@ -64,23 +66,62 @@ final readonly class OrderGiftCardAmountModifier implements OrderGiftCardAmountM
             return;
         }
 
-        foreach ($this->giftCardAmountsFor($order) as $code => $amount) {
+        foreach (array_keys($this->giftCardAmountsFor($order)) as $code) {
             $giftCard = $this->findGiftCard($order, $code);
             if (null === $giftCard) {
                 continue;
             }
 
-            $initialAmount = $giftCard->getInitialAmount() ?? 0;
-
-            // Never give back more than the card can hold. A cancellation can only undo what this
-            // order took, and inflating a card beyond its face value would be free money.
-            $amount = min($amount, $initialAmount - $giftCard->getAmount());
+            // Give back what the ledger says this order actually took, not what the adjustment says
+            // it intended to take. The two differ whenever the debit was clamped because the card
+            // had been spent elsewhere in the meantime - crediting the adjustment would then hand
+            // back more than was ever charged and inflate the card.
+            //
+            // Credits already recorded for this order are netted off, so a cancellation that fires
+            // twice is a no-op rather than paying out twice.
+            $amount = $this->outstandingDebitFor($giftCard, $order);
             if ($amount <= 0) {
                 continue;
             }
 
             $this->giftCardBalanceModifier->credit($giftCard, $amount, $order);
         }
+    }
+
+    /**
+     * What this order still has taken from the card: its debits less any credits already given
+     * back for the same order.
+     */
+    private function outstandingDebitFor(GiftCardInterface $giftCard, BaseOrderInterface $order): int
+    {
+        $outstanding = 0;
+
+        foreach ($giftCard->getTransactions() as $transaction) {
+            if (!self::belongsToOrder($transaction, $order)) {
+                continue;
+            }
+
+            $outstanding += match ($transaction->getType()) {
+                GiftCardTransactionType::Debit => $transaction->getAmount(),
+                GiftCardTransactionType::Credit => -$transaction->getAmount(),
+            };
+        }
+
+        return $outstanding;
+    }
+
+    private static function belongsToOrder(GiftCardTransactionInterface $transaction, BaseOrderInterface $order): bool
+    {
+        $transactionOrder = $transaction->getOrder();
+        if (null === $transactionOrder) {
+            return false;
+        }
+
+        // An order placed and cancelled inside one unit of work has no id yet, so fall back to
+        // identity - two different unsaved orders are still two different objects.
+        return null !== $order->getId() && null !== $transactionOrder->getId()
+            ? $transactionOrder->getId() === $order->getId()
+            : $transactionOrder === $order;
     }
 
     /**

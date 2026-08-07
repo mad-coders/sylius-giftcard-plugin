@@ -14,7 +14,11 @@ final class GiftCardNotRedeemableException extends GiftCardException
 {
     public function __construct(private readonly GiftCardInterface $giftCard, string $reason)
     {
-        parent::__construct(sprintf('The gift card "%s" cannot be redeemed: %s.', (string) $giftCard->getCode(), $reason));
+        parent::__construct(sprintf(
+            'The gift card "%s" cannot be redeemed: %s.',
+            self::maskCode($giftCard->getCode()),
+            $reason,
+        ));
     }
 
     public function getGiftCard(): GiftCardInterface

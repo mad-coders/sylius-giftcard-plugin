@@ -13,6 +13,8 @@ madcoders_sylius_gift_card_admin_gift_card:
             type: Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardType
     type: sylius.resource
 
+# Moves money, so the controller checks authorization itself rather than relying only on the admin
+# firewall - the `_sylius.permission` key is honoured by resource controllers, and this is not one.
 madcoders_sylius_gift_card_admin_gift_card_adjust_balance:
     path: /gift-cards/{id}/adjust-balance
     methods: [GET, POST]

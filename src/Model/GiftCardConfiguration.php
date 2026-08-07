@@ -18,6 +18,12 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
 
     public const DEFAULT_CODE_LENGTH = 16;
 
+    /**
+     * Below this the code space is small enough to guess. At 12 characters of the generator's
+     * 30-character alphabet that is ~59 bits; at 6 it is ~29 bits, which is minutes of work.
+     */
+    public const MINIMUM_CODE_LENGTH = 12;
+
     protected ?int $id = null;
 
     protected ?ChannelInterface $channel = null;
@@ -55,7 +61,9 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
 
     public function setCodeLength(int $codeLength): void
     {
-        $this->codeLength = $codeLength;
+        // Clamped rather than silently accepted: a gift card code is bearer money, and a
+        // misconfigured length is not obvious until the codes are already guessable.
+        $this->codeLength = max(self::MINIMUM_CODE_LENGTH, $codeLength);
     }
 
     public function getCodePrefix(): ?string

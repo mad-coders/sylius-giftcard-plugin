@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+
+    <!--
+        Codes are unique in the database. Without this the admin gets a driver-level integrity
+        violation - a 500 - instead of being told the code is taken, which is easy to hit when
+        importing pre-printed cards.
+    -->
+    <class name="Madcoders\SyliusGiftCardPlugin\Model\GiftCard">
+        <constraint name="Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity">
+            <option name="fields">
+                <value>code</value>
+            </option>
+            <option name="message">madcoders_sylius_gift_card.gift_card.code.unique</option>
+        </constraint>
+    </class>
+
+</constraint-mapping>
