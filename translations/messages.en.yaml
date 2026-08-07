@@ -15,6 +15,7 @@ madcoders_sylius_gift_card:
         never_expires: Never
         code: Code
         code_help: Leave empty to generate one from the channel's configuration.
+        code_immutable_help: A code cannot be changed once the card is issued - the customer already has it, and orders paid with the card are linked to it.
         code_prefix: Code prefix
         code_prefix_help: Prepended to every generated code, for example "GIFT-".
         code_length: Code length

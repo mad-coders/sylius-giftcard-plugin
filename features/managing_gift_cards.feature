@@ -56,3 +56,15 @@ Feature: Managing gift cards
         And the product "Gift Card" is a gift card product
         When I edit the product "Gift Card" and save it unchanged
         Then the product "Gift Card" should still be a gift card product
+
+    @ui
+    Scenario: An issued gift card's code and face value cannot be changed
+        # Both are load-bearing. The code is bearer money the customer is already holding, and it is
+        # the only link between an order and the card that paid for it - renaming an issued card
+        # would strand every refund, silently. The face value is what those orders were priced
+        # against. Use the balance adjustment action to correct a balance instead.
+        Given the store has a gift card "GIFT-LOCKED" worth "$50.00"
+        When I want to edit the gift card "GIFT-LOCKED"
+        Then I should not be able to change its code
+        And its code should still be "GIFT-LOCKED"
+        And I should not be able to change its initial amount
