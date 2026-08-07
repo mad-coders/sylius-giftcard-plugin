@@ -7,9 +7,11 @@ madcoders_sylius_gift_card_shop_cart_apply:
     defaults:
         _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController::applyAction
 
+# POST only: removing a card mutates the cart, so it must not be reachable by a link a browser
+# prefetcher, link scanner or a third-party page can follow.
 madcoders_sylius_gift_card_shop_cart_remove:
     path: /gift-cards/{code}/remove
-    methods: [GET, POST]
+    methods: [POST]
     defaults:
         _controller: Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController::removeAction
     requirements:

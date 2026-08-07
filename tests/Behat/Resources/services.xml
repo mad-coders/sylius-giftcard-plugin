@@ -29,6 +29,7 @@
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.create" />
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.show" />
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.adjust_balance" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.product.update" />
             <argument type="service" id="sylius.behat.notification_checker.admin" />
         </service>
 
@@ -84,6 +85,11 @@
         <service id="madcoders_sylius_gift_card.behat.page.shop.account.gift_card_show"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Account\GiftCardShowPage"
                  parent="sylius.behat.page.shop.page"
+                 public="false" />
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.product.update"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Product\UpdatePage"
+                 parent="sylius.behat.symfony_page"
                  public="false" />
     </services>
 

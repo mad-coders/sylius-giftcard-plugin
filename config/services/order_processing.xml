@@ -6,16 +6,24 @@
 
     <services>
         <!--
-            Priority -10 puts this after every Sylius processor (the lowest of which, the payment
-            processor, is 0), so gift cards are applied to the final total - after shipping,
-            promotions and taxes. Its adjustments are cleared at the start of the next run by
+            Priority 5 places this between taxes (10) and Sylius' payment processor (0). Both halves
+            matter:
+
+            - after taxes, so the discount applies to the final total including shipping,
+              promotions and tax;
+            - BEFORE the payment processor, because that sets the payment amount from
+              Order::getTotal(). Running afterwards (any priority below 0) leaves the payment
+              holding the pre-discount total, so the customer is charged full price while the card
+              is still debited. The processors run highest priority first.
+
+            Its adjustments are cleared at the start of the next run by
             RegisterGiftCardAdjustmentClearingPass, which is what keeps processing idempotent.
         -->
         <service id="madcoders_sylius_gift_card.order_processing.order_gift_card_processor"
                  class="Madcoders\SyliusGiftCardPlugin\OrderProcessor\OrderGiftCardProcessor">
             <argument type="service" id="sylius.factory.adjustment" />
             <argument type="service" id="translator" />
-            <tag name="sylius.order_processor" priority="-10" />
+            <tag name="sylius.order_processor" priority="5" />
         </service>
 
         <!--

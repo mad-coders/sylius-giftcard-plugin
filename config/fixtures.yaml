@@ -1,51 +1,51 @@
-# Adds gift card fixtures to Sylius' default suite, so `bin/console sylius:fixtures:load` gives a
-# shop with cards you can actually redeem.
+# Demo gift card data, in its own opt-in suite.
 #
-# Priorities are negative so these run after Sylius' own fixtures: gift cards reference a channel,
-# and the partly-spent example references a customer, both of which have to exist first.
+# Deliberately NOT added to Sylius' `default` suite. A plugin that injects fixtures into the host's
+# default suite changes what `sylius:fixtures:load` does the moment it is installed, and any
+# hardcoded channel code would then break that command outright for a shop whose channels are named
+# differently.
+#
+# Load it explicitly:
+#
+#     bin/console sylius:fixtures:load madcoders_gift_card
+#
+# The channel is left unset so the factory picks an existing one, which means this works in any
+# shop without editing.
 sylius_fixtures:
     suites:
-        default:
+        madcoders_gift_card:
             fixtures:
                 madcoders_gift_card_configuration:
-                    priority: -10
                     options:
                         custom:
-                            -   channel: FASHION_WEB
-                                code_length: 8
+                            -   code_length: 8
                                 code_prefix: 'GIFT-'
                                 validity_period: '1 year'
 
                 madcoders_gift_card:
-                    priority: -20
+                    # After the configuration, so generated codes pick up its prefix and validity.
+                    priority: -10
                     options:
                         custom:
                             # A full card, ready to spend.
                             -   code: 'GIFT-FULL0001'
-                                channel: FASHION_WEB
                                 initial_amount: 10000
 
                             # A small card, so a cart can be paid for with two of them.
                             -   code: 'GIFT-SMALL001'
-                                channel: FASHION_WEB
                                 initial_amount: 2000
 
-                            # Partly spent, and already assigned to the customer who spends it -
-                            # the state the account balance view exists to show.
+                            # Partly spent - the state the account balance view exists to show.
                             -   code: 'GIFT-USED0001'
-                                channel: FASHION_WEB
                                 initial_amount: 10000
                                 spent_amount: 6500
-                                redeemer: 'shop@example.com'
 
                             # Expired, to prove expiry is enforced at redemption.
                             -   code: 'GIFT-EXPIRED1'
-                                channel: FASHION_WEB
                                 initial_amount: 5000
                                 expires_at: '2020-01-01'
 
                             # Disabled, same reason.
                             -   code: 'GIFT-DISABLED'
-                                channel: FASHION_WEB
                                 initial_amount: 5000
                                 enabled: false

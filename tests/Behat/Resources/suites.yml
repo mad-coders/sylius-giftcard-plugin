@@ -92,8 +92,11 @@ default:
                 - sylius.behat.context.setup.currency
                 - sylius.behat.context.setup.locale
                 - sylius.behat.context.setup.admin_security
+                - sylius.behat.context.setup.product
+                - sylius.behat.context.transform.product
 
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card_product
 
                 - sylius.behat.context.ui.admin.managing_administrators
                 - madcoders_sylius_gift_card.behat.context.ui.admin.gift_card

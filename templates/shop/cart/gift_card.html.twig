@@ -30,11 +30,17 @@
                                 </span>
                             </span>
 
-                            <a class="btn btn-sm btn-outline-danger"
-                               href="{{ path('madcoders_sylius_gift_card_shop_cart_remove', {'code': gift_card.code}) }}"
-                               {{ sylius_test_html_attribute('remove-gift-card') }}>
-                                {{ 'madcoders_sylius_gift_card.ui.remove'|trans }}
-                            </a>
+                            {# A POST with a token: removal mutates the cart, so a link would let a
+                               prefetcher or a third-party page strip a customer's discount. #}
+                            <form method="post"
+                                  action="{{ path('madcoders_sylius_gift_card_shop_cart_remove', {'code': gift_card.code}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('madcoders_sylius_gift_card_remove') }}">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        {{ sylius_test_html_attribute('remove-gift-card') }}>
+                                    {{ 'madcoders_sylius_gift_card.ui.remove'|trans }}
+                                </button>
+                            </form>
                         </li>
                     {% endfor %}
                 </ul>

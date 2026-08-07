@@ -52,9 +52,29 @@ final readonly class GiftCardApplicator implements GiftCardApplicatorInterface
     {
         $order = $this->assertGiftCardAwareOrder($order);
 
-        $order->removeGiftCard($this->resolve($giftCard));
+        // Resolved from the order's own cards rather than the repository. Removing something that
+        // was never applied is meaningless, and looking the code up globally would turn this into
+        // an oracle: "no such card" for an unknown code versus "removed" for any real one in the
+        // shop tells an anonymous caller which codes exist. Gift card codes are bearer-like, so
+        // that distinction is worth money.
+        $giftCard = $this->resolveApplied($order, $giftCard);
+
+        $order->removeGiftCard($giftCard);
 
         $this->orderProcessor->process($order);
+    }
+
+    private function resolveApplied(OrderInterface $order, GiftCardInterface|string $giftCard): GiftCardInterface
+    {
+        $code = $giftCard instanceof GiftCardInterface ? $giftCard->getCode() : $giftCard;
+
+        foreach ($order->getGiftCards() as $appliedGiftCard) {
+            if ($appliedGiftCard->getCode() === $code) {
+                return $appliedGiftCard;
+            }
+        }
+
+        throw new GiftCardNotFoundException((string) $code);
     }
 
     private function resolve(GiftCardInterface|string $giftCard): GiftCardInterface

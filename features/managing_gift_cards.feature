@@ -46,3 +46,13 @@ Feature: Managing gift cards
         And I take "15.00" from its balance
         Then its remaining balance should be "$35.00"
         And its balance history should have 1 entries
+
+    @ui
+    Scenario: Editing a gift card product does not clear its gift card flag
+        # Guards a silent failure: the flag is a mapped checkbox, and Sylius' product form renders
+        # only what a hookable emits. If it is not rendered, every product save submits it as
+        # absent and Symfony writes false - quietly turning a gift card product into a normal one.
+        Given the store has a product "Gift Card"
+        And the product "Gift Card" is a gift card product
+        When I edit the product "Gift Card" and save it unchanged
+        Then the product "Gift Card" should still be a gift card product

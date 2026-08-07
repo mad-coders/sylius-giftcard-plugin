@@ -1,0 +1,15 @@
+{#
+    The "this product is a gift card" flag on the admin product form.
+
+    This template is not optional decoration. The field is mapped, and Sylius' product form closes
+    with `render_rest: false`, so without a hookable rendering it the checkbox is never emitted -
+    and an absent checkbox submits as false. Every product save would then silently clear the flag,
+    quietly turning gift card products into ordinary ones.
+#}
+{% set form = hookable_metadata.context.form %}
+
+{% if form.giftCard is defined %}
+    <div class="mb-3" {{ sylius_test_html_attribute('product-gift-card') }}>
+        {{ form_row(form.giftCard) }}
+    </div>
+{% endif %}

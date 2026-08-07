@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Customers were charged the full order total while their gift card was still debited.** The
+  order processor ran at priority -10, below Sylius' payment processor at 0 - and that processor
+  sets the payment amount from `Order::getTotal()`. The discount was therefore applied *after* the
+  amount had been captured. It now runs at priority 5, between taxes and payment, with a test
+  asserting the ordering against Sylius' own configuration so an upgrade cannot silently undo it.
+- **Editing any product silently cleared its gift card flag.** The flag is a mapped checkbox, and
+  Sylius' product form renders only what a hookable emits, so it was never displayed - and an
+  absent checkbox submits as false. There was also no way to mark a product as a gift card from the
+  admin at all. Both are fixed by rendering the field on the create and update forms.
+- **An unauthenticated visitor could enumerate valid gift card codes.** Removing a card resolved
+  the code against the repository before checking the cart, so an unknown code and a real one
+  belonging to somebody else produced different responses. Removal now only ever looks at the cards
+  on the caller's own cart.
+- Removing a gift card required a `GET` with no CSRF token, so a third-party page could strip a
+  shopper's discount. It is now a `POST` with a token.
+- The plugin no longer injects demo fixtures into the host's `default` suite, and no longer
+  hardcodes a channel code - which broke `sylius:fixtures:load` for any shop whose channel was not
+  named `FASHION_WEB`. The demo data moved to an opt-in `madcoders_gift_card` suite.
+
 ### Added
 
 - Project bootstrap: composer package, Sylius 2.x test application wiring, plugin bundle and
