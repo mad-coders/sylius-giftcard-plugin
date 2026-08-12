@@ -33,6 +33,16 @@ final class AdjustBalancePage extends SymfonyPage implements AdjustBalancePageIn
         $this->getElement('submit')->press();
     }
 
+    public function getValidationMessage(): string
+    {
+        return trim($this->getElement('validation_error')->getText());
+    }
+
+    public function hasValidationMessage(): bool
+    {
+        return $this->hasElement('validation_error');
+    }
+
     public function getCurrentBalance(): string
     {
         return trim($this->getElement('current_balance')->getText());
@@ -42,6 +52,9 @@ final class AdjustBalancePage extends SymfonyPage implements AdjustBalancePageIn
     {
         return array_merge(parent::getDefinedElements(), [
             'current_balance' => '[data-test-current-balance]',
+            // Symfony names a field's error elements `<field id>_errorN` whatever the form theme,
+            // so this matches without pinning the test to Bootstrap's markup.
+            'validation_error' => '[id*="_error"]',
             'submit' => '[data-test-adjust-balance-button]',
         ]);
     }

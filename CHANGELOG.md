@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The admin balance-adjustment form renders with the admin form theme. It was falling back to Twig's
+  default theme, so a rejected adjustment showed its reason as an unstyled bare list in the middle of
+  the admin panel.
+
+### Documentation
+
+- Recorded the removal of the winzou state machine wiring as
+  `docs/adr-log/0011-symfony-workflow-only.md`, and corrected the five documents that still described
+  it as supported. Two of those were instructions rather than description - `ai/coding-rules.md` and
+  `AGENTS.md` both carried a standing rule to wire every order transition for both adapters, which
+  would have had the next change reintroduce it. `docs/INSTALLATION.md` told hosts the winzou
+  callbacks were prepended for them, which was simply false, and it now also documents the two
+  decorated Sylius payment services.
+- Replaced the remaining pre-tender language ("reduce the order total", "gift card discount",
+  "redeem them against order totals") in the README, `composer.json`, `docs/PLAN.md` and
+  `docs/INSTALLATION.md`. ADR 0004 is marked "do not implement from it" with its superseded sections
+  and its withdrawn rule 3 struck through.
+
 ## [1.0.0-RC.2] - 2026-08-08
 
 Second release candidate. A source review after RC.1 found four ways an order settled with a gift

@@ -2,6 +2,10 @@
 
 {% set prefixes = ['sylius_admin.common'] %}
 
+{# Without this the form renders with Twig's default theme - errors come out as a bare <ul> in the
+   middle of the admin panel. The page is ours, so the theme has to be asked for explicitly. #}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
+
 {% block title %}{{ 'madcoders_sylius_gift_card.ui.adjust_balance'|trans }} | {{ parent() }}{% endblock %}
 
 {% block body %}

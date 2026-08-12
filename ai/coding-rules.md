@@ -57,8 +57,9 @@ See `docs/adr-log/0003-service-wiring.md`.
   arguments.
 - Business logic lives in the service. Framework wiring - state machine callbacks, event listeners,
   controllers - stays thin and delegates.
-- Anything hooking an order transition is wired for **both** state machine adapters (winzou and
-  Symfony Workflow).
+- Anything hooking an order transition is wired through **Symfony Workflow event listeners only**.
+  Sylius 2.x does not install winzou/state-machine, so winzou callbacks would be dead configuration
+  that CI cannot exercise - see `docs/adr-log/0011-symfony-workflow-only.md`.
 
 ## Gift card invariants
 

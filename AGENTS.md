@@ -62,9 +62,10 @@ configuration, or a usage example, use the MCP tools:
 
 Two Sylius 2.x specifics that are easy to get wrong from memory:
 
-1. **Two state machine adapters.** `winzou_state_machine` and Symfony Workflow are both supported
-   and the host application picks. Anything hooking an order transition must be wired for both -
-   see `docs/adr-log/0004-gift-card-redemption-as-order-adjustment.md`.
+1. **Symfony Workflow only.** Sylius 2.x does not install `winzou/state-machine` - it is only a
+   `suggest` - so order and payment transitions are hooked through Symfony Workflow event listeners
+   and nothing else. Do not add winzou callbacks or a `config/state_machine/` directory; they would
+   be dead configuration CI cannot exercise. See `docs/adr-log/0011-symfony-workflow-only.md`.
 2. **Twig hooks, not template events.** The 1.x `sylius.ui` template event system is replaced by
    `sylius_twig_hooks`. Configure hooks in `config/twig_hooks/`.
 

@@ -92,14 +92,16 @@ order adjustment, not a payment method.**
 
 - Adjustment type: `AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT` (`madcoders_gift_card`).
 - `OrderGiftCardProcessor` is an `OrderProcessorInterface` registered at priority **-10**, below
-  every Sylius processor, so it sees the final total after items, shipping, promotions and taxes.
-  For each applied card it adds a **negative** adjustment capped at the order's *remaining* total,
-  tagged with the card's code as `originCode`. Cards therefore stack, and an order total can never
-  go below zero.
+  every Sylius processor *including the payment processor*, so it sees the final total after items,
+  shipping, promotions and taxes - and can then settle the cards against the payment Sylius has
+  just sized. For each applied card it adds a **neutral** adjustment capped at what is still owed,
+  tagged with the card's code as `originCode`, and takes the covered amount off the payment.
+  `Order::getTotal()` is deliberately left alone: a gift card is money against the amount to pay,
+  not a discount on the price. See `docs/adr-log/0010-gift-card-as-tender.md`.
 - The adjustment type is registered with Sylius' own `OrderAdjustmentsClearer` (priority 60) by a
   compiler pass, rather than the processor removing its own adjustments. This is load-bearing: the
-  clearer runs *before* promotions (20) and taxes (10), so a stale gift card discount can never
-  distort those calculations, and reprocessing a cart stays idempotent.
+  clearer runs *before* promotions (20) and taxes (10), so a previous run's coverage can never
+  survive into the next one and compound, and reprocessing a cart stays idempotent.
 - `OrderGiftCardAmountModifier::debit()` moves money off the cards when the order is placed;
   `credit()` puts it back when the order is cancelled. Both work from the order's *adjustments*, so
   the amount returned is exactly the amount charged - including when a card was only partly used
@@ -107,11 +109,15 @@ order adjustment, not a payment method.**
 - Every debit and credit writes a `GiftCardTransaction`, and the first debit records the redeeming
   customer on the card.
 
-Because Sylius 2.x ships **two** state machine adapters, the transitions are wired for both:
-a `winzou_state_machine` callback block *and* Symfony Workflow event listeners
-(`workflow.sylius_order.completed.create` / `.cancel`) pointing at the same services. The business
-logic lives in the service; the wiring is a thin adapter. See
-`docs/adr-log/0004-gift-card-redemption-as-order-adjustment.md`.
+Order transitions are wired through **Symfony Workflow event listeners only**
+(`workflow.sylius_order.completed.create` / `.cancel`). Sylius 2.x does not install
+`winzou/state-machine`, so a winzou callback block would be dead configuration CI could never
+exercise. The business logic lives in the service; the listener is a thin adapter. See
+`docs/adr-log/0011-symfony-workflow-only.md`.
+
+Two Sylius services compare a payment against `Order::getTotal()`, which the tender model leaves at
+the full value of the goods, so both are decorated: `sylius.state_resolver.order_payment` and
+`sylius.order_processing.order_payment_processor.after_checkout`.
 
 ## Delivery phases
 

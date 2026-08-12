@@ -6,6 +6,7 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
@@ -15,12 +16,60 @@ use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
 {
-    /** @param ExampleFactoryInterface<GiftCardInterface> $giftCardExampleFactory */
+    /**
+     * @param ExampleFactoryInterface<GiftCardInterface>              $giftCardExampleFactory
+     * @param ExampleFactoryInterface<GiftCardConfigurationInterface> $giftCardConfigurationExampleFactory
+     */
     public function __construct(
         private readonly SharedStorageInterface $sharedStorage,
         private readonly ExampleFactoryInterface $giftCardExampleFactory,
         private readonly ObjectManager $giftCardManager,
+        private readonly ExampleFactoryInterface $giftCardConfigurationExampleFactory,
     ) {
+    }
+
+    /**
+     * @Given the channel issues gift card codes :length characters long prefixed with :prefix
+     */
+    public function theChannelIssuesGiftCardCodesLongPrefixedWith(int $length, string $prefix): void
+    {
+        $this->createConfiguration(['code_length' => $length, 'code_prefix' => $prefix]);
+    }
+
+    /**
+     * @Given the channel's gift cards are valid for :period
+     */
+    public function theChannelsGiftCardsAreValidFor(string $period): void
+    {
+        $this->createConfiguration(['validity_period' => $period]);
+    }
+
+    /**
+     * @Given the channel's gift cards are valid for the unparseable period :period
+     */
+    public function theChannelsGiftCardsAreValidForTheUnparseablePeriod(string $period): void
+    {
+        // A misconfigured period must not hand out a card that is already expired - a card issued
+        // dead is worse than one that never expires, because the customer only finds out at the
+        // till.
+        //
+        // The prefix rides along so the scenario can prove the configuration was actually consulted.
+        // Without it, "no expiry date" would also be the answer if the configuration were ignored
+        // altogether, and the test would pass while testing nothing.
+        $this->createConfiguration(['validity_period' => $period, 'code_prefix' => 'BADCFG-']);
+    }
+
+    /** @param array<string, mixed> $options */
+    private function createConfiguration(array $options): GiftCardConfigurationInterface
+    {
+        $configuration = $this->giftCardConfigurationExampleFactory->create(array_merge([
+            'channel' => $this->getChannel(),
+        ], $options));
+
+        $this->giftCardManager->persist($configuration);
+        $this->giftCardManager->flush();
+
+        return $configuration;
     }
 
     /**
