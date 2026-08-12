@@ -68,3 +68,56 @@ Feature: Managing gift cards
         Then I should not be able to change its code
         And its code should still be "GIFT-LOCKED"
         And I should not be able to change its initial amount
+
+    @ui
+    Scenario: Taking more off a gift card than it holds is refused on the form
+        # The model throws rather than let a balance go negative. That exception has to become a
+        # form error: letting it out would be a 500, with the reason buried in a log and the
+        # administrator none the wiser.
+        Given the store has a gift card "GIFT-OVER01" worth "$50.00"
+        When I view the gift card "GIFT-OVER01"
+        And I take "80.00" from its balance
+        Then I should be told the adjustment is not possible
+        And the balance on the form should still be "$50.00"
+
+    @ui
+    Scenario: Topping a gift card above its face value is refused on the form
+        # The cap is what stops a mistyped adjustment turning a $50 card into a $50,000 one.
+        Given the store has a gift card "GIFT-OVER02" worth "$50.00" with "$40.00" left
+        When I view the gift card "GIFT-OVER02"
+        And I add "30.00" to its balance
+        Then I should be told the adjustment is not possible
+        And the balance on the form should still be "$40.00"
+
+    @ui
+    Scenario: A card created without a code takes its code from the channel's configuration
+        # The per-channel configuration decides how guessable a code is and how long a card lasts.
+        # Nothing exercised it end to end before: the provider returned null in every test, so the
+        # generator always fell back to its defaults and the configuration was dead weight.
+        Given the channel issues gift card codes 12 characters long prefixed with "XMAS-"
+        When I want to create a new gift card
+        And I specify its initial amount as "75.00"
+        And I add this gift card
+        Then the issued card's code should start with "XMAS-"
+        And the issued card's code should have 12 characters after the prefix "XMAS-"
+
+    @ui
+    Scenario: A card created without an expiry takes the channel's validity period
+        Given the channel's gift cards are valid for "30 days"
+        When I want to create a new gift card
+        And I specify its initial amount as "75.00"
+        And I add this gift card
+        Then the issued card should expire in about 30 days
+
+    @ui
+    Scenario: A validity period that cannot be parsed issues a card that never expires
+        # Rather than one that is already expired. A card issued dead is worse than one that never
+        # expires, because the customer only finds out at the till.
+        Given the channel's gift cards are valid for the unparseable period "not a period"
+        When I want to create a new gift card
+        And I specify its initial amount as "75.00"
+        And I add this gift card
+        # The prefix proves the configuration was read at all - without it, "never expires" would
+        # also be the answer if the configuration were ignored, and this would test nothing.
+        Then the issued card's code should start with "BADCFG-"
+        And the issued card should never expire

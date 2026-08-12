@@ -228,13 +228,21 @@ A channel without one still works; the model defaults apply.
 
 These need no configuration on your side, but are worth knowing about:
 
-- **An order processor** at priority `-10`, which turns applied gift cards into order adjustments
-  after every Sylius processor has run.
+- **An order processor** at priority `-10`, which runs after every Sylius processor - including the
+  payment processor - and settles the applied gift cards against the payment. It records what each
+  card covered as a *neutral* adjustment and leaves `Order::getTotal()` alone: a gift card is money
+  against the amount to pay, not a discount on the price. See
+  `docs/adr-log/0010-gift-card-as-tender.md`.
 - **The `madcoders_gift_card` adjustment type** added to Sylius' `OrderAdjustmentsClearer`, so a
-  stale gift card discount can never distort promotions or taxes.
-- **State machine wiring for both adapters.** The Symfony Workflow listeners are plain service tags.
-  The `winzou_state_machine` callbacks are prepended only if you have that bundle installed, so
-  either adapter works without configuration.
+  previous run's coverage can never survive into the next one and compound.
+- **Two decorations on Sylius services that size or judge a payment from the order total**, which
+  under the tender model is larger than what the customer owes:
+  `sylius.state_resolver.order_payment` (otherwise an order settled with a card never reaches
+  `paid`) and `sylius.order_processing.order_payment_processor.after_checkout` (otherwise a retried
+  payment asks for the gift card money a second time).
+- **Symfony Workflow listeners** on the order and payment transitions, as plain service tags. There
+  is no `winzou_state_machine` wiring: Sylius 2.x does not install that bundle, so it would be dead
+  configuration. See `docs/adr-log/0011-symfony-workflow-only.md`.
 - **An email**, `madcoders_gift_cards_purchased`. Override its subject or template by redefining
   that code under `sylius_mailer.emails`.
 - **Admin and account menu entries**, added through Sylius' menu events.

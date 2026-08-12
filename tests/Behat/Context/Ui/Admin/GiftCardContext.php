@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardRepositoryInterface;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Admin\Crud\IndexPageInterface;
 use Sylius\Behat\Service\NotificationCheckerInterface;
@@ -28,6 +29,7 @@ final class GiftCardContext implements Context
         private readonly AdjustBalancePageInterface $adjustBalancePage,
         private readonly ProductUpdatePageInterface $productUpdatePage,
         private readonly NotificationCheckerInterface $notificationChecker,
+        private readonly GiftCardRepositoryInterface $giftCardRepository,
     ) {
     }
 
@@ -226,5 +228,87 @@ final class GiftCardContext implements Context
             $this->updatePage->isInitialAmountEditable(),
             'The initial amount can still be edited on an issued gift card.',
         );
+    }
+
+    /**
+     * @Then the balance on the form should still be :balance
+     */
+    public function theBalanceOnTheFormShouldStillBe(string $balance): void
+    {
+        // A rejected adjustment leaves the admin on the form, so this reads the balance the form
+        // itself shows - which is the number that must not have moved.
+        Assert::same($this->adjustBalancePage->getCurrentBalance(), $balance);
+    }
+
+    /**
+     * @Then I should be told the adjustment is not possible
+     */
+    public function iShouldBeToldTheAdjustmentIsNotPossible(): void
+    {
+        // The model refuses adjustments that would break its invariants - overdrawing a card, or
+        // crediting it above its face value. The admin has to be told which, on the form; letting
+        // the exception out would be a 500 with the reason buried in a log.
+        Assert::true(
+            $this->adjustBalancePage->hasValidationMessage(),
+            'The form came back without telling the administrator what was wrong.',
+        );
+    }
+
+    /**
+     * @Then the issued card's code should start with :prefix
+     */
+    public function theIssuedCardsCodeShouldStartWith(string $prefix): void
+    {
+        Assert::startsWith($this->issuedCard()->getCode() ?? '', $prefix);
+    }
+
+    /**
+     * @Then the issued card's code should have :length characters after the prefix :prefix
+     */
+    public function theIssuedCardsCodeShouldHaveCharactersAfterThePrefix(int $length, string $prefix): void
+    {
+        $code = $this->issuedCard()->getCode() ?? '';
+
+        Assert::same(mb_strlen(mb_substr($code, mb_strlen($prefix))), $length);
+    }
+
+    /**
+     * @Then the issued card should expire in about :days days
+     */
+    public function theIssuedCardShouldExpireInAboutDays(int $days): void
+    {
+        $expiresAt = $this->issuedCard()->getExpiresAt();
+        Assert::notNull($expiresAt, 'The card was issued without an expiry date.');
+
+        // A day either side, so the assertion does not depend on the clock ticking over mid-run.
+        $actual = (new \DateTimeImmutable())->diff($expiresAt)->days;
+
+        Assert::greaterThanEq($actual, $days - 1, sprintf('The card expires in %d days, not about %d.', $actual, $days));
+        Assert::lessThanEq($actual, $days + 1, sprintf('The card expires in %d days, not about %d.', $actual, $days));
+    }
+
+    /**
+     * @Then the issued card should never expire
+     */
+    public function theIssuedCardShouldNeverExpire(): void
+    {
+        Assert::null(
+            $this->issuedCard()->getExpiresAt(),
+            'The card was given an expiry date from a validity period that cannot be parsed.',
+        );
+    }
+
+    /**
+     * The card the admin just created, read back from the database rather than the page.
+     */
+    private function issuedCard(): \Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface
+    {
+        $cards = $this->giftCardRepository->findAll();
+        Assert::notEmpty($cards, 'No gift card was created.');
+
+        $card = end($cards);
+        Assert::isInstanceOf($card, \Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface::class);
+
+        return $card;
     }
 }

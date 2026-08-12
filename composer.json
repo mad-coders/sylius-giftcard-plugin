@@ -1,7 +1,7 @@
 {
     "name": "madcoders/sylius-giftcard-plugin",
     "type": "sylius-plugin",
-    "description": "Gift card plugin for Sylius 2.x - sell gift cards, redeem them against order totals and let customers track their remaining balance.",
+    "description": "Gift card plugin for Sylius 2.x - sell gift cards, spend them against what a customer owes and let customers track their remaining balance.",
     "license": "EUPL-1.2",
     "authors": [
         {

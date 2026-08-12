@@ -10,5 +10,9 @@ interface AdjustBalancePageInterface extends SymfonyPageInterface
 {
     public function adjust(string $direction, string $amount): void;
 
+    public function getValidationMessage(): string;
+
+    public function hasValidationMessage(): bool;
+
     public function getCurrentBalance(): string;
 }

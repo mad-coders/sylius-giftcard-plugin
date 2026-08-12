@@ -9,6 +9,7 @@
             <argument type="service" id="sylius.behat.shared_storage" />
             <argument type="service" id="madcoders_sylius_gift_card.fixture.example_factory.gift_card" />
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.fixture.example_factory.gift_card_configuration" />
         </service>
 
         <service id="madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_cart"
@@ -42,6 +43,7 @@
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card.adjust_balance" />
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.product.update" />
             <argument type="service" id="sylius.behat.notification_checker.admin" />
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
         </service>
 
         <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card.index"

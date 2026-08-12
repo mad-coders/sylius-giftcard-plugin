@@ -1,8 +1,16 @@
 # 0004 - Redemption as an order adjustment
 
-**Status:** superseded in part by [0010](0010-gift-card-as-tender.md), which replaces the
-discount mechanism below with tender against the payment. The state machine wiring and the use of a
-coded adjustment as the per-card record still stand.
+**Status:** superseded in part.
+
+- [0010](0010-gift-card-as-tender.md) replaces the discount mechanism below with tender against the
+  payment.
+- [0011](0011-symfony-workflow-only.md) replaces the state machine wiring below, and withdraws
+  rule 3.
+
+What still stands from this ADR: a coded adjustment (`originCode`) as the per-card record on an
+order, and the compiler pass that hands the adjustment type to Sylius' `OrderAdjustmentsClearer`.
+
+The rest is kept for the history of how the model got here. **Do not implement from it.**
 
 ## Context
 
@@ -41,15 +49,13 @@ code in `originCode`.
 
 ### State machine wiring
 
-Sylius 2.x supports two state machine adapters (`winzou_state_machine` and Symfony Workflow) and
-the host application chooses. The plugin therefore ships **both** wirings, pointing at the same
-services:
+*Superseded by [0011](0011-symfony-workflow-only.md).* This ADR assumed a host might be running
+either `winzou_state_machine` or Symfony Workflow, and shipped both wirings. Sylius 2.x does not
+install winzou at all, so the winzou half was dead, untested configuration and has been removed.
 
-- `config/state_machine/winzou/*.yaml` - callback blocks on `sylius_order`.
-- `config/services/listeners.xml` - invokable listeners tagged
-  `kernel.event_listener` on `workflow.sylius_order.completed.create` and `.cancel`.
-
-The listener classes contain no logic beyond unwrapping the event and delegating.
+What remains: `config/services/listeners.xml`, invokable listeners tagged `kernel.event_listener`
+on `workflow.sylius_order.completed.create` and `.cancel`. The listener classes contain no logic
+beyond unwrapping the event and delegating.
 
 ## Consequences
 
@@ -64,4 +70,5 @@ The listener classes contain no logic beyond unwrapping the event and delegating
    manual adjustment action).
 2. Never compute a discount without going through the order processor - anything that changes what
    a card contributes belongs in `OrderGiftCardProcessor`.
-3. Any new order transition that needs gift card behaviour must be wired for **both** adapters.
+3. ~~Any new order transition that needs gift card behaviour must be wired for **both**
+   adapters.~~ Withdrawn by [0011](0011-symfony-workflow-only.md): Symfony Workflow only.

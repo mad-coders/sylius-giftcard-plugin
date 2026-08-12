@@ -33,6 +33,16 @@ final class AdjustBalancePage extends SymfonyPage implements AdjustBalancePageIn
         $this->getElement('submit')->press();
     }
 
+    public function getValidationMessage(): string
+    {
+        return trim($this->getElement('validation_error')->getText());
+    }
+
+    public function hasValidationMessage(): bool
+    {
+        return $this->hasElement('validation_error');
+    }
+
     public function getCurrentBalance(): string
     {
         return trim($this->getElement('current_balance')->getText());
@@ -42,6 +52,10 @@ final class AdjustBalancePage extends SymfonyPage implements AdjustBalancePageIn
     {
         return array_merge(parent::getDefinedElements(), [
             'current_balance' => '[data-test-current-balance]',
+            // Bootstrap 5's form theme, which this page asks for explicitly, wraps a field error
+            // in `.invalid-feedback`. Matched on the class rather than the element id Symfony
+            // gives it: that id only appears from Symfony 7, and the plugin supports 6.4 too.
+            'validation_error' => '.invalid-feedback',
             'submit' => '[data-test-adjust-balance-button]',
         ]);
     }

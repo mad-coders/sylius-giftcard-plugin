@@ -1,6 +1,6 @@
 <h1 align="center">Sylius Gift Card Plugin</h1>
 
-<p align="center">Sell gift cards in your Sylius store, redeem them against order totals, and let
+<p align="center">Sell gift cards in your Sylius store, spend them against what a customer owes, and let
 customers track what is left on them.</p>
 
 <p align="center">
