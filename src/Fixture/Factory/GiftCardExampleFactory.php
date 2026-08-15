@@ -25,6 +25,9 @@ use Webmozart\Assert\Assert;
  */
 class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
+    /** How a fixture asks for a card with no expiry date at all, whatever the channel configures. */
+    public const string NEVER_EXPIRES = 'never';
+
     private readonly OptionsResolver $optionsResolver;
 
     /**
@@ -83,7 +86,10 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         Assert::nullOrIsInstanceOf($redeemer, CustomerInterface::class);
 
         $expiresAt = $options['expires_at'];
-        Assert::nullOrIsInstanceOf($expiresAt, \DateTimeInterface::class);
+        Assert::true(
+            null === $expiresAt || self::NEVER_EXPIRES === $expiresAt || $expiresAt instanceof \DateTimeInterface,
+            'expires_at must be a date, null, or "never".',
+        );
 
         $configuration = $this->giftCardConfigurationProvider->getForChannel($channel);
 
@@ -96,7 +102,12 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         $giftCard->setEnabled($enabled);
         $giftCard->setCustomMessage($customMessage);
         $giftCard->setPurchaser($purchaser);
-        $giftCard->setExpiresAt($expiresAt ?? $configuration?->calculateExpiryDate());
+        $giftCard->setExpiresAt(match (true) {
+            self::NEVER_EXPIRES === $expiresAt => null,
+            $expiresAt instanceof \DateTimeInterface => $expiresAt,
+            // Not specified: the channel's configuration decides, which is what a real card gets.
+            default => $configuration?->calculateExpiryDate(),
+        });
 
         // Fixtures need to describe a partly-spent card - that is the interesting state for the
         // account page. Spending it down goes through the balance modifier rather than the model
@@ -136,11 +147,18 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
             ->setDefault('enabled', true)
             ->setAllowedTypes('enabled', 'bool')
 
+            // null means "let the channel's configuration decide"; the string `never` is how a
+            // fixture says a card should outlive the configured validity period, which is otherwise
+            // impossible to express - a null here is indistinguishable from not saying anything.
             ->setDefault('expires_at', null)
             // Allowed types are checked before normalizers run, so a date string has to be accepted
             // here as well as the object the normalizer turns it into.
             ->setAllowedTypes('expires_at', ['null', 'string', \DateTimeInterface::class])
-            ->setNormalizer('expires_at', static function (Options $options, mixed $value): ?\DateTimeInterface {
+            ->setNormalizer('expires_at', static function (Options $options, mixed $value): \DateTimeInterface|string|null {
+                if (self::NEVER_EXPIRES === $value) {
+                    return self::NEVER_EXPIRES;
+                }
+
                 if (is_string($value)) {
                     return new \DateTime($value);
                 }
@@ -154,13 +172,43 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
             ->setDefault('custom_message', null)
             ->setAllowedTypes('custom_message', ['null', 'string'])
 
+            // Both are resolved by email, and both fail loudly if that email is not a customer.
+            // Sylius' own LazyOption quietly yields null instead, which produced fixtures that
+            // claimed to demonstrate the two-customer model while silently linking nobody.
             ->setDefault('purchaser', null)
             ->setAllowedTypes('purchaser', ['null', 'string', CustomerInterface::class])
-            ->setNormalizer('purchaser', LazyOption::findOneBy($this->customerRepository, 'email'))
+            ->setNormalizer('purchaser', $this->customerNormalizer('purchaser'))
 
             ->setDefault('redeemer', null)
             ->setAllowedTypes('redeemer', ['null', 'string', CustomerInterface::class])
-            ->setNormalizer('redeemer', LazyOption::findOneBy($this->customerRepository, 'email'))
+            ->setNormalizer('redeemer', $this->customerNormalizer('redeemer'))
         ;
+    }
+
+    /**
+     * Resolves a customer by email, refusing to yield null for an address that does not exist.
+     *
+     * @return \Closure(Options, mixed): ?CustomerInterface
+     */
+    private function customerNormalizer(string $option): \Closure
+    {
+        return function (Options $options, mixed $value) use ($option): ?CustomerInterface {
+            if (null === $value || $value instanceof CustomerInterface) {
+                return $value;
+            }
+
+            $customer = $this->customerRepository->findOneBy(['email' => $value]);
+
+            if (!$customer instanceof CustomerInterface) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Cannot set the %s of a gift card to "%s": no customer has that email address. '
+                    . 'Load the customer fixtures first.',
+                    $option,
+                    is_string($value) ? $value : get_debug_type($value),
+                ));
+            }
+
+            return $customer;
+        };
     }
 }
