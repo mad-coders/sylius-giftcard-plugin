@@ -22,6 +22,13 @@
             <tag name="sylius_fixtures.fixture" />
         </service>
 
+        <service id="madcoders_sylius_gift_card.fixture.gift_card_product"
+                 class="Madcoders\SyliusGiftCardPlugin\Fixture\GiftCardProductFixture">
+            <argument type="service" id="sylius.repository.product" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <tag name="sylius_fixtures.fixture" />
+        </service>
+
         <service id="madcoders_sylius_gift_card.fixture.example_factory.gift_card_configuration"
                  class="Madcoders\SyliusGiftCardPlugin\Fixture\Factory\GiftCardConfigurationExampleFactory">
             <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card_configuration" />

@@ -9,6 +9,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `make backend`, `make db-reset`, `make fixtures` and `make serve` failed on a clean checkout:
+  building the full Sylius container exceeds PHP's default 128M CLI limit, and only `lint-container`
+  lifted it. Every console call now does.
+- Naming a customer that does not exist as a gift card fixture's `purchaser` or `redeemer` silently
+  linked nobody, because Sylius' `LazyOption` yields null for an unknown email. It now fails with the
+  address it could not find - the previous behaviour produced demo data that claimed to show the
+  two-customer model while showing nothing.
+
+### Added
+
+- `madcoders_gift_card_product`, a fixture that marks products as gift card products - by code, or
+  simply by count for a demo whose catalogue is generated. Without it there was no way to show a
+  gift card being *sold*, which is half the plugin.
+- The demo suite now covers every state a card can be in: spendable, partly spent, spent out,
+  expired, disabled, expiring soon, never expiring, and all three shapes of the two-customer model
+  (bought-not-used, bought-by-one-used-by-another, bought-and-used-by-the-same-person). It creates
+  two known customers for those, since Sylius' own fixtures generate random addresses.
+- `expires_at: never` in the gift card fixtures, for a card that outlives the channel's configured
+  validity period. A null previously meant "let the configuration decide", so this was impossible to
+  express.
+
+### Fixed
+
 - **The plugin's migrations never ran in a host application.** They were registered under the
   `DoctrineMigrations` namespace, which a Sylius application already maps to its own `migrations/`
   directory - and the application's configuration beats anything the plugin prepends, so the path

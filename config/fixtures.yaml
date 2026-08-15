@@ -5,16 +5,36 @@
 # hardcoded channel code would then break that command outright for a shop whose channels are named
 # differently.
 #
-# Load it explicitly:
+# Load it explicitly, after the default suite:
 #
+#     bin/console sylius:fixtures:load default
 #     bin/console sylius:fixtures:load madcoders_gift_card
 #
 # The channel is left unset so the factory picks an existing one, which means this works in any
 # shop without editing.
+#
+# Between them these cards cover every state a gift card can be in, so the admin grid, the account
+# pages and the cart panel can all be seen doing something without hand-crafting data first.
 sylius_fixtures:
     suites:
         madcoders_gift_card:
             fixtures:
+                # Two known customers, so the two-customer model can actually be demonstrated.
+                # Sylius' own customer fixtures generate random addresses apart from
+                # shop@example.com, so referring to a second one by email is not otherwise possible.
+                shop_user:
+                    priority: 10
+                    options:
+                        custom:
+                            -   email: 'giftcard.buyer@example.com'
+                                first_name: 'Bianca'
+                                last_name: 'Buyer'
+                                password: 'sylius'
+                            -   email: 'giftcard.holder@example.com'
+                                first_name: 'Hugo'
+                                last_name: 'Holder'
+                                password: 'sylius'
+
                 madcoders_gift_card_configuration:
                     options:
                         custom:
@@ -27,25 +47,94 @@ sylius_fixtures:
                     priority: -10
                     options:
                         custom:
+                            # --- Spendable ------------------------------------------------------
                             # A full card, ready to spend.
                             -   code: 'GIFT-FULL0001'
                                 initial_amount: 10000
 
-                            # A small card, so a cart can be paid for with two of them.
+                            # A small card, so a cart can be paid for with two of them - the case
+                            # that proves cards stack.
                             -   code: 'GIFT-SMALL001'
                                 initial_amount: 2000
 
+                            # Worth more than anything in the demo catalogue: covers a whole order
+                            # and leaves change on the card.
+                            -   code: 'GIFT-LARGE001'
+                                initial_amount: 100000
+
+                            # --- Partly and fully spent -----------------------------------------
                             # Partly spent - the state the account balance view exists to show.
                             -   code: 'GIFT-USED0001'
                                 initial_amount: 10000
                                 spent_amount: 6500
 
+                            # Spent out. Still visible in the account and the admin grid, but no
+                            # longer redeemable - the balance, not the enabled flag, is what stops it.
+                            -   code: 'GIFT-EMPTY001'
+                                initial_amount: 5000
+                                spent_amount: 5000
+
+                            # --- Not redeemable -------------------------------------------------
                             # Expired, to prove expiry is enforced at redemption.
                             -   code: 'GIFT-EXPIRED1'
                                 initial_amount: 5000
                                 expires_at: '2020-01-01'
 
-                            # Disabled, same reason.
+                            # Disabled, same reason but a different cause - so the two failures can
+                            # be told apart in the UI.
                             -   code: 'GIFT-DISABLED'
                                 initial_amount: 5000
                                 enabled: false
+
+                            # Expires soon rather than in a year: shows the expiry date actually
+                            # rendering somewhere useful.
+                            -   code: 'GIFT-EXPSOON1'
+                                initial_amount: 5000
+                                expires_at: '+7 days'
+
+                            # No expiry at all. A channel configuration with a validity period is
+                            # the usual case, so this is the one that proves a card can outlive it.
+                            -   code: 'GIFT-NOEXPIRY'
+                                initial_amount: 5000
+                                expires_at: 'never'
+
+                            # --- The two-customer model -----------------------------------------
+                            # The distinguishing feature of this plugin: a card knows both who
+                            # bought it and who is spending it, and they are usually not the same
+                            # person. Both accounts come from Sylius' own customer fixtures.
+                            #
+                            # Bought by one customer, not yet redeemed by anybody - it is sitting in
+                            # the recipient's inbox.
+                            -   code: 'GIFT-GIFTED01'
+                                initial_amount: 15000
+                                purchaser: 'giftcard.buyer@example.com'
+                                custom_message: 'Happy birthday! Spend it on something silly.'
+
+                            # Bought by one customer and being spent by another. This is the card to
+                            # look at to understand the model: it appears under "cards I bought" for
+                            # the purchaser and "cards I use" for the redeemer.
+                            -   code: 'GIFT-SHARED01'
+                                initial_amount: 20000
+                                spent_amount: 7500
+                                purchaser: 'giftcard.buyer@example.com'
+                                redeemer: 'giftcard.holder@example.com'
+                                custom_message: 'Thanks for everything this year.'
+
+                            # Bought and used by the same person - buying yourself a card is
+                            # unusual but legal, and the account pages have to handle a card that
+                            # appears in both lists.
+                            -   code: 'GIFT-SELFUSE1'
+                                initial_amount: 5000
+                                spent_amount: 1000
+                                purchaser: 'giftcard.holder@example.com'
+                                redeemer: 'giftcard.holder@example.com'
+
+                madcoders_gift_card_product:
+                    # After Sylius' own product fixtures, which the default suite loads.
+                    priority: -20
+                    options:
+                        # Counted rather than named: the demo catalogue's product codes are
+                        # generated and differ between Sylius versions, so naming them would break
+                        # this suite on the next release. In a real shop use `products:` with your
+                        # own codes instead.
+                        count: 2

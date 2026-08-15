@@ -67,10 +67,34 @@ value of the goods, not what the customer pays.** The reasoning is in
 ```bash
 make setup          # deps + docker (MySQL on 3307) + assets + database
 make install-hooks  # pre-commit quality gate and commit template
+make app            # fresh schema + demo data, ready to look at
+make serve          # http://127.0.0.1:8080
 make verify         # fast gate: composer validate + phpstan + ecs + unit tests
 make test           # phpunit + behat
+make install-test   # install into a throwaway Sylius by following docs/INSTALLATION.md
 make help           # every available target
 ```
+
+### The demo data
+
+`make app` loads a gift card in every state the plugin can produce, so the admin grid, the account
+pages and the cart panel all have something to show:
+
+| Card | What it demonstrates |
+|---|---|
+| `GIFT-FULL0001`, `GIFT-SMALL001` | Spendable; two of them on one cart proves cards stack |
+| `GIFT-LARGE001` | Worth more than the cart - covers it all and keeps the change |
+| `GIFT-USED0001` | Partly spent, with the ledger entry explaining the balance |
+| `GIFT-EMPTY001` | Spent out: still listed, no longer redeemable |
+| `GIFT-EXPIRED1`, `GIFT-DISABLED` | The two ways a card stops being redeemable |
+| `GIFT-EXPSOON1`, `GIFT-NOEXPIRY` | Expiring in a week, and never expiring at all |
+| `GIFT-GIFTED01` | Bought by one customer, not yet used by anybody |
+| `GIFT-SHARED01` | **The two-customer model**: bought by one, spent by another |
+| `GIFT-SELFUSE1` | Bought and used by the same person |
+
+`giftcard.buyer@example.com` and `giftcard.holder@example.com` (password `sylius`) are the two
+customers those last three cards link, and the first two products in the catalogue are marked as
+gift card products so the "buying one issues a card" flow can be walked through.
 
 Usage guide: [`docs/USAGE.md`](docs/USAGE.md). Contributor guide: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). Working on this with an AI agent?
 Start from [`AGENTS.md`](AGENTS.md).

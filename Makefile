@@ -7,7 +7,9 @@
         verify pre-commit install-hooks \
         setup app ci
 
-CONSOLE = vendor/bin/console
+# Building the full Sylius container exceeds PHP's default 128M CLI limit, so every console call
+# has to lift it - `make backend` on a clean checkout dies otherwise.
+CONSOLE = php -d memory_limit=-1 vendor/bin/console
 BEHAT   = APP_ENV=test vendor/bin/behat --colors --strict --no-interaction -f progress
 
 # Default target: list the available commands.
@@ -125,8 +127,7 @@ rector-fix: ## Apply Rector (PHP 8.3 modernization of src)
 	vendor/bin/rector process
 
 lint-container: ## Validate the service container of the test application
-	# Building the full Sylius container exceeds the default CLI memory_limit.
-	APP_ENV=test php -d memory_limit=-1 $(CONSOLE) lint:container
+	APP_ENV=test $(CONSOLE) lint:container
 
 validate: ## Validate composer.json
 	composer validate --ansi --strict
