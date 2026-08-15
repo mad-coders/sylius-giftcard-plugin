@@ -58,7 +58,7 @@ final class GiftCardProductFixture extends AbstractFixture
         $codes = $options['products'] ?? [];
 
         if ([] !== $codes) {
-            return array_map(fn (string $code): ProductInterface => $this->productByCode($code), $codes);
+            return array_map($this->productByCode(...), $codes);
         }
 
         /** @var int $count */
@@ -102,6 +102,7 @@ final class GiftCardProductFixture extends AbstractFixture
         return $product;
     }
 
+    #[\Override]
     protected function configureOptionsNode(ArrayNodeDefinition $optionsNode): void
     {
         $optionsNode
