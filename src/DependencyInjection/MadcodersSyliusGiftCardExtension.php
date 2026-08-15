@@ -86,7 +86,11 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
 
     protected function getMigrationsNamespace(): string
     {
-        return 'DoctrineMigrations';
+        // The plugin's own namespace, not the application's `DoctrineMigrations`. A host application
+        // already maps that name to its own `migrations/` directory, and its configuration beats
+        // anything prepended here - so registering under it silently threw the plugin's migrations
+        // away and `doctrine:migrations:migrate` created no gift card tables at all.
+        return 'Madcoders\\SyliusGiftCardPlugin\\Migrations';
     }
 
     protected function getMigrationsDirectory(): string

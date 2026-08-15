@@ -153,3 +153,53 @@ jobs:
                     if-no-files-found: ignore
                     compression-level: 6
                     overwrite: true
+
+    installation:
+        name: "Installable on a clean Sylius ${{ matrix.sylius }}"
+        runs-on: ubuntu-latest
+
+        # Every other job runs against sylius/test-application, which is pre-wired through
+        # SYLIUS_TEST_APP_* environment variables. That proves the plugin *behaves*, not that a host
+        # following docs/INSTALLATION.md ends up with a working shop. This job answers that, by
+        # installing into a fresh Sylius Standard using the snippets extracted from the guide
+        # itself - so a stale or wrong instruction fails here.
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    -   php: "8.3"
+                        sylius: "^2.2"
+                    -   php: "8.3"
+                        sylius: "^2.0"
+
+        services:
+            mysql:
+                image: mysql:8.4
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: true
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
+        env:
+            DATABASE_URL: "mysql://root@127.0.0.1:3306/gift_card_install_test"
+            SYLIUS_VERSION: "${{ matrix.sylius }}"
+
+        steps:
+            -   uses: actions/checkout@v7
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: "${{ matrix.php }}"
+                    extensions: intl, gd, opcache, pdo_mysql, exif, fileinfo
+                    tools: composer:v2
+                    coverage: none
+                    ini-values: memory_limit=-1
+
+            -   name: Install into a clean Sylius application
+                run: tests/Installation/install.sh "${{ runner.temp }}/sylius-app"

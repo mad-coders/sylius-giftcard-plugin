@@ -9,6 +9,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The plugin's migrations never ran in a host application.** They were registered under the
+  `DoctrineMigrations` namespace, which a Sylius application already maps to its own `migrations/`
+  directory - and the application's configuration beats anything the plugin prepends, so the path
+  was silently discarded. `doctrine:migrations:migrate` created no gift card tables at all. They now
+  register under `Madcoders\SyliusGiftCardPlugin\Migrations`, as every other Sylius plugin does.
+  The test application was unaffected, which is why nothing caught it until the plugin was installed
+  into a real Sylius.
+- **`docs/INSTALLATION.md` told you to create three files that already exist.** Sylius Standard ships
+  `src/Entity/Order/Order.php`, `src/Entity/Order/OrderItemUnit.php` and
+  `src/Entity/Product/Product.php`, and they already carry other plugins' interfaces and traits.
+  Following the guide literally replaced them, which stripped those traits and `Product`'s
+  `createTranslation()` - breaking product translations, and with them the fixtures and the shop.
+  Step 6 is now written as a modification of the existing classes.
+
+### Added
+
+- An `installation` CI job that installs the plugin into a fresh Sylius Standard by following
+  `docs/INSTALLATION.md`, on Sylius 2.0 and 2.2, and asserts the result boots: migrations produce the
+  schema the models map to, the documented routes and services resolve, the promised tables and
+  columns exist, and the fixtures put real gift cards in the database. The files come from the guide
+  itself, so a stale or wrong snippet fails CI. Runnable locally with `make install-test`. Both bugs
+  above were found by writing it.
+
+### Fixed
+
 - The admin balance-adjustment form renders with the admin form theme. It was falling back to Twig's
   default theme, so a rejected adjustment showed its reason as an unstyled bare list in the middle of
   the admin panel.
