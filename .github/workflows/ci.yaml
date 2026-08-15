@@ -168,9 +168,9 @@ jobs:
             matrix:
                 include:
                     -   php: "8.3"
-                        sylius: "^2.2"
+                        sylius: "~2.2.0"
                     -   php: "8.3"
-                        sylius: "^2.0"
+                        sylius: "~2.0.0"
 
         services:
             mysql:
