@@ -145,4 +145,10 @@ install-hooks: ## Point git at the repo hooks (.githooks) and set the commit tem
 
 ## --- CI ---------------------------------------------------------------------
 
+install-test: ## Install the plugin into a throwaway Sylius app by following docs/INSTALLATION.md
+	# Proves the *documentation* works, which nothing else does: the rest of the suite runs against
+	# sylius/test-application, which is pre-wired through SYLIUS_TEST_APP_* variables.
+	DATABASE_URL=$${DATABASE_URL:-mysql://root@127.0.0.1:3307/gift_card_install_test} \
+		tests/Installation/install.sh
+
 ci: validate static phpunit behat ## Full CI pipeline (expects a prepared test application)

@@ -115,80 +115,83 @@ sylius_resource:
 
 ## 6. Extend your Sylius entities
 
-The plugin adds state to three Sylius models. Apply the interface and the trait to your own
-entities - the traits carry their own Doctrine mapping, so there is nothing else to map.
+The plugin adds state to three Sylius models: `Order`, `OrderItemUnit` and `Product`.
 
-**Order** - the gift cards being spent on the order. Note the constructor call: the trait cannot
-initialise its own collection because `Order` already has a constructor.
+> **These classes already exist in your application.** Sylius Standard ships all three under
+> `src/Entity/`, and they usually already carry other plugins' interfaces and traits - a stock
+> Sylius 2.2 has Mollie's traits on `Order` and `Product`, and `Product` has a `createTranslation()`
+> the ORM needs. **Add to those classes; do not replace them.** Overwriting `Product` with just the
+> gift card trait breaks product translations outright.
 
-```php
-# src/Entity/Order/Order.php
+Each entity needs the same three additions: import the plugin's interface and trait, add the
+interface to `implements`, and `use` the trait inside the class.
 
-namespace App\Entity\Order;
+**Order** - the gift cards being spent on the order. This one needs a fourth addition: the trait
+cannot initialise its own collection, because `Order` already has a constructor.
 
-use Doctrine\ORM\Mapping as ORM;
-use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface as GiftCardOrderInterface;
-use Madcoders\SyliusGiftCardPlugin\Model\OrderTrait as GiftCardOrderTrait;
-use Sylius\Component\Core\Model\Order as BaseOrder;
+```diff
+  namespace App\Entity\Order;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'sylius_order')]
-class Order extends BaseOrder implements GiftCardOrderInterface
-{
-    use GiftCardOrderTrait;
+  use Doctrine\ORM\Mapping as ORM;
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface as GiftCardOrderInterface;
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderTrait as GiftCardOrderTrait;
+  use Sylius\Component\Core\Model\Order as BaseOrder;
 
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->initializeGiftCards();
-    }
-}
+  #[ORM\Entity]
+  #[ORM\Table(name: 'sylius_order')]
+- class Order extends BaseOrder
++ class Order extends BaseOrder implements GiftCardOrderInterface
+  {
++     use GiftCardOrderTrait;
++
++     public function __construct()
++     {
++         parent::__construct();
++
++         $this->initializeGiftCards();
++     }
+  }
 ```
+
+If your `Order` already has a constructor, add the `initializeGiftCards()` call to it rather than
+declaring a second one.
 
 **OrderItemUnit** - the gift card generated for a purchased unit.
 
-```php
-# src/Entity/Order/OrderItemUnit.php
+```diff
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitInterface as GiftCardOrderItemUnitInterface;
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitTrait as GiftCardOrderItemUnitTrait;
 
-namespace App\Entity\Order;
-
-use Doctrine\ORM\Mapping as ORM;
-use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitInterface as GiftCardOrderItemUnitInterface;
-use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitTrait as GiftCardOrderItemUnitTrait;
-use Sylius\Component\Core\Model\OrderItemUnit as BaseOrderItemUnit;
-
-#[ORM\Entity]
-#[ORM\Table(name: 'sylius_order_item_unit')]
-class OrderItemUnit extends BaseOrderItemUnit implements GiftCardOrderItemUnitInterface
-{
-    use GiftCardOrderItemUnitTrait;
-}
+- class OrderItemUnit extends BaseOrderItemUnit
++ class OrderItemUnit extends BaseOrderItemUnit implements GiftCardOrderItemUnitInterface
+  {
++     use GiftCardOrderItemUnitTrait;
+  }
 ```
 
 **Product** - marks a product as a gift card product.
 
-```php
-# src/Entity/Product/Product.php
+```diff
++ use Madcoders\SyliusGiftCardPlugin\Model\ProductInterface as GiftCardProductInterface;
++ use Madcoders\SyliusGiftCardPlugin\Model\ProductTrait as GiftCardProductTrait;
 
-namespace App\Entity\Product;
-
-use Doctrine\ORM\Mapping as ORM;
-use Madcoders\SyliusGiftCardPlugin\Model\ProductInterface as GiftCardProductInterface;
-use Madcoders\SyliusGiftCardPlugin\Model\ProductTrait as GiftCardProductTrait;
-use Sylius\Component\Core\Model\Product as BaseProduct;
-
-#[ORM\Entity]
-#[ORM\Table(name: 'sylius_product')]
-class Product extends BaseProduct implements GiftCardProductInterface
-{
-    use GiftCardProductTrait;
-}
+- class Product extends BaseProduct
++ class Product extends BaseProduct implements GiftCardProductInterface
+  {
++     use GiftCardProductTrait;
++
+      // whatever your Product already has - keep it, `createTranslation()` especially
+  }
 ```
 
-If your application does not already override these Sylius models, register the overrides too:
+The traits carry their own Doctrine mapping, so there is nothing else to map.
+
+If your application does **not** already override these Sylius models, register the overrides too -
+a stock Sylius Standard already does this for you:
 
 ```yaml
+# config/packages/madcoders_sylius_gift_card.yaml
+
 sylius_order:
     resources:
         order:
@@ -205,7 +208,8 @@ sylius_product:
                 model: App\Entity\Product\Product
 ```
 
-A complete worked example lives in `tests/TestApplication/` in this repository.
+A complete worked example lives in `tests/TestApplication/` in this repository, and
+`tests/Installation/` applies exactly these steps to a clean Sylius on every CI run.
 
 ## 7. Run the migrations
 
