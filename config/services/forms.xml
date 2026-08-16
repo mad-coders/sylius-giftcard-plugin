@@ -25,6 +25,7 @@
             <argument type="collection">
                 <argument>madcoders_sylius_gift_card</argument>
             </argument>
+            <argument type="service" id="translator" />
             <tag name="form.type" />
         </service>
 

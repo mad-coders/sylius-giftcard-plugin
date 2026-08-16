@@ -166,6 +166,7 @@ default:
 
                 - sylius.behat.context.ui.admin.managing_administrators
                 - madcoders_sylius_gift_card.behat.context.ui.admin.gift_card
+                - madcoders_sylius_gift_card.behat.context.ui.admin.gift_card_configuration
 
             filters:
                 tags: "@madcoders_gift_card_admin"

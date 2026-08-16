@@ -60,6 +60,27 @@
             <argument type="string">madcoders_sylius_gift_card_admin_gift_card_create</argument>
         </service>
 
+        <service id="madcoders_sylius_gift_card.behat.context.ui.admin.gift_card_configuration"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin\GiftCardConfigurationContext">
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card_configuration.index" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.gift_card_configuration.create" />
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card_configuration" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card_configuration.index"
+                 class="Sylius\Behat\Page\Admin\Crud\IndexPage"
+                 parent="sylius.behat.page.admin.crud.index"
+                 public="false">
+            <argument type="string">madcoders_sylius_gift_card_admin_gift_card_configuration_index</argument>
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.admin.gift_card_configuration.create"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCardConfiguration\CreatePage"
+                 parent="sylius.behat.page.admin.crud.create"
+                 public="false">
+            <argument type="string">madcoders_sylius_gift_card_admin_gift_card_configuration_create</argument>
+        </service>
+
         <service id="madcoders_sylius_gift_card.behat.context.ui.admin.order_gift_card"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin\OrderGiftCardContext">
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.admin.order.show" />

@@ -9,6 +9,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The gift card configuration form silently ignored a code length below the minimum. `setCodeLength()`
+  raises anything shorter to 12 as a backstop, so by the time the field was validated it held the
+  raised value and the constraint passed - an operator who asked for 4-character codes was given
+  12-character ones and told nothing, walking away believing their channel issues short codes. The
+  submitted value is now checked before the model rounds it up, and the form says so.
+
+### Added
+
+- Behat coverage for the per-channel gift card configuration screens, which had none: creating a
+  configuration through the admin, and refusing a code length below the minimum. That minimum is a
+  security control - a guessable gift card code is money anybody can spend - and the form is the only
+  place it is enforced against a human.
+
+### Fixed
+
 - `make backend`, `make db-reset`, `make fixtures` and `make serve` failed on a clean checkout:
   building the full Sylius container exceeds PHP's default 128M CLI limit, and only `lint-container`
   lifted it. Every console call now does.
