@@ -140,3 +140,33 @@ Feature: Paying for an order with a gift card
         When the order "#00012" was cancelled
         Then the gift card "GIFT-100" should be worth "$200.00"
         And the gift card "GIFT-100" should have 3 entries in its balance history
+
+    @ui
+    Scenario: A card that expires between applying it and checking out is dropped
+        # A long checkout or an abandoned cart makes this ordinary rather than exotic, and it is the
+        # one case where the plugin could lose the shop real money: the payment was already reduced
+        # by $40 when the card was applied, so if the card were quietly honoured anyway the shop
+        # would hand over goods for money nobody paid, and if it were dropped without re-pricing the
+        # payment the customer would be undercharged.
+        #
+        # Neither happens - the processor re-checks every card on each pass through checkout, drops
+        # the ones that are no longer redeemable, and the payment goes back to the full amount.
+        Given there is a customer "holder@example.com" that placed an order "#00013"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        And the gift card "GIFT-40" has expired meanwhile
+        When the customer chose "Free" shipping method to "United States" with "Offline" payment
+        Then the payment for this order should be "$100.00"
+        And the gift card "GIFT-40" should be worth "$40.00"
+
+    @ui
+    Scenario: A card disabled between applying it and checking out is dropped
+        # Same shape, different cause: an administrator pulling a card mid-checkout. The card keeps
+        # its balance, so it can be re-enabled and spent later.
+        Given there is a customer "holder@example.com" that placed an order "#00014"
+        And the customer bought a single "PHP T-Shirt"
+        And the gift card "GIFT-40" worth "$40.00" is applied to this order
+        And the gift card "GIFT-40" has been disabled meanwhile
+        When the customer chose "Free" shipping method to "United States" with "Offline" payment
+        Then the payment for this order should be "$100.00"
+        And the gift card "GIFT-40" should be worth "$40.00"

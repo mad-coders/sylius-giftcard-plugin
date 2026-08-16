@@ -183,6 +183,30 @@ final readonly class GiftCardCheckoutContext implements Context
     }
 
     /**
+     * @Given the gift card :code has expired meanwhile
+     */
+    public function theGiftCardHasExpiredMeanwhile(string $code): void
+    {
+        // Between the customer applying the card and the order being placed. Long checkouts and
+        // abandoned carts make this ordinary, not exotic.
+        $giftCard = $this->attachedGiftCard($code);
+        $giftCard->setExpiresAt(new \DateTime('-1 day'));
+
+        $this->giftCardManager->flush();
+    }
+
+    /**
+     * @Given the gift card :code has been disabled meanwhile
+     */
+    public function theGiftCardHasBeenDisabledMeanwhile(string $code): void
+    {
+        $giftCard = $this->attachedGiftCard($code);
+        $giftCard->disable();
+
+        $this->giftCardManager->flush();
+    }
+
+    /**
      * @Then the gift card :code should be worth :balance
      */
     public function theGiftCardShouldBeWorth(string $code, string $balance): void
@@ -239,6 +263,21 @@ final readonly class GiftCardCheckoutContext implements Context
     public function theTotalOfThisOrderShouldBe(string $amount): void
     {
         Assert::same($this->refreshedOrder()->getTotal(), self::toMinorUnits($amount));
+    }
+
+    /**
+     * The card as the current unit of work already knows it.
+     *
+     * Unlike {@see self::giftCard()} this does not clear the entity manager first: these steps run
+     * mid-scenario, and detaching the order under them makes the next checkout step fail trying to
+     * remove an adjustment it no longer owns.
+     */
+    private function attachedGiftCard(string $code): GiftCardInterface
+    {
+        $giftCard = $this->giftCardRepository->findOneByCode($code);
+        Assert::isInstanceOf($giftCard, GiftCardInterface::class, sprintf('There is no gift card "%s".', $code));
+
+        return $giftCard;
     }
 
     private function giftCard(string $code): GiftCardInterface
