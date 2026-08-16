@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Behat coverage for a gift card that stops being redeemable *after* the customer applied it -
+  expiring, or disabled by an administrator, mid-checkout. The processor re-checks every card on each
+  pass and drops the ones that are no longer redeemable, so the payment goes back to the full amount
+  and the card keeps its balance. That was untested, and it is the one path where the plugin could
+  have handed over goods for money nobody paid.
+
 ### Fixed
 
 - The gift card configuration form silently ignored a code length below the minimum. `setCodeLength()`
