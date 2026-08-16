@@ -121,3 +121,26 @@ Feature: Managing gift cards
         # also be the answer if the configuration were ignored, and this would test nothing.
         Then the issued card's code should start with "BADCFG-"
         And the issued card should never expire
+
+    @ui
+    Scenario: Configuring how a channel issues gift card codes
+        # The per-channel configuration is what decides how guessable a code is and how long a card
+        # lasts. Until now nothing exercised its admin screens at all.
+        When I want to configure gift cards for the "United States" channel
+        And I set the code prefix to "XMAS-"
+        And I set the code length to 20
+        And I set the validity period to "18 months"
+        And I save this configuration
+        Then the "United States" channel should issue codes 20 characters long prefixed with "XMAS-"
+        And the configuration for "United States" should appear in the list
+
+    @ui
+    Scenario: A code length below the minimum is refused
+        # Not a preference - a short code is guessable, and a guessable gift card code is money
+        # anybody can spend. The model clamps it as a backstop, but an operator who asks for a
+        # 4-character code has to be told, not quietly given a 12-character one.
+        When I want to configure gift cards for the "United States" channel
+        And I set the code length to 4
+        And I save this configuration
+        Then I should be told the code length is too short
+        And no gift card configuration should have been saved
