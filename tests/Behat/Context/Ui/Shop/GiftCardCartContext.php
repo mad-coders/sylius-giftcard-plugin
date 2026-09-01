@@ -30,6 +30,17 @@ final class GiftCardCartContext implements Context
     }
 
     /**
+     * @When I try to apply :count wrong gift card codes
+     */
+    public function iTryToApplyWrongGiftCardCodes(int $count): void
+    {
+        // Distinct codes, so nothing can pass by being remembered from the attempt before.
+        for ($attempt = 1; $attempt <= $count; ++$attempt) {
+            $this->iApplyTheGiftCard(sprintf('GIFT-WRONG-%d', $attempt));
+        }
+    }
+
+    /**
      * @When I remove the gift card :code
      */
     public function iRemoveTheGiftCard(string $code): void
@@ -131,34 +142,26 @@ final class GiftCardCartContext implements Context
     }
 
     /**
-     * @Then I should be notified that the gift card cannot be used in this store
-     */
-    public function iShouldBeNotifiedThatTheGiftCardCannotBeUsedInThisStore(): void
-    {
-        $this->notificationChecker->checkNotification(
-            'This gift card cannot be used in this store.',
-            NotificationType::failure(),
-        );
-    }
-
-    /**
-     * @Then I should be notified that the gift card does not exist
-     */
-    public function iShouldBeNotifiedThatTheGiftCardDoesNotExist(): void
-    {
-        $this->notificationChecker->checkNotification(
-            'There is no gift card with this code.',
-            NotificationType::failure(),
-        );
-    }
-
-    /**
      * @Then I should be notified that the gift card cannot be used
      */
     public function iShouldBeNotifiedThatTheGiftCardCannotBeUsed(): void
     {
+        // The same words whatever went wrong - no such code, expired, disabled, spent, wrong store.
+        // A scenario that expects this after an unknown code and again after a real but unusable one
+        // is what pins that the endpoint is not a code-existence oracle.
         $this->notificationChecker->checkNotification(
-            'This gift card cannot be used - it may be expired, disabled or already spent.',
+            'This gift card code cannot be used. Check it and try again.',
+            NotificationType::failure(),
+        );
+    }
+
+    /**
+     * @Then I should be told I have tried too many gift card codes
+     */
+    public function iShouldBeToldIHaveTriedTooManyGiftCardCodes(): void
+    {
+        $this->notificationChecker->checkNotification(
+            'Too many gift card codes have been tried from here. Please wait a few minutes before trying again.',
             NotificationType::failure(),
         );
     }

@@ -26,6 +26,9 @@ until 1.0.0 is tagged.
   their account - even though someone else paid for it.
 - **Administer cards** from the Sylius admin: create them manually, adjust balances, and configure
   code format and validity per channel.
+- **Treat codes as money.** The redeem field is rate limited per client, refusals say the same thing
+  whether or not the code exists, and no code ever reaches a log, a flash or an exception message.
+  Needs `symfony/rate-limiter`; see [`docs/INSTALLATION.md`](docs/INSTALLATION.md).
 
 Not in 1.0: PDF gift cards, API Platform resources, bulk generation. See
 [`docs/adr-log/0009-no-pdf-in-1-0.md`](docs/adr-log/0009-no-pdf-in-1-0.md).

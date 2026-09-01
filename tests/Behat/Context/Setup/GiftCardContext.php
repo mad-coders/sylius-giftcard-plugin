@@ -6,12 +6,14 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup;
 
 use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
+use Sylius\Component\Core\Model\OrderInterface;
 use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
@@ -25,6 +27,7 @@ final class GiftCardContext implements Context
         private readonly ExampleFactoryInterface $giftCardExampleFactory,
         private readonly ObjectManager $giftCardManager,
         private readonly ExampleFactoryInterface $giftCardConfigurationExampleFactory,
+        private readonly GiftCardApplicatorInterface $giftCardApplicator,
     ) {
     }
 
@@ -78,6 +81,25 @@ final class GiftCardContext implements Context
     public function theStoreHasAGiftCardWorth(string $code, string $amount): void
     {
         $this->createGiftCard($code, $amount);
+    }
+
+    /**
+     * @Given the gift card :code worth :amount is already on my cart
+     */
+    public function theGiftCardWorthIsAlreadyOnMyCart(string $code, string $amount): void
+    {
+        // Applied straight to the order rather than through the redeem field, because the scenario
+        // that needs this is about what the redeem field does when the card is *already* there. Going
+        // through the field first would spend the one forgiveness the window allows, and the bug the
+        // scenario exists to catch would then be masked by the cap rather than caught by the guard.
+        $giftCard = $this->createGiftCard($code, $amount);
+
+        $cart = $this->sharedStorage->get('order');
+        Assert::isInstanceOf($cart, OrderInterface::class);
+
+        $this->giftCardApplicator->apply($cart, $giftCard);
+
+        $this->giftCardManager->flush();
     }
 
     /**

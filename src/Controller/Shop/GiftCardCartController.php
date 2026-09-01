@@ -10,6 +10,7 @@ use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotRedeemableException;
 use Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardCodeType;
+use Madcoders\SyliusGiftCardPlugin\RateLimiter\GiftCardRedemptionLimiterInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\Component\Order\Context\CartNotFoundException;
@@ -61,6 +62,12 @@ final readonly class GiftCardCartController
         private ObjectManager $orderManager,
         private UrlGeneratorInterface $urlGenerator,
         private CsrfTokenManagerInterface $csrfTokenManager,
+        /**
+         * Null when the host has not installed symfony/rate-limiter, or has switched the limiter
+         * off. Redemption then works exactly as it did before, unthrottled - see
+         * docs/adr-log/0012-rate-limiting-gift-card-redemption.md.
+         */
+        private ?GiftCardRedemptionLimiterInterface $redemptionLimiter = null,
     ) {
     }
 
@@ -89,28 +96,48 @@ final readonly class GiftCardCartController
             return $this->redirectBack($request, $cart);
         }
 
+        // Asked before the applicator is, so a run of guesses never reaches the repository at all.
+        if (true === $this->redemptionLimiter?->isBlocked($request)) {
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.too_many_attempts');
+
+            return $this->redirectBack($request, $cart);
+        }
+
         try {
-            $this->giftCardApplicator->apply($cart, $code);
-        } catch (GiftCardNotFoundException) {
-            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.not_found');
-
-            return $this->redirectBack($request, $cart);
-        } catch (GiftCardNotRedeemableException) {
-            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.not_redeemable');
-
-            return $this->redirectBack($request, $cart);
-        } catch (ChannelMismatchException) {
-            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.channel_mismatch');
+            $newlyApplied = $this->giftCardApplicator->apply($cart, $code);
+        } catch (GiftCardNotFoundException | GiftCardNotRedeemableException | ChannelMismatchException) {
+            // One message for all three, deliberately. Saying "there is no such code" for one and
+            // "this card is expired" for another tells an anonymous caller which codes are real,
+            // which is the fact gift card codes exist to protect - the same reason removeAction
+            // never consults the repository. Where the distinction is genuinely useful, the account
+            // page gives it to the customer the card belongs to, behind a login.
+            $this->redemptionLimiter?->recordFailure($request);
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.not_usable');
 
             return $this->redirectBack($request, $cart);
         }
 
         $this->orderManager->flush();
+
+        // A code that works clears whatever this client got wrong before it: the limiter is there to
+        // stop guessing, and somebody holding a real card is not guessing.
+        //
+        // Only when the card was *newly* applied. Re-posting a code already on the cart succeeds,
+        // flushes and flashes exactly like the first time - addGiftCard() early-returns - and costs
+        // the card nothing, so counting it as a redemption would sell an attacker unlimited guessing
+        // for the price of one small gift card. The limiter caps the clears on top of this.
+        if ($newlyApplied) {
+            $this->redemptionLimiter?->clear($request);
+        }
         $this->addFlash($request, self::FLASH_SUCCESS, 'madcoders_sylius_gift_card.cart.applied');
 
         return $this->redirectBack($request, $cart);
     }
 
+    /**
+     * Not rate limited, on purpose: removal is resolved against the cart's own cards and never
+     * consults the repository, so repeating it cannot tell anybody which codes exist.
+     */
     public function removeAction(Request $request, string $code): RedirectResponse
     {
         $cart = $this->getCart();

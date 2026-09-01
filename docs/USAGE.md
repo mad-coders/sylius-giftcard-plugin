@@ -44,6 +44,17 @@ an admin can reinstate them.
 A customer enters a code in the gift card panel on the cart. A card can be applied when it is
 enabled, not expired, has a balance left, and belongs to the order's channel.
 
+**Every refusal says the same thing** - "This gift card code cannot be used." - whether the code does
+not exist, the card is expired, disabled, spent, or belongs to another channel. The panel is an
+anonymous POST and a code is money to whoever holds it, so a message that distinguished those cases
+would tell anybody typing codes at random which ones are real. A customer who wants to know why their
+own card will not work finds it in *My gift cards*, which is behind a login and shows only cards that
+are theirs.
+
+Repeated failures from the same client are refused after a threshold, with a message of their own.
+See `docs/INSTALLATION.md` for the settings and `docs/adr-log/0012-rate-limiting-gift-card-redemption.md`
+for the reasoning.
+
 **A gift card is money, not a discount.** The order stays worth what the goods are worth; the card
 comes off what the customer has to pay. So a 100 order paid with a 40 card is still a 100 order, and
 the customer pays 60.

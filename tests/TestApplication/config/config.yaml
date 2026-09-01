@@ -2,6 +2,22 @@ imports:
     - { resource: "@MadcodersSyliusGiftCardPlugin/config/config.yaml" }
     - { resource: "services_test.php" }
 
+# A tighter threshold than the shipped default of ten, so a scenario that proves the limiter refuses
+# does not need eleven round trips to get there - and so the threshold being configurable at all is
+# exercised by the suite rather than only asserted in a unit test.
+madcoders_sylius_gift_card:
+    redemption_rate_limit:
+        limit: 3
+
+# FrameworkBundle turns the lock component on by itself when a host requires it, but not when it is a
+# dev dependency, which is what it is here. Enabled explicitly so the suite builds the container a
+# real host gets - one where the limiter's counter is guarded and lock.factory has to actually wire.
+framework:
+    lock:
+        enabled: true
+        resources:
+            default: ['flock']
+
 # The plugin's models are mapped superclasses, so the application supplies the concrete entities -
 # exactly as a host application has to. See docs/INSTALLATION.md.
 doctrine:

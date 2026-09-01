@@ -6,7 +6,10 @@ madcoders_sylius_gift_card:
     cart:
         applied: The gift card has been applied to your cart.
         removed: The gift card has been removed from your cart.
-        not_found: There is no gift card with this code.
-        not_redeemable: This gift card cannot be used - it may be expired, disabled or already spent.
-        channel_mismatch: This gift card cannot be used in this store.
+        # One message for every reason an apply can fail, on purpose. Telling the customer whether
+        # the code exists tells anybody typing codes at random the same thing, and a gift card code
+        # is money to whoever holds it. Your own cards, with their balance and expiry, are in your
+        # account. See docs/adr-log/0012-rate-limiting-gift-card-redemption.md.
+        not_usable: This gift card code cannot be used. Check it and try again.
+        too_many_attempts: Too many gift card codes have been tried from here. Please wait a few minutes before trying again.
         code_required: Please enter a gift card code.

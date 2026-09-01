@@ -7,10 +7,16 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Controller\Shop;
 use Doctrine\Persistence\ObjectManager;
 use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController;
+use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
+use Madcoders\SyliusGiftCardPlugin\RateLimiter\GiftCardRedemptionLimiterInterface;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -74,6 +80,179 @@ final class GiftCardCartControllerTest extends TestCase
         );
 
         self::assertSame('/cart', $response->getTargetUrl());
+    }
+
+    public function testARateLimitedClientIsRefusedWithoutTheCodeBeingLookedUpAtAll(): void
+    {
+        // The point of the limiter: a run of guesses must not reach the repository. If the applicator
+        // is consulted first the shop is still answering the attacker's question, just more slowly.
+        $applicator = $this->createMock(GiftCardApplicatorInterface::class);
+        $applicator->expects(self::never())->method('apply');
+
+        $request = $this->applyRequest();
+        $response = $this->apply($request, $applicator, $this->limiterBlocking(true));
+
+        self::assertSame('/cart', $response->getTargetUrl());
+        self::assertSame(
+            ['madcoders_sylius_gift_card.cart.too_many_attempts'],
+            $this->flashes($request, GiftCardCartController::FLASH_ERROR),
+        );
+    }
+
+    public function testAnUnknownCodeAndAnUnusableCardAreRefusedInTheSameWords(): void
+    {
+        // Two different exceptions, one message. A distinct message per cause is a code-existence
+        // oracle on an endpoint anybody can post to.
+        $notFound = $this->applyRequest();
+        $notRedeemable = $this->applyRequest();
+
+        $this->apply($notFound, $this->applicatorThrowing(new GiftCardNotFoundException('GIFT-NOPE')));
+        $this->apply($notRedeemable, $this->applicatorThrowing(new ChannelMismatchException(null, null)));
+
+        self::assertSame(
+            $this->flashes($notFound, GiftCardCartController::FLASH_ERROR),
+            $this->flashes($notRedeemable, GiftCardCartController::FLASH_ERROR),
+        );
+        self::assertSame(
+            ['madcoders_sylius_gift_card.cart.not_usable'],
+            $this->flashes($notFound, GiftCardCartController::FLASH_ERROR),
+        );
+    }
+
+    public function testAFailedApplyCountsAgainstTheClientAndASuccessfulOneClearsTheTally(): void
+    {
+        $failing = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $failing->expects(self::once())->method('recordFailure');
+        $failing->expects(self::never())->method('clear');
+
+        $this->apply(
+            $this->applyRequest(),
+            $this->applicatorThrowing(new GiftCardNotFoundException('GIFT-NOPE')),
+            $failing,
+        );
+
+        $succeeding = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $succeeding->expects(self::never())->method('recordFailure');
+        $succeeding->expects(self::once())->method('clear');
+
+        $this->apply($this->applyRequest(), $this->applicatorReturning(true), $succeeding);
+    }
+
+    public function testReSubmittingACardTheCartAlreadyHasDoesNotBuyBackTheAllowance(): void
+    {
+        // The bypass this guards: applying a card does not debit it, and addGiftCard() early-returns
+        // on one the cart already has, so re-posting the same code succeeds, flushes and flashes just
+        // like the first time. If that counted as a redemption, one $5 card would buy an attacker
+        // unlimited guessing - nine wrong codes, then their own, for ever.
+        $limiter = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $limiter->expects(self::never())->method('clear');
+
+        $request = $this->applyRequest();
+        $response = $this->apply($request, $this->applicatorReturning(false), $limiter);
+
+        // Still a success as far as the customer is concerned - the card *is* on their cart.
+        self::assertSame(
+            ['madcoders_sylius_gift_card.cart.applied'],
+            $this->flashes($request, GiftCardCartController::FLASH_SUCCESS),
+        );
+        self::assertSame('/cart', $response->getTargetUrl());
+    }
+
+    private function applicatorThrowing(\Throwable $exception): GiftCardApplicatorInterface
+    {
+        $applicator = $this->createMock(GiftCardApplicatorInterface::class);
+        $applicator->method('apply')->willThrowException($exception);
+
+        return $applicator;
+    }
+
+    /** @param bool $newlyApplied whether the card was actually added, or was already on the cart */
+    private function applicatorReturning(bool $newlyApplied): GiftCardApplicatorInterface
+    {
+        $applicator = $this->createMock(GiftCardApplicatorInterface::class);
+        $applicator->method('apply')->willReturn($newlyApplied);
+
+        return $applicator;
+    }
+
+    private function limiterBlocking(bool $blocked): GiftCardRedemptionLimiterInterface
+    {
+        $limiter = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $limiter->method('isBlocked')->willReturn($blocked);
+
+        return $limiter;
+    }
+
+    /**
+     * A request carrying a submitted code and a session to put the answer in.
+     */
+    private function applyRequest(string $code = 'GIFT-NOPE'): Request
+    {
+        $request = new Request(request: ['madcoders_sylius_gift_card_code' => ['code' => $code]]);
+        $request->setSession(new Session(new MockArraySessionStorage()));
+
+        return $request;
+    }
+
+    /** @return list<string> */
+    private function flashes(Request $request, string $type): array
+    {
+        $session = $request->getSession();
+        self::assertInstanceOf(Session::class, $session);
+
+        /** @var list<string> $messages */
+        $messages = $session->getFlashBag()->peek($type);
+
+        return $messages;
+    }
+
+    private function apply(
+        Request $request,
+        ?GiftCardApplicatorInterface $applicator = null,
+        ?GiftCardRedemptionLimiterInterface $limiter = null,
+    ): \Symfony\Component\HttpFoundation\RedirectResponse {
+        $cart = $this->createMock(\Madcoders\SyliusGiftCardPlugin\Model\OrderInterface::class);
+        $cart->method('getId')->willReturn(1);
+
+        $cartContext = $this->createMock(CartContextInterface::class);
+        $cartContext->method('getCart')->willReturn($cart);
+
+        $controller = new GiftCardCartController(
+            $cartContext,
+            $applicator ?? $this->createMock(GiftCardApplicatorInterface::class),
+            $this->createSubmittedCodeFormFactory($request),
+            $this->createMock(ObjectManager::class),
+            $this->createUrlGenerator(),
+            $this->createMock(CsrfTokenManagerInterface::class),
+            $limiter ?? $this->limiterBlocking(false),
+        );
+
+        return $controller->applyAction($request);
+    }
+
+    /**
+     * A form factory whose form reports the code the request carries.
+     *
+     * The controller reads the submitted code through the form type, so a unit test of what it does
+     * with the answer has to stand in for the form rather than for the request parsing.
+     */
+    private function createSubmittedCodeFormFactory(Request $request): FormFactoryInterface
+    {
+        /** @var array{code?: string} $submitted */
+        $submitted = $request->request->all()['madcoders_sylius_gift_card_code'] ?? [];
+
+        $codeField = $this->createMock(FormInterface::class);
+        $codeField->method('getData')->willReturn($submitted['code'] ?? '');
+
+        $form = $this->createMock(FormInterface::class);
+        $form->method('isSubmitted')->willReturn(true);
+        $form->method('isValid')->willReturn(true);
+        $form->method('get')->with('code')->willReturn($codeField);
+
+        $formFactory = $this->createMock(FormFactoryInterface::class);
+        $formFactory->method('create')->willReturn($form);
+
+        return $formFactory;
     }
 
     private function removeWithReturnTo(?string $returnTo): \Symfony\Component\HttpFoundation\RedirectResponse
