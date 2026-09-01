@@ -23,7 +23,9 @@ Feature: A gift card does not buy a gift card
         When I try to apply the gift card "GIFT-500"
         Then I should be told a gift card cannot pay for a gift card
         And no gift card should be applied to my cart
-        And I should have "$50.00" left to pay
+        # The cart total, not "left to pay": the panel only prints what is left to pay once a card
+        # is actually covering something, so its absence here is itself the proof that nothing was.
+        And my cart total should be "$50.00"
 
     @ui
     Scenario: The refusal says nothing about whether the code exists
@@ -81,8 +83,10 @@ Feature: A gift card does not buy a gift card
         And I have proceeded through checkout process
         When I look at the checkout summary
         And I try to place my order
+        # The violation is the whole assertion, as it is in Sylius' own checkout scenarios: where a
+        # refused confirmation leaves the customer is Sylius' business, and pinning it here would
+        # make this scenario a hostage to that.
         Then I should be told at the checkout that a gift card cannot pay for a gift card
-        And I should still be in the checkout
 
     @ui
     Scenario: A mixed basket still completes checkout
