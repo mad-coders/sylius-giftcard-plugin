@@ -1,0 +1,36 @@
+{#
+    The gift card panel in the checkout sidebar, directly under the totals.
+
+    That is the moment the customer is looking at what they are about to pay, so it is where they
+    look for a way to pay less of it. Before this the panel existed only on the cart page, and a
+    customer already in checkout had to go back to find it.
+
+    The sidebar is a separate hook region from the step's own form, so this form is not nested
+    inside another one - see config/twig_hooks/shop.yaml.
+#}
+{% set order = hookable_metadata.context.order|default(null) %}
+
+{#
+    Where the controller should send the customer back to. Mapped from the current route rather than
+    submitted as a URL: the apply endpoint is reachable anonymously, and one that redirects wherever
+    it is told is an open redirect. The controller accepts only these keys and falls back to the
+    cart, so a forged value achieves nothing.
+#}
+{% set return_to = {
+    'sylius_shop_checkout_address': 'checkout_address',
+    'sylius_shop_checkout_select_shipping': 'checkout_shipping',
+    'sylius_shop_checkout_select_payment': 'checkout_payment',
+    'sylius_shop_checkout_complete': 'checkout_complete',
+}[app.request.attributes.get('_route')]|default('cart') %}
+
+{% if order is not null and not order.empty %}
+    <div class="mt-4 pt-3 border-top" {{ sylius_test_html_attribute('checkout-gift-card-panel') }}>
+        <h6 class="mb-3">{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}</h6>
+
+        {% include '@MadcodersSyliusGiftCardPlugin/shop/common/gift_card_panel.html.twig' with {
+            'order': order,
+            'return_to': return_to,
+            'compact': true,
+        } only %}
+    </div>
+{% endif %}

@@ -33,6 +33,31 @@ sylius_twig_hooks:
                 template: '@MadcodersSyliusGiftCardPlugin/shop/order/summary/gift_card_total.html.twig'
                 priority: -100
 
+        # The apply/remove panel in the checkout sidebar, under the totals it changes.
+        #
+        # `sylius_shop.checkout.common.sidebar.summary` is shared by every checkout step, so one
+        # hookable covers all of them; the template works out which step it is on so the customer is
+        # sent back there. The sidebar is a separate hook region from the step's own form, so this
+        # form is not nested inside another.
+        'sylius_shop.checkout.common.sidebar.summary':
+            madcoders_gift_card_panel:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/checkout/gift_card.html.twig'
+                # Below the totals table (0), so the field reads under the amount it changes.
+                priority: -100
+
+        # The summary step overrides the sidebar block entirely, so the hookable above never reaches
+        # it. It needs its own - and it is the page that matters most, being the last screen before
+        # the customer pays.
+        #
+        # Attached to `content`, NOT to `content.form`: that hookable renders inside Sylius'
+        # `form_start()`, and a form nested in another form is ignored by the browser - pressing
+        # apply would submit the checkout instead. Priority 50 puts the panel below the flashes
+        # (100) and directly above the order summary (0).
+        'sylius_shop.checkout.complete.content':
+            madcoders_gift_card_panel:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/checkout/gift_card.html.twig'
+                priority: 50
+
         # Account pages. The prefix is merged with `sylius_shop.account.common`, so the account
         # breadcrumbs and menu still render around this content.
         'madcoders_sylius_gift_card.account.gift_card_index.index.content.main':

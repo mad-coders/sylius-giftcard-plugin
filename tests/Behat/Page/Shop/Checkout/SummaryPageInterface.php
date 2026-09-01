@@ -13,4 +13,13 @@ interface SummaryPageInterface extends PageInterface
     public function getAmountToPay(): string;
 
     public function hasGiftCardTotal(): bool;
+
+    public function hasGiftCardPanel(): bool;
+
+    public function applyGiftCard(string $code): void;
+
+    public function removeGiftCard(string $code): void;
+
+    /** @return list<string> */
+    public function getAppliedGiftCardCodes(): array;
 }

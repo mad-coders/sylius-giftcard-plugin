@@ -26,7 +26,14 @@
         <service id="madcoders_sylius_gift_card.behat.context.ui.shop.checkout_summary"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\CheckoutSummaryContext">
             <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.checkout.summary" />
+            <argument type="service" id="sylius.behat.notification_checker.shop" />
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.checkout.payment_step" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.checkout.payment_step"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Checkout\PaymentStepPage"
+                 parent="sylius.behat.page.shop.page"
+                 public="false" />
 
         <service id="madcoders_sylius_gift_card.behat.page.shop.checkout.summary"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Checkout\SummaryPage"

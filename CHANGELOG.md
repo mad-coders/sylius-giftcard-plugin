@@ -9,6 +9,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
+  shipping and payment steps and on the summary page. It existed only on the cart before, so a
+  customer already in checkout had to go back to find it - at exactly the moment they are looking at
+  what they are about to pay. Applying or removing a card returns them to the step they were on.
+  Closes #30.
+
+### Changed
+
+- The apply and remove endpoints accept an optional `_return_to` field naming where to send the
+  customer afterwards. It is resolved through a whitelist of keys, never a submitted URL or the
+  referer, so a forged value can only send them to their own cart. Anything already posting to these
+  endpoints without the field keeps redirecting to the cart.
+
+### Added
+
 - Behat coverage for a gift card that stops being redeemable *after* the customer applied it -
   expiring, or disabled by an administrator, mid-checkout. The processor re-checks every card on each
   pass and drops the ones that are no longer redeemable, so the payment goes back to the full amount
