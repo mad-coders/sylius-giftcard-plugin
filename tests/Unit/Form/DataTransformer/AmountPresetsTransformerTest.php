@@ -57,6 +57,15 @@ final class AmountPresetsTransformerTest extends TestCase
         (new AmountPresetsTransformer())->reverseTransform('25, fifty');
     }
 
+    public function testItRefusesAWorthlessPresetRatherThanDroppingIt(): void
+    {
+        // The same standard the code length is held to: an operator who typed something that cannot
+        // be offered is told, not quietly saved a shorter list than they wrote.
+        $this->expectException(TransformationFailedException::class);
+
+        (new AmountPresetsTransformer())->reverseTransform('25, 0, 100');
+    }
+
     public function testItRefusesMorePrecisionThanMoneyHas(): void
     {
         // Silently rounding 25.005 would give the operator a channel offering an amount they never

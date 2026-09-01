@@ -162,6 +162,26 @@ Feature: Managing gift cards
         Then the "United States" channel should allow any amount between "$10.00" and "$500.00"
 
     @ui
+    Scenario: A preset that is not an amount is refused
+        # Also pins the translation domain: a constraint's message is looked up in `validators`, so
+        # the same key sitting in messages.en.yaml renders as the raw key on the page.
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose from preset amounts
+        And I offer the amounts "25, fifty, 100"
+        And I save this configuration
+        Then I should be told the preset amounts are not amounts
+        And no gift card configuration should have been saved
+
+    @ui
+    Scenario: A worthless preset is refused rather than dropped
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose from preset amounts
+        And I offer the amounts "25, 0, 100"
+        And I save this configuration
+        Then I should be told the preset amounts are not amounts
+        And no gift card configuration should have been saved
+
+    @ui
     Scenario: A range with a bound missing is refused
         # A channel that offers a free amount without knowing its bounds offers nothing at all at
         # runtime, which is the safe behaviour but a silent one. The operator has to be told.

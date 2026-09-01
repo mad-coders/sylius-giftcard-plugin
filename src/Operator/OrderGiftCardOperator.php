@@ -162,10 +162,18 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
      *
      * - **Promotions are included** because a card worth more than the customer paid for it turns
      *   any promotion on a gift card product into an arbitrage.
-     * - **Tax is excluded** because tax is not part of what the card is worth. In a tax-inclusive
-     *   shop Sylius records tax as a neutral adjustment and the unit total already excludes it; in a
-     *   tax-exclusive shop the tax is added on top, and leaving it in would hand a customer who
-     *   asked for a 50 card a 55 one. Both shops now issue the same card for the same choice.
+     * - **Tax charged on top is excluded** because it is not part of what the card is worth. A
+     *   tax-exclusive shop adds the tax as a non-neutral adjustment, so it is inside `getTotal()`;
+     *   leaving it in would hand a customer who asked for a 50 card a 55 one.
+     *
+     * The subtraction is deliberately a **no-op in a tax-inclusive shop**, and that is the whole
+     * reason it is written this way. Such a shop records included tax as a *neutral* adjustment, and
+     * `getAdjustmentsTotal()` sums only non-neutral ones - so there is nothing to subtract and the
+     * gross price stands, which is correct: the customer asked for a 50 card and paid 50.
+     *
+     * Do not "improve" this by summing the adjustments directly or by reaching for `getTaxTotal()`,
+     * both of which include neutral tax. That would subtract the VAT a tax-inclusive shop already
+     * has inside its price, under-issuing every card in every such shop by the full tax rate.
      */
     private function faceValueOf(OrderItemUnitInterface $unit): int
     {

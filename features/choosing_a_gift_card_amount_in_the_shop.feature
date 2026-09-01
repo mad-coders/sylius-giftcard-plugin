@@ -22,7 +22,7 @@ Feature: Being offered a gift card amount in the shop
         Given the channel lets customers choose any gift card amount between "$10.00" and "$500.00"
         When I look at the "Gift Card" product page
         Then I should be able to type my own amount
-        And I should be told the amount must be between "$10.00" and "$500.00"
+        And the form should tell me I can type anything between "$10.00" and "$500.00"
 
     @ui
     Scenario: A channel offering both shows the presets and an other-amount box

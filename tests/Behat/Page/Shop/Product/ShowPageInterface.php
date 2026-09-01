@@ -32,4 +32,19 @@ interface ShowPageInterface extends SymfonyPageInterface
     public function getMessageMaxLength(): ?int;
 
     public function getMessageHelp(): string;
+
+    /** Clicks one of the offered amounts, by the label the customer reads. */
+    public function chooseAmount(string $label): void;
+
+    public function specifyCustomAmount(string $amount): void;
+
+    public function specifyMessage(string $message): void;
+
+    /** Types a message past the `maxlength` the field advertises, as a client ignoring it would. */
+    public function specifyMessageIgnoringTheBrowserLimit(string $message): void;
+
+    public function addToCart(): void;
+
+    /** Every error the form is showing, joined - the amount and the message fail separately. */
+    public function getValidationMessages(): string;
 }

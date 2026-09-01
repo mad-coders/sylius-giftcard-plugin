@@ -152,8 +152,10 @@ final class OrderGiftCardOperatorTest extends TestCase
 
     public function testATaxInclusiveShopIssuesTheSameCardAsATaxExclusiveOne(): void
     {
-        // Included tax is a neutral adjustment, so the unit total already excludes it. The two shops
-        // must not disagree about what the same choice is worth.
+        // Included tax is a *neutral* adjustment, which getAdjustmentsTotal() does not sum - so the
+        // gross price stands and there is nothing to subtract. That is the right answer: the
+        // customer asked for a 50 card and paid 50. This test is the guard against a future change
+        // that subtracts neutral tax too and under-issues every card in every tax-inclusive shop.
         $order = $this->createOrder(giftCardUnits: 1, unitPrice: 5000);
         $this->adjustEveryUnit($order, AdjustmentInterface::TAX_ADJUSTMENT, 500, neutral: true);
 

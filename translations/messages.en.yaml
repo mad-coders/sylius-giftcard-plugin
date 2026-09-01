@@ -33,12 +33,12 @@ madcoders_sylius_gift_card:
         amount_presets: Preset amounts
         amount_presets_help: 'The amounts offered as ready-made choices, separated by commas, in this channel''s currency - for example "25, 50, 100". Used by the preset modes.'
         minimum_amount: Smallest amount
-        minimum_amount_help: The least a customer may type in. Used by the free-amount modes.
+        minimum_amount_help: The least a customer may type in. Used by the free-amount modes. Preset amounts are offered whether or not they fall inside it.
         maximum_amount: Largest amount
-        maximum_amount_help: The most a customer may type in. Used by the free-amount modes.
+        maximum_amount_help: The most a customer may type in. Used by the free-amount modes. Preset amounts are offered whether or not they fall inside it.
         choose_amount: Choose an amount
         other_amount: Other amount
-        amount_between: 'Anything between %minimum% and %maximum%.'
+        amount_between: 'Type anything between %minimum% and %maximum%.'
         gift_card_message: Message
         gift_card_message_help: 'Optional. Up to %limit% characters, shown with the code when it is delivered.'
         purchaser: Bought by
@@ -82,18 +82,10 @@ madcoders_sylius_gift_card:
         code_length:
             too_short: 'The code length must be at least 12 characters - a shorter code is guessable.'
         amount_presets:
-            invalid: 'Enter the preset amounts separated by commas, for example "25, 50, 100".'
             required: This mode offers preset amounts, so at least one has to be set.
         bounds:
             required: This mode lets the customer type an amount, so both the smallest and the largest have to be set.
             inverted: The largest amount cannot be smaller than the smallest one.
-    cart_item:
-        amount:
-            required: Please choose how much this gift card should be worth.
-            not_a_preset: Please choose one of the available amounts.
-            out_of_range: 'The amount must be between {{ minimum }} and {{ maximum }}.'
-        message:
-            too_long: 'Your message is too long - please keep it to {{ limit }} characters or fewer.'
     gift_card:
         code:
             not_blank: Please enter a gift card code.

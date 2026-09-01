@@ -72,13 +72,24 @@ fixtures-test: ## Load the fixtures into the test database (used by CI)
 	APP_ENV=test $(CONSOLE) sylius:fixtures:load default --no-interaction
 	APP_ENV=test $(CONSOLE) sylius:fixtures:load madcoders_gift_card --no-interaction
 
+# PHP's own server rather than `symfony serve`, for two reasons that both bite immediately:
+#
+#  * `-d memory_limit=-1`. Building the Sylius container costs more than the default 128M, exactly as
+#    it does for every console call. Under `symfony serve` the shop 500s on the first page that
+#    warms a cold container, and the error surfaces as a blank page rather than as an out-of-memory
+#    message - which is a long way to walk to find a one-word cause.
+#  * `-d variables_order=EGPCS`. Without `E` the server does not put the environment into $_SERVER,
+#    so Symfony never sees APP_ENV and quietly boots `dev` - against the dev database, while you are
+#    trying to run the test suite.
+SERVE = php -d memory_limit=-1 -d variables_order=EGPCS -S 127.0.0.1:8080 -t public
+
 serve: ## Serve the DEV application on http://127.0.0.1:8080 (dev database)
 	APP_ENV=dev $(CONSOLE) cache:clear
-	(cd vendor/sylius/test-application && APP_ENV=dev symfony serve --port=8080)
+	(cd vendor/sylius/test-application && APP_ENV=dev $(SERVE))
 
 serve-test: ## Serve the TEST application on http://127.0.0.1:8080 (test database; for @javascript Behat)
 	APP_ENV=test $(CONSOLE) cache:clear
-	(cd vendor/sylius/test-application && APP_ENV=test symfony serve --port=8080)
+	(cd vendor/sylius/test-application && APP_ENV=test $(SERVE))
 
 ## --- Setup ------------------------------------------------------------------
 

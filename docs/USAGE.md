@@ -57,6 +57,10 @@ with the code in the delivery email, on the card's page in the customer's accoun
 A message is customer-supplied text, so it is rendered as text everywhere it appears, never as
 markup.
 
+Two gift cards of the same product bought in one order stay two separate lines when their amount or
+message differs, so each card carries what was asked for it. Two identical ones merge into a quantity
+of two, exactly as any other product would.
+
 ## Selling gift cards
 
 Mark a product as a gift card by ticking **This product is a gift card** on the product form.
@@ -64,11 +68,12 @@ Mark a product as a gift card by ticking **This product is a gift card** on the 
 When an order containing that product is **paid**:
 
 - one card is issued **per purchased unit** - buying three gift cards gives three separate codes;
-- each card's face value is **what was actually paid for that unit, less tax**. Promotions are
-  included, so a discounted gift card issues a card worth the discounted price and a promotion
-  cannot be turned into free money. Tax is excluded, because tax is not part of what the card is
-  worth: a customer who asks for a 50 card gets a 50 card whether the shop prices tax-inclusive or
-  tax-exclusive;
+- each card's face value is **what was actually paid for that unit, less any tax charged on top of
+  the price**. Promotions are included, so a discounted gift card issues a card worth the discounted
+  price and a promotion cannot be turned into free money. Tax added on top is excluded, because it is
+  not part of what the card is worth. A tax-inclusive shop is unaffected - Sylius records included
+  tax as a neutral adjustment, so there is nothing to subtract and the gross price stands. Either
+  way, a customer who asks for a 50 card gets a 50 card;
 - the buyer is recorded as the card's **purchaser**;
 - the codes, and any message the buyer wrote, are emailed to the buyer.
 

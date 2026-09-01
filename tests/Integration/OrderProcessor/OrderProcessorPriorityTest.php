@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\OrderProcessor;
+namespace Tests\Madcoders\SyliusGiftCardPlugin\Integration\OrderProcessor;
 
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +16,11 @@ use PHPUnit\Framework\TestCase;
  *
  * Both priorities are read from the real XML - ours and Sylius' - so the test fails if either side
  * moves, including when a Sylius upgrade renumbers its own chain.
+ *
+ * It lives in the **integration** suite, not the unit one, precisely because of that last clause.
+ * CI's fast job runs `--testsuite=unit` against whatever Composer happens to resolve - one Sylius
+ * version - while the version matrix runs `--testsuite=non-unit` across every supported one. A guard
+ * against Sylius renumbering its chain that only ever sees the newest Sylius is not a guard.
  */
 final class OrderProcessorPriorityTest extends TestCase
 {

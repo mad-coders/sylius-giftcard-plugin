@@ -1,7 +1,19 @@
 # Constraint violation messages. Symfony translates these in the `validators` domain, not
 # `messages`, so a key put in the wrong catalogue reaches the customer as the key itself.
+#
+# Messages this plugin translates itself before handing them to a FormError - the gift card
+# configuration's cross-field rules - stay in `messages`, because that call uses the default domain.
 madcoders_sylius_gift_card:
     cart_item:
         gift_card_not_sold_in_channel: Gift cards are not sold in this channel.
+        amount:
+            required: Please choose how much this gift card should be worth.
+            not_a_preset: Please choose one of the available amounts.
+            out_of_range: 'The amount must be between {{ minimum }} and {{ maximum }}.'
+        message:
+            too_long: 'Your message is too long - please keep it to {{ limit }} characters or fewer.'
     order:
         gift_card_not_sold_in_channel: Your cart contains a gift card, and gift cards are not sold in this channel. Please remove it to continue.
+    gift_card_configuration:
+        amount_presets:
+            invalid: 'Enter the preset amounts separated by commas, for example "25, 50, 100".'

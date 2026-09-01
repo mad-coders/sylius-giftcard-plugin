@@ -199,6 +199,18 @@ final readonly class GiftCardConfigurationContext implements Context
     }
 
     /**
+     * @Then I should be told the preset amounts are not amounts
+     */
+    public function iShouldBeToldThePresetAmountsAreNotAmounts(): void
+    {
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'separated by commas',
+            'The form accepted a preset list that is not a list of amounts.',
+        );
+    }
+
+    /**
      * @Then I should be told the range needs both bounds
      */
     public function iShouldBeToldTheRangeNeedsBothBounds(): void

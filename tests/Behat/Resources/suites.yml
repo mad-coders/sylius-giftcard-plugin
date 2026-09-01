@@ -69,6 +69,7 @@ default:
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card_purchase
                 - madcoders_sylius_gift_card.behat.context.ui.shop.bought_gift_card
                 - madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_product
+                - madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_cart
 
             filters:
                 tags: "@madcoders_gift_card_buying"

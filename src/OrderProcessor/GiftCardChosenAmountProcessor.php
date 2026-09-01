@@ -68,11 +68,18 @@ final readonly class GiftCardChosenAmountProcessor implements OrderProcessorInte
                 $configuration->isAllowedAmount($chosenAmount);
 
             if (!$allowed) {
-                // Cleared, not just ignored: leaving it in place would mean re-judging the same
-                // rejected value on every run, and would show the customer a choice that is not
-                // being honoured.
-                $item->setGiftCardAmount(null);
-
+                // The price is refused; the *record* of what the customer asked for is kept.
+                //
+                // These are different decisions and it is worth being deliberate about the second.
+                // The usual way a stored amount stops being allowed is that an operator narrowed the
+                // channel's presets or bounds while the card sat in somebody's cart. Erasing the
+                // amount there would throw away a request the customer made in good faith, and make
+                // it unrecoverable: widening the range back would not bring it back, and nothing
+                // would be left to explain why the line is priced as it is. Keeping it costs a
+                // re-check per run, which is a comparison against a list.
+                //
+                // The line falls back to whatever Sylius' price recalculator left on it, which is
+                // the channel price - so the customer is never charged an amount nobody offered.
                 continue;
             }
 

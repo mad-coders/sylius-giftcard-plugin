@@ -91,6 +91,92 @@ final class ShowPage extends SymfonyPage implements ShowPageInterface
         return null === $help ? '' : trim($help->getText());
     }
 
+    public function chooseAmount(string $label): void
+    {
+        foreach ($this->amountOptionLabels() as $option) {
+            if (trim($option->getText()) !== $label) {
+                continue;
+            }
+
+            // The label, not the input: the radio is visually hidden behind Bootstrap's `btn-check`,
+            // and a real customer clicks the button they can see.
+            $option->click();
+
+            return;
+        }
+
+        throw new \InvalidArgumentException(sprintf('The page does not offer an amount labelled "%s".', $label));
+    }
+
+    public function specifyCustomAmount(string $amount): void
+    {
+        $this->fieldIn('gift_card_custom_amount', 'input')->setValue($amount);
+    }
+
+    public function specifyMessage(string $message): void
+    {
+        $this->fieldIn('gift_card_message', 'textarea')->setValue($message);
+    }
+
+    public function specifyMessageIgnoringTheBrowserLimit(string $message): void
+    {
+        // The textarea carries a `maxlength`, and a browser honours it - so setValue() alone can
+        // only ever produce a message the server would accept, and would test nothing. Dropping the
+        // attribute first makes this the case that matters: a client that ignores the hint, which is
+        // every client that did not come from this form.
+        $field = $this->fieldIn('gift_card_message', 'textarea');
+        $this->getSession()->executeScript(sprintf(
+            'document.querySelector("%s textarea").removeAttribute("maxlength");',
+            '[data-test-gift-card-message]',
+        ));
+
+        $field->setValue($message);
+    }
+
+    public function addToCart(): void
+    {
+        $this->getElement('add_to_cart_button')->click();
+
+        // The component either redirects the browser to the cart (a successful add) or re-renders
+        // in place carrying the refusal. Waiting for whichever arrives is what makes the next
+        // assertion look at the outcome rather than at the page as it was before the click.
+        $this->getDocument()->waitFor(
+            15,
+            fn (): bool => $this->hasLeftTheProductPage() || '' !== $this->getValidationMessages(),
+        );
+    }
+
+    private function hasLeftTheProductPage(): bool
+    {
+        return !str_contains($this->getSession()->getCurrentUrl(), '/products/');
+    }
+
+    public function getValidationMessages(): string
+    {
+        $messages = [];
+
+        foreach ($this->getDocument()->findAll('css', '.invalid-feedback, .form-error-message') as $error) {
+            $text = trim($error->getText());
+
+            if ('' !== $text) {
+                $messages[] = $text;
+            }
+        }
+
+        return implode(' ', $messages);
+    }
+
+    private function fieldIn(string $element, string $tag): NodeElement
+    {
+        $field = $this->getElement($element)->find('css', $tag);
+
+        if (null === $field) {
+            throw new \RuntimeException(sprintf('No <%s> inside the "%s" element.', $tag, $element));
+        }
+
+        return $field;
+    }
+
     /** @return list<NodeElement> */
     private function amountOptionLabels(): array
     {
@@ -107,6 +193,7 @@ final class ShowPage extends SymfonyPage implements ShowPageInterface
             'gift_card_amount' => '[data-test-gift-card-amount]',
             'gift_card_custom_amount' => '[data-test-gift-card-custom-amount]',
             'gift_card_message' => '[data-test-gift-card-message]',
+            'add_to_cart_button' => '#add-to-cart-button',
         ]);
     }
 }

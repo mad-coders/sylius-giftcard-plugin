@@ -156,8 +156,12 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
     public function setAmountPresets(array $amountPresets): void
     {
         // Normalised on the way in rather than on the way out, so everything reading presets - the
-        // shop form, the validator, the admin - sees the same list in the same order. A zero or
-        // negative preset is dropped because a card has to be worth something.
+        // shop form, the validator, the admin - sees the same list in the same order. Sorting and
+        // de-duplicating do not change what the channel offers; offering 50 twice is offering 50.
+        //
+        // Dropping a worthless preset *is* a correction, and it is a backstop only: the admin form
+        // refuses one outright, exactly as it does a code length below the minimum. Nothing should
+        // reach here having silently lost a preset the operator typed.
         $presets = array_values(array_unique(array_filter(
             $amountPresets,
             static fn (int $preset): bool => $preset > 0,

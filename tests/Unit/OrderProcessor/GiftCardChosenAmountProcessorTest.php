@@ -67,7 +67,40 @@ final class GiftCardChosenAmountProcessorTest extends TestCase
 
         $item = $order->getItems()->first();
         self::assertSame(self::CHANNEL_PRICE, $item->getUnitPrice(), 'the forged amount must not become the price');
-        self::assertNull($item->getGiftCardAmount(), 'and it must not survive to be judged again');
+    }
+
+    public function testARefusedAmountIsNotErasedFromTheLine(): void
+    {
+        // Refusing the price and erasing the request are different decisions. The everyday way an
+        // amount stops being allowed is an operator narrowing the channel's presets while the card
+        // sits in somebody's cart; erasing it there would destroy a request made in good faith and
+        // leave nothing to explain the price, and widening the range back would not restore it.
+        $order = self::orderWithGiftCardItem(chosenAmount: 3333);
+
+        $this->processorFor(self::presetsConfiguration())->process($order);
+
+        self::assertSame(3333, $order->getItems()->first()->getGiftCardAmount());
+    }
+
+    public function testAnAmountAllowedAgainIsHonouredAgain(): void
+    {
+        // The point of keeping it: the operator puts the preset back, and the customer's cart is
+        // priced as they asked without them having to do anything.
+        $order = self::orderWithGiftCardItem(chosenAmount: 3333);
+
+        $narrow = new GiftCardConfiguration();
+        $narrow->setAmountMode(GiftCardAmountMode::Presets);
+        $narrow->setAmountPresets([5000]);
+
+        $this->processorFor($narrow)->process($order);
+        self::assertSame(self::CHANNEL_PRICE, $order->getItems()->first()->getUnitPrice());
+
+        $widened = new GiftCardConfiguration();
+        $widened->setAmountMode(GiftCardAmountMode::Presets);
+        $widened->setAmountPresets([3333, 5000]);
+
+        $this->processorFor($widened)->process($order);
+        self::assertSame(3333, $order->getItems()->first()->getUnitPrice());
     }
 
     public function testAFreeAmountOutsideTheChannelBoundsIsRefused(): void

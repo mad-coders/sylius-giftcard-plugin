@@ -1,11 +1,4 @@
 madcoders_sylius_gift_card:
-    cart_item:
-        amount:
-            not_a_preset: Wybierz jedną z dostępnych kwot.
-            out_of_range: Kwota musi mieścić się między {{ minimum }} a {{ maximum }}.
-            required: Wybierz, na jaką kwotę ma opiewać karta podarunkowa.
-        message:
-            too_long: Wiadomość jest za długa - zmieść się w {{ limit }} znakach.
     emails:
         gift_cards_purchased:
             heading: Twoje karty podarunkowe są gotowe
@@ -24,7 +17,6 @@ madcoders_sylius_gift_card:
             positive: Kwota musi być większa od zera.
     gift_card_configuration:
         amount_presets:
-            invalid: Podaj kwoty oddzielone przecinkami, na przykład "25, 50, 100".
             required: Ten tryb udostępnia gotowe kwoty, więc trzeba podać co najmniej
                 jedną.
         bounds:
@@ -46,7 +38,7 @@ madcoders_sylius_gift_card:
         adjust_balance: Koryguj saldo
         adjustment_direction: Kierunek
         amount: Kwota
-        amount_between: Dowolna kwota od %minimum% do %maximum%.
+        amount_between: Wpisz dowolną kwotę od %minimum% do %maximum%.
         amount_mode: Sposób wyboru kwoty
         amount_mode.fixed: Cena produktu
         amount_mode.presets: Lista gotowych kwot
@@ -89,10 +81,12 @@ madcoders_sylius_gift_card:
             wartości zapłaconej za tę sztukę.
         maximum_amount: Największa kwota
         maximum_amount_help: Najwięcej, ile klient może wpisać. Używane przez tryby
-            z dowolną kwotą.
+            z dowolną kwotą. Gotowe kwoty są oferowane niezależnie od tego, czy się
+            w nim mieszczą.
         minimum_amount: Najmniejsza kwota
         minimum_amount_help: Najmniej, ile klient może wpisać. Używane przez tryby
-            z dowolną kwotą.
+            z dowolną kwotą. Gotowe kwoty są oferowane niezależnie od tego, czy się
+            w nim mieszczą.
         my_gift_cards: Moje karty podarunkowe
         never_expires: Nigdy
         no_gift_cards_bought: Nie kupiłeś jeszcze żadnej karty podarunkowej.

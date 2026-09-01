@@ -64,7 +64,17 @@ final readonly class AmountPresetsTransformer implements DataTransformerInterfac
                 throw new TransformationFailedException(sprintf('"%s" is not an amount.', $part));
             }
 
-            $presets[] = (int) round(((float) $part) * self::DIVISOR);
+            $preset = (int) round(((float) $part) * self::DIVISOR);
+
+            // Refused, not quietly dropped. The model drops it too, as a backstop, but an operator
+            // who typed a worthless preset has to be told - the same standard the code length is
+            // held to, and for the same reason: silently saving something other than what was asked
+            // for leaves them believing their channel offers something it does not.
+            if ($preset <= 0) {
+                throw new TransformationFailedException(sprintf('"%s" is not worth anything.', $part));
+            }
+
+            $presets[] = $preset;
         }
 
         return $presets;
