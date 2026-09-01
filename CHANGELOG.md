@@ -213,6 +213,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Validation messages no longer reach the user as raw translation keys.** Symfony resolves every
+  constraint violation in the `validators` catalogue, never in `messages`, so nine keys that lived in
+  `translations/messages.*.yaml` rendered as, for example,
+  `madcoders_sylius_gift_card.gift_card.amount.positive` where a sentence belonged. They have moved
+  to `translations/validators.en.yaml` and `validators.pl.yaml`: the gift card `code`,
+  `initial_amount` and `amount` messages, and the gift card configuration's `code_length`,
+  `amount_presets` and `bounds` ones. A host that overrode any of them in `messages` has to move its
+  override to `validators` too. Closes #37.
+- The gift card configuration form's own error messages are translated from `validators` as well,
+  rather than from the translator's default domain. Those are added as a `FormError` by hand, which
+  nothing translates on the way out, so the form has to do it - and doing it in `messages` is what
+  split the plugin's validation messages across two catalogues and hid the bug above: the one message
+  the plugin translated itself was the one message that worked, and the only one a test asserted.
+  There is now one rule, recorded in `ai/coding-rules.md`: a validation message lives in `validators`,
+  whoever raises it.
 - The admin balance-adjustment form renders with the admin form theme. It was falling back to Twig's
   default theme, so a rejected adjustment showed its reason as an unstyled bare list in the middle of
   the admin panel.

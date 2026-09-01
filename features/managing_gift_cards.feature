@@ -81,6 +81,19 @@ Feature: Managing gift cards
         And the balance on the form should still be "$50.00"
 
     @ui
+    Scenario: An adjustment of nothing is refused in words the administrator can read
+        # Pins the translation domain, which nothing did for the gift card forms. Symfony resolves a
+        # constraint violation in the `validators` catalogue, so the same key sitting in
+        # messages.en.yaml renders as `madcoders_sylius_gift_card.gift_card.amount.positive` - a
+        # string that tells an administrator nothing. This asserts the English sentence, so moving
+        # the key back to `messages` turns it red.
+        Given the store has a gift card "GIFT-ZERO1" worth "$50.00"
+        When I view the gift card "GIFT-ZERO1"
+        And I add "0.00" to its balance
+        Then I should be told the amount must be greater than zero
+        And the balance on the form should still be "$50.00"
+
+    @ui
     Scenario: Topping a gift card above its face value is refused on the form
         # The cap is what stops a mistyped adjustment turning a $50 card into a $50,000 one.
         Given the store has a gift card "GIFT-OVER02" worth "$50.00" with "$40.00" left

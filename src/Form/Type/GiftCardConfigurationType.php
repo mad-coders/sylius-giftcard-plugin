@@ -118,9 +118,7 @@ final class GiftCardConfigurationType extends AbstractResourceType
         // before the model rounds it up, and the error is raised after the form has submitted -
         // an error added during PRE_SUBMIT would be discarded when the child submits.
         $submittedCodeLength = null;
-        // A FormError added by hand is rendered verbatim - unlike a violation from the validator,
-        // nothing translates it on the way out - so it is translated here.
-        $tooShort = $this->translator->trans('madcoders_sylius_gift_card.gift_card_configuration.code_length.too_short');
+        $tooShort = $this->validationMessage('madcoders_sylius_gift_card.gift_card_configuration.code_length.too_short');
 
         $builder->addEventListener(
             FormEvents::PRE_SUBMIT,
@@ -155,11 +153,9 @@ final class GiftCardConfigurationType extends AbstractResourceType
      */
     private function addAmountConsistencyChecks(FormBuilderInterface $builder): void
     {
-        // A FormError added by hand is rendered verbatim - unlike a violation from the validator,
-        // nothing translates it on the way out - so the messages are translated here.
-        $presetsRequired = $this->translator->trans('madcoders_sylius_gift_card.gift_card_configuration.amount_presets.required');
-        $boundsRequired = $this->translator->trans('madcoders_sylius_gift_card.gift_card_configuration.bounds.required');
-        $boundsInverted = $this->translator->trans('madcoders_sylius_gift_card.gift_card_configuration.bounds.inverted');
+        $presetsRequired = $this->validationMessage('madcoders_sylius_gift_card.gift_card_configuration.amount_presets.required');
+        $boundsRequired = $this->validationMessage('madcoders_sylius_gift_card.gift_card_configuration.bounds.required');
+        $boundsInverted = $this->validationMessage('madcoders_sylius_gift_card.gift_card_configuration.bounds.inverted');
 
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
@@ -195,6 +191,21 @@ final class GiftCardConfigurationType extends AbstractResourceType
                 }
             },
         );
+    }
+
+    /**
+     * A validation message this form raises itself, ready to hand to a FormError.
+     *
+     * A FormError added by hand is rendered verbatim - unlike a violation from the validator,
+     * nothing translates it on the way out - so it has to be translated here. The domain is named
+     * explicitly because the translator's default is `messages`, while Symfony resolves every
+     * constraint violation in `validators`. Leaving it to the default is what split this plugin's
+     * validation messages across two catalogues and left the constraint ones rendering as raw keys
+     * (issue #37). One rule now: a validation message lives in `validators`, whoever raises it.
+     */
+    private function validationMessage(string $key): string
+    {
+        return $this->translator->trans($key, [], 'validators');
     }
 
     #[\Override]

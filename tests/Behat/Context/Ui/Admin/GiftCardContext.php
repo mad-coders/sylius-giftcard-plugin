@@ -255,6 +255,22 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @Then I should be told the amount must be greater than zero
+     */
+    public function iShouldBeToldTheAmountMustBeGreaterThanZero(): void
+    {
+        // Asserts the sentence, not merely that something was said. Symfony resolves a constraint
+        // violation in the `validators` catalogue, so a message key left in `messages` renders as
+        // the key itself - which looks like a working form to every test that only checks that an
+        // error appeared, and like a bug report to the administrator reading it.
+        Assert::same(
+            $this->adjustBalancePage->getValidationMessage(),
+            'The amount must be greater than zero.',
+            'The form did not put the constraint message in front of the administrator in English.',
+        );
+    }
+
+    /**
      * @Then the issued card's code should start with :prefix
      */
     public function theIssuedCardsCodeShouldStartWith(string $prefix): void

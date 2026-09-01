@@ -7,9 +7,27 @@ madcoders_sylius_gift_card:
         gift_card_not_sold_in_channel: Karty podarunkowe nie są sprzedawane w tym kanale.
         message:
             too_long: Wiadomość jest za długa - zmieść się w {{ limit }} znakach.
+    gift_card:
+        amount:
+            positive: Kwota musi być większa od zera.
+        code:
+            not_blank: Wpisz kod karty podarunkowej.
+            unique: Karta podarunkowa o tym kodzie już istnieje.
+        initial_amount:
+            not_blank: Podaj wartość karty podarunkowej.
+            positive: Kwota musi być większa od zera.
     gift_card_configuration:
         amount_presets:
             invalid: Podaj kwoty oddzielone przecinkami, na przykład "25, 50, 100".
+            required: Ten tryb udostępnia gotowe kwoty, więc trzeba podać co najmniej
+                jedną.
+        bounds:
+            inverted: Największa kwota nie może być mniejsza od najmniejszej.
+            required: W tym trybie klient wpisuje kwotę, więc trzeba podać zarówno
+                najmniejszą, jak i największą.
+        code_length:
+            too_short: Długość kodu musi wynosić co najmniej 12 znaków - krótszy kod
+                da się odgadnąć.
     order:
         gift_card_not_sold_in_channel: Twój koszyk zawiera kartę podarunkową, a karty podarunkowe
             nie są sprzedawane w tym kanale. Usuń ją, aby kontynuować.
