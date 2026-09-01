@@ -38,9 +38,16 @@ sylius_fixtures:
                 madcoders_gift_card_configuration:
                     options:
                         custom:
+                            # Presets *and* a free amount, so the demo shows the whole shop-side
+                            # form at once: radio buttons for the common amounts, a box for anything
+                            # else. Amounts are minor units, as everywhere else in the plugin.
                             -   code_length: 8
                                 code_prefix: 'GIFT-'
                                 validity_period: '1 year'
+                                amount_mode: 'presets_and_range'
+                                amount_presets: [2500, 5000, 10000]
+                                minimum_amount: 1000
+                                maximum_amount: 50000
 
                 madcoders_gift_card:
                     # After the configuration, so generated codes pick up its prefix and validity.

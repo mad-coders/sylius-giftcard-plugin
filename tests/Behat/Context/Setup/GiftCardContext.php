@@ -7,6 +7,7 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup;
 use Behat\Behat\Context\Context;
 use Doctrine\Persistence\ObjectManager;
 use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
@@ -77,6 +78,53 @@ final class GiftCardContext implements Context
         // Without it, "no expiry date" would also be the answer if the configuration were ignored
         // altogether, and the test would pass while testing nothing.
         $this->createConfiguration(['validity_period' => $period, 'code_prefix' => 'BADCFG-']);
+    }
+
+    /**
+     * @Given the channel sells gift cards at the product's price
+     */
+    public function theChannelSellsGiftCardsAtTheProductsPrice(): void
+    {
+        $this->createConfiguration(['amount_mode' => GiftCardAmountMode::Fixed->value]);
+    }
+
+    /**
+     * @Given the channel offers gift cards of :presets
+     */
+    public function theChannelOffersGiftCardsOf(string $presets): void
+    {
+        $this->createConfiguration([
+            'amount_mode' => GiftCardAmountMode::Presets->value,
+            'amount_presets' => self::toMinorUnitsList($presets),
+        ]);
+    }
+
+    /**
+     * @Given the channel lets customers choose any gift card amount between :minimum and :maximum
+     */
+    public function theChannelLetsCustomersChooseAnyGiftCardAmountBetween(string $minimum, string $maximum): void
+    {
+        $this->createConfiguration([
+            'amount_mode' => GiftCardAmountMode::Range->value,
+            'minimum_amount' => self::toMinorUnits($minimum),
+            'maximum_amount' => self::toMinorUnits($maximum),
+        ]);
+    }
+
+    /**
+     * @Given the channel offers gift cards of :presets or any amount between :minimum and :maximum
+     */
+    public function theChannelOffersGiftCardsOfOrAnyAmountBetween(
+        string $presets,
+        string $minimum,
+        string $maximum,
+    ): void {
+        $this->createConfiguration([
+            'amount_mode' => GiftCardAmountMode::PresetsAndRange->value,
+            'amount_presets' => self::toMinorUnitsList($presets),
+            'minimum_amount' => self::toMinorUnits($minimum),
+            'maximum_amount' => self::toMinorUnits($maximum),
+        ]);
     }
 
     /** @param array<string, mixed> $options */
@@ -172,6 +220,18 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @Given the store has a gift card :code worth :amount used by :customer saying :message
+     */
+    public function theStoreHasAGiftCardWorthUsedBySaying(
+        string $code,
+        string $amount,
+        CustomerInterface $customer,
+        string $message,
+    ): void {
+        $this->createGiftCard($code, $amount, ['redeemer' => $customer, 'custom_message' => $message]);
+    }
+
+    /**
      * @Given the store has a gift card :code worth :amount with :remaining left used by :customer
      */
     public function theStoreHasAGiftCardWorthWithLeftUsedBy(
@@ -227,5 +287,24 @@ final class GiftCardContext implements Context
         $normalised = preg_replace('/[^0-9.]/', '', $amount) ?? '';
 
         return (int) round(((float) $normalised) * 100);
+    }
+
+    /**
+     * A written list such as "$25.00, $50.00 and $100.00" as minor units.
+     *
+     * @return list<int>
+     */
+    private static function toMinorUnitsList(string $amounts): array
+    {
+        $parts = preg_split('/\s*(?:,|and)\s*/', trim($amounts));
+
+        if (false === $parts) {
+            return [];
+        }
+
+        return array_values(array_map(
+            self::toMinorUnits(...),
+            array_filter($parts, static fn (string $part): bool => '' !== trim($part)),
+        ));
     }
 }

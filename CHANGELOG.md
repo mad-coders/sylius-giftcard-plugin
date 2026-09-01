@@ -74,6 +74,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Existing shops are unaffected: the mode defaults to sellable, in the model, in the column default
   and for a channel with no configuration at all. Closes #32.
 
+- **Customers choose what a gift card is worth.** A channel's gift card configuration now decides how
+  the amount is picked: the product's price as before, a list of preset amounts, any amount within a
+  minimum and maximum, or presets plus a free amount. Presets and bounds are per channel and in that
+  channel's currency. The chosen amount becomes the order line's price, so the order total, the taxes
+  and the payment all reflect it, and the issued card is worth exactly that. Closes #34.
+- **Customers can leave a short message with a gift card.** Up to 255 characters, shown on the form,
+  enforced server side, stored on the cards issued for that line only, and shown with the code in the
+  delivery email, on the card's page in the customer's account and in the admin. It is untrusted text
+  and is rendered as text everywhere - with a test that proves it rather than assuming it. Closes #35.
+- Both fields sit on the gift card product page inside Sylius' own add-to-cart form, as plain HTML:
+  the presets are radio buttons styled as cards, the free amount is a number input, the message is a
+  textarea. Nothing needs JavaScript to decide what gets submitted.
 - The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
   shipping and payment steps and on the summary page. It existed only on the cart before, so a
   customer already in checkout had to go back to find it - at exactly the moment they are looking at
@@ -91,6 +103,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   binding the entity manager into the checker's slot. A host that redefined the service needs to add
   `madcoders_sylius_gift_card.checker.gift_card_purchase` as the fifth argument; the logger may be
   omitted, and is passed with `on-invalid="null"` so the plugin still works without MonologBundle.
+- **A card's face value now excludes tax.** It is what was paid for the unit, promotions included,
+  minus any tax charged on top. A tax-exclusive shop previously issued a 55 card to a customer who
+  paid 50 plus tax - the mis-issue ADR 0010 named and did not fix - so the same choice was worth
+  different amounts depending on how the shop prices. Tax-inclusive shops are unaffected, because
+  Sylius already records included tax as a neutral adjustment.
+- **Host applications must apply `OrderItemInterface` and `OrderItemTrait` to their `OrderItem`**, and
+  register the override, exactly as they already do for `Order`, `OrderItemUnit` and `Product`. That
+  is where the chosen amount and the message live. See `docs/INSTALLATION.md` step 6, and run the new
+  migration.
 - Gift card messages are rendered by the panel itself, under plugin-owned flash types, rather than
   left to the page. Only the cart and the checkout summary step render flashes at all, so a refusal
   on the shipping or payment step was silent - and the unread message then surfaced on whichever

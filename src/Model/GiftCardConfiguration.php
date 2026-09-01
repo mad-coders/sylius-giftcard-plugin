@@ -40,6 +40,21 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
      */
     protected GiftCardSaleMode $saleMode = GiftCardSaleMode::Sellable;
 
+    protected GiftCardAmountMode $amountMode = GiftCardAmountMode::Fixed;
+
+    /**
+     * Nullable only because the column is - MySQL refuses a default on a JSON column, so a channel
+     * that predates this setting has null there. Read it through {@see self::getAmountPresets()},
+     * which resolves that to an empty list.
+     *
+     * @var list<int>|null
+     */
+    protected ?array $amountPresets = [];
+
+    protected ?int $minimumAmount = null;
+
+    protected ?int $maximumAmount = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -121,5 +136,86 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
 
         // A period that parses but moves nothing ("0 days") would expire the card on creation.
         return $expiresAt > $from ? $expiresAt : null;
+    }
+
+    public function getAmountMode(): GiftCardAmountMode
+    {
+        return $this->amountMode;
+    }
+
+    public function setAmountMode(GiftCardAmountMode $amountMode): void
+    {
+        $this->amountMode = $amountMode;
+    }
+
+    public function getAmountPresets(): array
+    {
+        return $this->amountPresets ?? [];
+    }
+
+    public function setAmountPresets(array $amountPresets): void
+    {
+        // Normalised on the way in rather than on the way out, so everything reading presets - the
+        // shop form, the validator, the admin - sees the same list in the same order. A zero or
+        // negative preset is dropped because a card has to be worth something.
+        $presets = array_values(array_unique(array_filter(
+            $amountPresets,
+            static fn (int $preset): bool => $preset > 0,
+        )));
+
+        sort($presets);
+
+        $this->amountPresets = $presets;
+    }
+
+    public function getMinimumAmount(): ?int
+    {
+        return $this->minimumAmount;
+    }
+
+    public function setMinimumAmount(?int $minimumAmount): void
+    {
+        $this->minimumAmount = $minimumAmount;
+    }
+
+    public function getMaximumAmount(): ?int
+    {
+        return $this->maximumAmount;
+    }
+
+    public function setMaximumAmount(?int $maximumAmount): void
+    {
+        $this->maximumAmount = $maximumAmount;
+    }
+
+    public function allowsCustomerChosenAmount(): bool
+    {
+        return $this->amountMode->allowsCustomerChosenAmount();
+    }
+
+    public function isAllowedAmount(int $amount): bool
+    {
+        if ($amount <= 0) {
+            return false;
+        }
+
+        if ($this->amountMode->offersPresets() && in_array($amount, $this->getAmountPresets(), true)) {
+            return true;
+        }
+
+        return $this->amountMode->offersFreeAmount() && $this->isWithinBounds($amount);
+    }
+
+    private function isWithinBounds(int $amount): bool
+    {
+        // A range mode with a bound missing is a misconfigured channel, and the safe reading of
+        // "between unspecified and unspecified" is "nothing", not "anything" - the same instinct as
+        // clamping the code length. The admin form refuses to leave a bound empty in these modes, so
+        // this only catches a channel configured some other way.
+        if (null === $this->minimumAmount || null === $this->maximumAmount) {
+            return false;
+        }
+
+        return $amount >= $this->minimumAmount && $amount <= $this->maximumAmount;
     }
 }

@@ -5,6 +5,19 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
+        <!--
+            Priority 45 puts this immediately BELOW Sylius' price recalculator (50), which resets
+            every item's unit price from channel pricing, and ABOVE promotions (20), taxes (10) and
+            the payment (0). So a customer-chosen amount survives recalculation and is the base all
+            three of those work from - see
+            docs/adr-log/0014-customer-chosen-gift-card-amount.md.
+        -->
+        <service id="madcoders_sylius_gift_card.order_processing.gift_card_chosen_amount_processor"
+                 class="Madcoders\SyliusGiftCardPlugin\OrderProcessor\GiftCardChosenAmountProcessor">
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <tag name="sylius.order_processor" priority="45" />
+        </service>
+
 <!--
             Priority -10 puts this BELOW Sylius' payment processor (0), which is deliberate: that
             processor sets the payment from the order total, and this one then takes what the gift

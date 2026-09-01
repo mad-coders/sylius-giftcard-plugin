@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Madcoders\SyliusGiftCardPlugin\Fixture\Factory;
 
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
@@ -13,6 +14,7 @@ use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Webmozart\Assert\Assert;
 
@@ -59,6 +61,19 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
         $saleMode = $options['sale_mode'];
         Assert::string($saleMode);
 
+        $amountMode = $options['amount_mode'];
+        Assert::isInstanceOf($amountMode, GiftCardAmountMode::class);
+
+        $amountPresets = $options['amount_presets'];
+        Assert::isList($amountPresets);
+        Assert::allInteger($amountPresets);
+
+        $minimumAmount = $options['minimum_amount'];
+        Assert::nullOrInteger($minimumAmount);
+
+        $maximumAmount = $options['maximum_amount'];
+        Assert::nullOrInteger($maximumAmount);
+
         $configuration = $this->giftCardConfigurationFactory->createNew();
         $configuration->setChannel($channel);
         $configuration->setCodeLength($codeLength);
@@ -66,6 +81,10 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
         $configuration->setValidityPeriod($validityPeriod);
         $configuration->setEnabled($enabled);
         $configuration->setSaleMode(GiftCardSaleMode::from($saleMode));
+        $configuration->setAmountMode($amountMode);
+        $configuration->setAmountPresets($amountPresets);
+        $configuration->setMinimumAmount($minimumAmount);
+        $configuration->setMaximumAmount($maximumAmount);
 
         return $configuration;
     }
@@ -96,6 +115,26 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
                 static fn (GiftCardSaleMode $mode): string => $mode->value,
                 GiftCardSaleMode::cases(),
             ))
+
+            // Fixed by default, so a fixture that says nothing about amounts describes a channel
+            // that behaves exactly as it did before the customer could choose one.
+            ->setDefault('amount_mode', GiftCardAmountMode::Fixed)
+            ->setAllowedTypes('amount_mode', ['string', GiftCardAmountMode::class])
+            ->setNormalizer(
+                'amount_mode',
+                static fn (Options $options, string|GiftCardAmountMode $mode): GiftCardAmountMode => $mode instanceof GiftCardAmountMode
+                    ? $mode
+                    : GiftCardAmountMode::from($mode),
+            )
+
+            ->setDefault('amount_presets', [])
+            ->setAllowedTypes('amount_presets', 'int[]')
+
+            ->setDefault('minimum_amount', null)
+            ->setAllowedTypes('minimum_amount', ['null', 'int'])
+
+            ->setDefault('maximum_amount', null)
+            ->setAllowedTypes('maximum_amount', ['null', 'int'])
         ;
     }
 }

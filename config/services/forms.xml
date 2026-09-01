@@ -38,6 +38,26 @@
                  class="Madcoders\SyliusGiftCardPlugin\Form\Extension\ProductTypeExtension">
             <tag name="form.type_extension" extended-type="Sylius\Bundle\ProductBundle\Form\Type\ProductType" />
         </service>
+
+        <!-- What the customer wants the card to be worth, and what they want it to say. -->
+        <service id="madcoders_sylius_gift_card.form.type.gift_card_amount"
+                 class="Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardAmountType">
+            <argument type="service" id="sylius.formatter.money" />
+            <tag name="form.type" />
+        </service>
+
+        <!--
+            Extends the base cart item type, so both Sylius' shop and core add-to-cart forms carry
+            the fields. They are only added for a gift card product, so every other product's form
+            is untouched.
+        -->
+        <service id="madcoders_sylius_gift_card.form.extension.type.cart_item"
+                 class="Madcoders\SyliusGiftCardPlugin\Form\Extension\CartItemTypeExtension">
+            <argument type="service" id="sylius.context.channel" />
+            <argument type="service" id="sylius.context.locale" />
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <tag name="form.type_extension" extended-type="Sylius\Bundle\OrderBundle\Form\Type\CartItemType" />
+        </service>
     </services>
 
 </container>

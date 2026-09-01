@@ -25,6 +25,12 @@ final class EntityTraitApplier
             // The trait cannot initialise its own collection, because Order already has a constructor.
             'constructor_call' => 'initializeGiftCards',
         ],
+        'src/Entity/Order/OrderItem.php' => [
+            'interface' => ['Madcoders\SyliusGiftCardPlugin\Model\OrderItemInterface', 'GiftCardOrderItemInterface'],
+            'trait' => ['Madcoders\SyliusGiftCardPlugin\Model\OrderItemTrait', 'GiftCardOrderItemTrait'],
+            'class' => 'OrderItem',
+            'constructor_call' => null,
+        ],
         'src/Entity/Order/OrderItemUnit.php' => [
             'interface' => ['Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitInterface', 'GiftCardOrderItemUnitInterface'],
             'trait' => ['Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitTrait', 'GiftCardOrderItemUnitTrait'],

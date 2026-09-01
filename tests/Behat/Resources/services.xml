@@ -126,12 +126,32 @@
             <argument type="service" id="sylius.manager.product" />
         </service>
 
+        <service id="madcoders_sylius_gift_card.behat.context.setup.gift_card_purchase"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Setup\GiftCardPurchaseContext">
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="sylius.factory.order_item" />
+            <argument type="service" id="sylius.modifier.order_item_quantity" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="sylius.manager.order" />
+        </service>
+
         <service id="madcoders_sylius_gift_card.behat.context.ui.shop.bought_gift_card"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\BoughtGiftCardContext">
             <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
             <argument type="service" id="sylius.behat.email_checker" />
+            <argument type="service" id="Sylius\Behat\Service\Provider\EmailMessagesProviderInterface" />
         </service>
+
+        <service id="madcoders_sylius_gift_card.behat.context.ui.shop.gift_card_product"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\GiftCardProductContext">
+            <argument type="service" id="madcoders_sylius_gift_card.behat.page.shop.product.show" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.behat.page.shop.product.show"
+                 class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Shop\Product\ShowPage"
+                 parent="sylius.behat.symfony_page"
+                 public="false" />
 
         <service id="madcoders_sylius_gift_card.behat.context.ui.shop.account_gift_card"
                  class="Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Shop\AccountGiftCardContext">

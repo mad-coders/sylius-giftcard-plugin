@@ -19,6 +19,23 @@
                 <option name="default">sellable</option>
             </options>
         </field>
+        <!--
+            The default is declared here as well as in the migration: the column is added to a table
+            that already has rows, so it needs one, and `doctrine:schema:validate` compares the two.
+        -->
+        <field name="amountMode" column="amount_mode" type="string" length="32" enum-type="Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode">
+            <options>
+                <option name="default">fixed</option>
+            </options>
+        </field>
+        <!--
+            A short, ordered list of amounts in minor units; JSON keeps it one column and one read.
+            Nullable because MySQL refuses a default on a JSON column, and a column added to an
+            existing table needs one - null and [] both mean "no presets", which the model resolves.
+        -->
+        <field name="amountPresets" column="amount_presets" type="json" nullable="true" />
+        <field name="minimumAmount" column="minimum_amount" type="integer" nullable="true" />
+        <field name="maximumAmount" column="maximum_amount" type="integer" nullable="true" />
         <field name="enabled" column="enabled" type="boolean" />
         <field name="createdAt" column="created_at" type="datetime" nullable="true" />
         <field name="updatedAt" column="updated_at" type="datetime" nullable="true" />

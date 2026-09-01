@@ -24,6 +24,18 @@ Feature: Seeing my gift cards
         And I should not see "GIFT-GIFT01" among the gift cards I use
 
     @ui
+    Scenario: A card bought for me shows the message that came with it
+        Given the store has a gift card "GIFT-MINE02" worth "$50.00" used by "holder@example.com" saying "Happy birthday!"
+        When I open the balance history of "GIFT-MINE02"
+        Then I should see the message "Happy birthday!" on the card
+
+    @ui
+    Scenario: A message written in markup is shown as text, not as markup
+        Given the store has a gift card "GIFT-MINE03" worth "$50.00" used by "holder@example.com" saying "<script>alert(1)</script>"
+        When I open the balance history of "GIFT-MINE03"
+        Then the card's page should show "<script>alert(1)</script>" as text rather than as markup
+
+    @ui
     Scenario: I can see where my balance went
         Given the store has a gift card "GIFT-MINE01" worth "$50.00" with "$20.00" left used by "holder@example.com"
         When I open the balance history of "GIFT-MINE01"

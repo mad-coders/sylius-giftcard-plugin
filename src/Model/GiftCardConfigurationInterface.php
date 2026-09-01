@@ -10,7 +10,8 @@ use Sylius\Resource\Model\TimestampableInterface;
 use Sylius\Resource\Model\ToggleableInterface;
 
 /**
- * Per-channel gift card settings: how codes are generated and how long a new card stays valid.
+ * Per-channel gift card settings: how codes are generated, how long a new card stays valid, and how
+ * a customer buying one chooses what it is worth.
  *
  * Deliberately holds no presentation settings - 1.0 ships no PDF or image rendering, see
  * docs/adr-log/0009-no-pdf-in-1-0.md.
@@ -55,4 +56,47 @@ interface GiftCardConfigurationInterface extends ResourceInterface, Timestampabl
      * expire.
      */
     public function calculateExpiryDate(?\DateTimeImmutable $from = null): ?\DateTimeImmutable;
+
+    /** How a customer buying a gift card in this channel chooses what it is worth. */
+    public function getAmountMode(): GiftCardAmountMode;
+
+    public function setAmountMode(GiftCardAmountMode $amountMode): void;
+
+    /**
+     * The amounts this channel offers as ready-made choices, in the channel's currency and in
+     * integer minor units, ascending and without duplicates.
+     *
+     * @return list<int>
+     */
+    public function getAmountPresets(): array;
+
+    /** @param list<int> $amountPresets minor units; sorted, deduplicated and stripped of non-positive values */
+    public function setAmountPresets(array $amountPresets): void;
+
+    /** The smallest amount a customer may type in, in minor units. Null means no free amount is offered. */
+    public function getMinimumAmount(): ?int;
+
+    public function setMinimumAmount(?int $minimumAmount): void;
+
+    /** The largest amount a customer may type in, in minor units. Null means no free amount is offered. */
+    public function getMaximumAmount(): ?int;
+
+    public function setMaximumAmount(?int $maximumAmount): void;
+
+    /**
+     * Whether a customer buying a gift card in this channel picks the amount, rather than paying the
+     * product's channel price.
+     */
+    public function allowsCustomerChosenAmount(): bool;
+
+    /**
+     * Whether a customer buying a gift card in this channel may be charged this amount.
+     *
+     * The single decision point behind both the shop form and the order processor, so a forged
+     * amount is judged by exactly the same rule as a typed one - see
+     * docs/adr-log/0014-customer-chosen-gift-card-amount.md.
+     *
+     * @param int $amount minor units
+     */
+    public function isAllowedAmount(int $amount): bool;
 }

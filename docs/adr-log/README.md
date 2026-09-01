@@ -22,3 +22,4 @@ Consequences / Rules).
 | [0011](0011-symfony-workflow-only.md) | Symfony Workflow only, no winzou wiring (supersedes 0004's wiring) |
 | [0012](0012-rate-limiting-gift-card-redemption.md) | Redemption rate limited on the client address, one message for every refusal |
 | [0013](0013-gift-card-sale-mode.md) | Selling gift cards is a per-channel mode, enforced three times |
+| [0014](0014-customer-chosen-gift-card-amount.md) | The customer chooses the amount; the order processor is what makes it a price |
