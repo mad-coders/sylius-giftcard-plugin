@@ -41,7 +41,16 @@ final class Version20260902100000 extends AbstractMigration
     {
         $this->backfillExpiryDates();
 
-        $schema->getTable(self::GIFT_CARD_TABLE)->getColumn('expires_at')->setNotnull(true);
+        $expiresAt = $schema->getTable(self::GIFT_CARD_TABLE)->getColumn('expires_at');
+        $expiresAt->setNotnull(true);
+
+        // The default has to be cleared as well, and it is not cosmetic. Introspecting a MySQL
+        // column declared `DATETIME DEFAULT NULL` gives DBAL the *string* "NULL" as the default,
+        // which it happily re-emits - harmless while the column is nullable, fatal the moment it is
+        // not: `CHANGE expires_at expires_at DATETIME DEFAULT 'NULL' NOT NULL` is error 1067,
+        // "Invalid default value". PostgreSQL never showed this, because it emits a bare
+        // `ALTER ... SET NOT NULL`. Passing PHP null makes the platform omit the clause entirely.
+        $expiresAt->setDefault(null);
     }
 
     public function down(Schema $schema): void
@@ -49,7 +58,9 @@ final class Version20260902100000 extends AbstractMigration
         // Deliberately not undoing the back-fill. The dates written above are the ones the shop has
         // since been quoting to customers, and inventing "these ones were guessed" to erase them
         // would take money off cards that are now in circulation with a printed expiry.
-        $schema->getTable(self::GIFT_CARD_TABLE)->getColumn('expires_at')->setNotnull(false);
+        $expiresAt = $schema->getTable(self::GIFT_CARD_TABLE)->getColumn('expires_at');
+        $expiresAt->setNotnull(false);
+        $expiresAt->setDefault(null);
     }
 
     /**

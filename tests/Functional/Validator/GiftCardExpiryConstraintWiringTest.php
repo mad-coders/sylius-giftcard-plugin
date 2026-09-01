@@ -39,14 +39,19 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         $this->validator = $validator;
     }
 
-    /** @return iterable<string, array{string}> */
-    public static function groups(): iterable
+    /**
+     * Deliberately not called `groups()` - `PHPUnit\Framework\TestCase::groups()` is final, and
+     * overriding it is a fatal error rather than a test failure.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function validationGroups(): iterable
     {
         yield 'the group the admin form validates with' => [self::RESOURCE_GROUP];
         yield 'the group a host validating the entity uses' => ['Default'];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('groups')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
     public function testAGiftCardWithNoExpiryDateIsRefused(string $group): void
     {
         $giftCard = new GiftCard();
@@ -61,7 +66,7 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         );
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('groups')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
     public function testAGiftCardWithAnExpiryDateIsAccepted(string $group): void
     {
         // The mirror image. Without it a constraint that refused unconditionally would pass the
@@ -76,7 +81,7 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         self::assertSame([], $this->pluginMessagesOf($violations));
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('groups')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
     public function testAConfigurationWithNoValidityPeriodIsRefused(string $group): void
     {
         $configuration = new GiftCardConfiguration();
@@ -90,7 +95,7 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         );
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('groups')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
     public function testAConfigurationWithAnUnparseableValidityPeriodIsRefused(string $group): void
     {
         // The silent failure this exists for: "1 yaer" used to save cleanly and quietly issue cards
@@ -106,7 +111,7 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         );
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('groups')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
     public function testAConfigurationWithAUsableValidityPeriodIsAccepted(string $group): void
     {
         $configuration = new GiftCardConfiguration();
