@@ -6,7 +6,7 @@ namespace Madcoders\SyliusGiftCardPlugin\RateLimiter;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
  * @see GiftCardRedemptionLimiterInterface
@@ -22,17 +22,20 @@ final readonly class GiftCardRedemptionLimiter implements GiftCardRedemptionLimi
     private const string UNIDENTIFIED_CLIENT_NOTICE = 'notice.unidentified-client';
 
     public function __construct(
-        private RateLimiterFactoryInterface $clientLimiterFactory,
+        // Typed against the concrete factory, not RateLimiterFactoryInterface: that interface does
+        // not exist before Symfony 7.3, and the plugin supports 6.4. The concrete class is what
+        // framework.rate_limiter builds on every supported version.
+        private RateLimiterFactory $clientLimiterFactory,
         /**
          * How often a success may wipe a client's failures. Capped, because applying a card is free,
          * repeatable and does not debit it - see clear().
          */
-        private RateLimiterFactoryInterface $resetLimiterFactory,
+        private RateLimiterFactory $resetLimiterFactory,
         /**
          * One bucket for the whole shop, so guessing spread across many addresses is still visible
          * and, if the host asks for it, still bounded.
          */
-        private RateLimiterFactoryInterface $shopLimiterFactory,
+        private RateLimiterFactory $shopLimiterFactory,
         /**
          * Whether exhausting the shop-wide window refuses redemption for everybody, or only raises an
          * alert. Off by default: a shop-wide block is a kill switch on the money path that anybody
