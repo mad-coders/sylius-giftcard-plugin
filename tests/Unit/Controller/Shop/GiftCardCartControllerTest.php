@@ -135,13 +135,42 @@ final class GiftCardCartControllerTest extends TestCase
         $succeeding->expects(self::never())->method('recordFailure');
         $succeeding->expects(self::once())->method('clear');
 
-        $this->apply($this->applyRequest(), null, $succeeding);
+        $this->apply($this->applyRequest(), $this->applicatorReturning(true), $succeeding);
+    }
+
+    public function testReSubmittingACardTheCartAlreadyHasDoesNotBuyBackTheAllowance(): void
+    {
+        // The bypass this guards: applying a card does not debit it, and addGiftCard() early-returns
+        // on one the cart already has, so re-posting the same code succeeds, flushes and flashes just
+        // like the first time. If that counted as a redemption, one $5 card would buy an attacker
+        // unlimited guessing - nine wrong codes, then their own, for ever.
+        $limiter = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $limiter->expects(self::never())->method('clear');
+
+        $request = $this->applyRequest();
+        $response = $this->apply($request, $this->applicatorReturning(false), $limiter);
+
+        // Still a success as far as the customer is concerned - the card *is* on their cart.
+        self::assertSame(
+            ['madcoders_sylius_gift_card.cart.applied'],
+            $this->flashes($request, GiftCardCartController::FLASH_SUCCESS),
+        );
+        self::assertSame('/cart', $response->getTargetUrl());
     }
 
     private function applicatorThrowing(\Throwable $exception): GiftCardApplicatorInterface
     {
         $applicator = $this->createMock(GiftCardApplicatorInterface::class);
         $applicator->method('apply')->willThrowException($exception);
+
+        return $applicator;
+    }
+
+    /** @param bool $newlyApplied whether the card was actually added, or was already on the cart */
+    private function applicatorReturning(bool $newlyApplied): GiftCardApplicatorInterface
+    {
+        $applicator = $this->createMock(GiftCardApplicatorInterface::class);
+        $applicator->method('apply')->willReturn($newlyApplied);
 
         return $applicator;
     }

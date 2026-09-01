@@ -43,6 +43,42 @@ Feature: Stopping someone from guessing gift card codes
         And I should have "$60.00" left to pay
 
     @ui
+    Scenario: Re-applying a card the cart already has does not buy back the allowance
+        # Applying a card does not debit it, and a card the cart already holds is added again as a
+        # silent no-op that still succeeds, still flushes and still flashes exactly like the first
+        # time. If that counted as a redemption, one $5 card would buy unlimited guessing: nine wrong
+        # codes, then your own, for ever. The card is put on the cart directly rather than through the
+        # redeem field so that the re-submission below is the first success of the window - otherwise
+        # the cap on forgiveness would hide the missing guard instead of the guard being tested.
+        Given the gift card "GIFT-40" worth "$40.00" is already on my cart
+        And I try to apply 2 wrong gift card codes
+        When I apply the gift card "GIFT-40"
+        Then I should be notified that the gift card has been applied
+        When I try to apply the gift card "GIFT-NOPE"
+        Then I should be notified that the gift card cannot be used
+        When I try to apply the gift card "GIFT-NOPE"
+        Then I should be told I have tried too many gift card codes
+
+    @ui
+    Scenario: A second real card in the same window does not forgive a second run of guesses
+        # Even a genuinely new redemption is repeatable - remove the card, apply it again - so it is
+        # not on its own evidence that the client is not guessing. One forgiveness per window bounds
+        # what a real card is worth to an attacker while still covering the customer who fumbled.
+        Given the store has a gift card "GIFT-40" worth "$40.00"
+        And the store has a gift card "GIFT-25" worth "$25.00"
+        And I try to apply 2 wrong gift card codes
+        And I apply the gift card "GIFT-40"
+        And I try to apply 2 wrong gift card codes
+        # The second real card still applies - the customer is not punished for holding two cards.
+        # What it no longer does is wipe the two failures that came before it.
+        When I apply the gift card "GIFT-25"
+        Then I should be notified that the gift card has been applied
+        When I try to apply the gift card "GIFT-NOPE"
+        Then I should be notified that the gift card cannot be used
+        When I try to apply the gift card "GIFT-NOPE"
+        Then I should be told I have tried too many gift card codes
+
+    @ui
     Scenario: A card that works clears the failed attempts before it
         # Two wrong codes, then a real one, then two more wrong ones. Without the reset that is five
         # failures against an allowance of three and the last try would be refused for the limit;

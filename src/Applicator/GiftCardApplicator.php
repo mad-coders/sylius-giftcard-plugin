@@ -25,7 +25,7 @@ final readonly class GiftCardApplicator implements GiftCardApplicatorInterface
     ) {
     }
 
-    public function apply(BaseOrderInterface $order, GiftCardInterface|string $giftCard): void
+    public function apply(BaseOrderInterface $order, GiftCardInterface|string $giftCard): bool
     {
         $order = $this->assertGiftCardAwareOrder($order);
         $giftCard = $this->resolve($giftCard);
@@ -43,9 +43,16 @@ final readonly class GiftCardApplicator implements GiftCardApplicatorInterface
             throw new ChannelMismatchException($giftCardChannel, $orderChannel);
         }
 
+        // Asked before adding, because addGiftCard() early-returns on a card the order already has.
+        // Without this the caller cannot tell a redemption from a re-submission of the same code, and
+        // a re-submission is free and endlessly repeatable - applying does not debit the card.
+        $newlyApplied = !$order->hasGiftCard($giftCard);
+
         $order->addGiftCard($giftCard);
 
         $this->orderProcessor->process($order);
+
+        return $newlyApplied;
     }
 
     public function remove(BaseOrderInterface $order, GiftCardInterface|string $giftCard): void

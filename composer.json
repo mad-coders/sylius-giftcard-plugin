@@ -51,13 +51,15 @@
         "symfony/dotenv": "^6.4 || ^7.4",
         "symfony/http-client": "^6.4 || ^7.4",
         "symfony/intl": "^6.4 || ^7.4",
+        "symfony/lock": "^6.4 || ^7.4",
         "symfony/rate-limiter": "^6.4 || ^7.4",
         "symfony/runtime": "^6.4 || ^7.4",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4",
         "symfony/webpack-encore-bundle": "^2.2"
     },
     "suggest": {
-        "symfony/rate-limiter": "Throttles failed gift card redemption attempts. Without it the plugin boots and works, but the redeem field accepts unlimited guesses - see docs/INSTALLATION.md."
+        "symfony/rate-limiter": "Throttles failed gift card redemption attempts. Without it the plugin boots and works, but the redeem field accepts unlimited guesses - see docs/INSTALLATION.md.",
+        "symfony/lock": "Makes the redemption rate limiter's counter atomic. Without it concurrent attempts can each read the same count, so the effective allowance per round trip is the number of PHP workers rather than the configured limit."
     },
     "config": {
         "sort-packages": true,

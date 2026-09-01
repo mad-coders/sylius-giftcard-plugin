@@ -11,12 +11,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Redeeming a gift card is rate limited. A client that keeps submitting codes that do not work is
   refused after a configurable number of failures - ten per fifteen minutes by default - and the
-  refusal is logged at `warning` on the `security` channel with the client and the attempt count, so
-  a shop can alert on it. Only failures count and a successful redemption clears the tally, so a
-  customer using the cards they hold never meets the limiter. The endpoint is an anonymous POST and a
-  gift card code is money to whoever holds it, so unlimited attempts were a brute-force oracle.
-  Removing a card is deliberately not limited: it resolves against the cart and never consults the
-  repository. Closes #33.
+  refusal is logged once per client per window at `warning` on the `security` channel, so a shop can
+  alert on it. Only failures count. A successful redemption forgives the failures before it, but only
+  once per window and only when a card was genuinely newly applied: applying a card does not debit it
+  and can be repeated, so unlimited forgiveness would have sold unlimited guessing for the price of
+  the cheapest card in the shop. The endpoint is an anonymous POST and a gift card code is money to
+  whoever holds it, so unlimited attempts were a brute-force oracle. Removing a card is deliberately
+  not limited: it resolves against the cart and never consults the repository. Closes #33.
+- The limiter keys on the client **network** - IPv6 aggregated to its /64 - because a routed /64 comes
+  free with any cheap VPS, and a second, looser window watches the whole shop for guessing spread
+  across many addresses. The shop-wide window alerts at `error` rather than blocking by default;
+  `shop_blocks: true` makes it enforce.
+- The limiter **stands down, loudly, rather than lock a shop out**. A request carrying forwarding
+  headers while `framework.trusted_proxies` is unset would otherwise put every customer behind a CDN
+  in one bucket, so eleven wrong codes would stop redemption for everybody. That case logs a warning
+  and is not limited. Configure trusted proxies - see `docs/INSTALLATION.md`.
+- `symfony/lock` is suggested alongside `symfony/rate-limiter` and wired when present. Without it the
+  counter is an unsynchronised read-modify-write, so concurrent attempts get roughly worker-count
+  tries per round trip rather than the configured limit.
+- `redemption_rate_limit.enabled: true` without `symfony/rate-limiter` installed now fails the
+  container build instead of silently doing nothing, and an unparseable `interval` is rejected while
+  the container is built rather than throwing on the first customer to type a code.
 - A failed redemption now says the same thing whatever went wrong. "There is no gift card with this
   code", "this gift card cannot be used - it may be expired, disabled or already spent" and "this
   gift card cannot be used in this store" were three answers to the question *does this code exist?*,

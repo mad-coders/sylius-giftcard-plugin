@@ -19,7 +19,14 @@
 
         <!-- fixed_window rather than sliding_window: the cheaper policy is enough here, because the
              thing being limited is already rare for a real customer, and the window resetting a
-             little abruptly costs an attacker far more than it costs a shop. -->
+             little abruptly costs an attacker far more than it costs a shop.
+
+             The third argument is the lock factory, and it is not decoration. Without it the counter
+             is a read-modify-write with no mutual exclusion: fifty simultaneous posts all read the
+             same count and all store one more, so the effective allowance per round trip becomes the
+             number of PHP workers rather than the configured limit. `on-invalid="null"` because
+             symfony/lock is a suggest like the rate limiter itself - a host without it gets the
+             limiter it had before, and docs/INSTALLATION.md says what that costs. -->
         <service id="madcoders_sylius_gift_card.rate_limiter.redemption_factory"
                  class="Symfony\Component\RateLimiter\RateLimiterFactory">
             <argument type="collection">
@@ -29,11 +36,45 @@
                 <argument key="interval">%madcoders_sylius_gift_card.redemption_rate_limit.interval%</argument>
             </argument>
             <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.storage" />
+            <argument type="service" id="lock.factory" on-invalid="null" />
+        </service>
+
+        <!-- How often a success may wipe a client's failures, and how often a misconfiguration may
+             write a warning. One per window: both are things that should happen rarely and that an
+             attacker would otherwise be able to trigger at will. -->
+        <service id="madcoders_sylius_gift_card.rate_limiter.redemption_reset_factory"
+                 class="Symfony\Component\RateLimiter\RateLimiterFactory">
+            <argument type="collection">
+                <argument key="id">madcoders_sylius_gift_card_redemption_reset</argument>
+                <argument key="policy">fixed_window</argument>
+                <argument key="limit">1</argument>
+                <argument key="interval">%madcoders_sylius_gift_card.redemption_rate_limit.interval%</argument>
+            </argument>
+            <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.storage" />
+            <argument type="service" id="lock.factory" on-invalid="null" />
+        </service>
+
+        <!-- One bucket for the whole shop. A per-client limit is only as good as the number of
+             clients an attacker can afford, and a routed IPv6 /64 is free with any cheap VPS, so
+             guessing spread thinly across addresses would otherwise be invisible. -->
+        <service id="madcoders_sylius_gift_card.rate_limiter.redemption_shop_factory"
+                 class="Symfony\Component\RateLimiter\RateLimiterFactory">
+            <argument type="collection">
+                <argument key="id">madcoders_sylius_gift_card_redemption_shop</argument>
+                <argument key="policy">%madcoders_sylius_gift_card.redemption_rate_limit.shop_policy%</argument>
+                <argument key="limit">%madcoders_sylius_gift_card.redemption_rate_limit.shop_limit%</argument>
+                <argument key="interval">%madcoders_sylius_gift_card.redemption_rate_limit.interval%</argument>
+            </argument>
+            <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.storage" />
+            <argument type="service" id="lock.factory" on-invalid="null" />
         </service>
 
         <service id="madcoders_sylius_gift_card.rate_limiter.redemption"
                  class="Madcoders\SyliusGiftCardPlugin\RateLimiter\GiftCardRedemptionLimiter">
             <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.redemption_factory" />
+            <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.redemption_reset_factory" />
+            <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.redemption_shop_factory" />
+            <argument>%madcoders_sylius_gift_card.redemption_rate_limit.shop_blocks%</argument>
             <!-- Optional: a host application without a logger still gets the limiter, it just gets
                  nothing to alert on. -->
             <argument type="service" id="logger" on-invalid="null" />

@@ -254,18 +254,24 @@ These need no configuration on your side, but are worth knowing about:
 ## Rate limiting the redeem field
 
 A gift card code is a bearer instrument, and the redeem field is an anonymous POST: without a limiter
-it accepts unlimited guesses. The plugin throttles **failed** attempts per client address - ten per
-fifteen minutes by default, on out of the box - logs every refusal at `warning` on the `security`
-channel, and never counts or logs a successful one. See
-`docs/adr-log/0012-rate-limiting-gift-card-redemption.md` for why the client address and not the
+it accepts unlimited guesses. The plugin throttles **failed** attempts per client network - ten per
+fifteen minutes by default, on out of the box - logs the refusal at `warning` on the `security`
+channel, and never counts a successful one. See
+`docs/adr-log/0012-rate-limiting-gift-card-redemption.md` for why the client network and not the
 session or the customer.
 
 **The limiter needs `symfony/rate-limiter`, which Sylius does not install.** Without it the plugin
-boots and redeems cards exactly as it otherwise would - unthrottled and silent about it. Install it:
+boots and redeems cards exactly as it otherwise would - unthrottled. Install it, together with
+`symfony/lock`, which makes the counter atomic:
 
 ```bash
-composer require symfony/rate-limiter
+composer require symfony/rate-limiter symfony/lock
 ```
+
+`symfony/lock` is optional in the sense that the limiter works without it, but without a lock,
+counting an attempt is a read-modify-write with nothing serialising it: concurrent posts all read the
+same count and all store one more, so the real allowance per round trip becomes the number of PHP
+workers rather than the number you configured.
 
 Tune it, or turn it off, under the plugin's own configuration key:
 
@@ -274,9 +280,33 @@ Tune it, or turn it off, under the plugin's own configuration key:
 
 madcoders_sylius_gift_card:
     redemption_rate_limit:
-        enabled: true          # default; set false to accept unlimited attempts again
+        # enabled is true by default - see the note below before setting it here
         limit: 10              # failed attempts allowed per client per window
         interval: '15 minutes' # any relative date format - '1 hour', '30 minutes'
+        shop_limit: 200        # failed attempts allowed across the whole shop per window; 0 to ignore
+        shop_blocks: false     # whether reaching shop_limit refuses redemption for everybody
+```
+
+Writing `enabled: true` **without `symfony/rate-limiter` installed is a container build failure**, not
+a no-op: a shop owner who turns the limiter on should not end up unprotected and told otherwise. The
+default degrades quietly, an explicit request does not - which is why the snippet above leaves the key
+alone. Use `enabled: false` to accept unlimited attempts deliberately.
+
+`shop_limit` is a second, much looser window over the whole shop, for guessing spread thinly across
+many addresses. It **alerts** by default rather than blocking, because refusing every redemption in
+the shop is a kill switch that anybody with a botnet could pull on purpose. Turn on `shop_blocks` only
+if you would rather stop guessing than keep gift card payments working under attack.
+
+**If you run behind a load balancer or CDN, configure Symfony's `framework.trusted_proxies`.** Without
+it every request appears to come from your own edge, so limiting on the client would lock out the
+whole shop at once. The limiter detects this - forwarding headers present, no trusted proxies
+configured - and **stands down rather than lock your shop out**, logging a warning. Redemption is then
+completely unthrottled, so this is a configuration step and not an optional one:
+
+```yaml
+framework:
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
 ```
 
 **If you run more than one web node**, point the limiter's cache pool at shared storage. Its state
@@ -290,10 +320,6 @@ framework:
             madcoders_sylius_gift_card.cache.rate_limiter:
                 adapter: cache.adapter.redis
 ```
-
-**If you run behind a load balancer or CDN**, configure Symfony's `framework.trusted_proxies` -
-otherwise every request looks as though it comes from your own edge and the whole shop shares one
-allowance.
 
 ## Authorization
 

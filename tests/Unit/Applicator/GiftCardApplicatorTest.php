@@ -110,10 +110,28 @@ final class GiftCardApplicatorTest extends TestCase
         $giftCard = $this->createGiftCard('GIFT-A', 5_000, 'WEB');
 
         $applicator = $this->createApplicator();
-        $applicator->apply($order, $giftCard);
-        $applicator->apply($order, $giftCard);
+
+        // The return value is what separates a redemption from a re-submission. Callers that treat
+        // the second as the first - the rate limiter did - hand out credit for doing nothing, and
+        // this call costs the card nothing and can be repeated for ever.
+        self::assertTrue($applicator->apply($order, $giftCard));
+        self::assertFalse($applicator->apply($order, $giftCard));
 
         self::assertCount(1, $order->getGiftCards());
+    }
+
+    public function testACardRemovedAndAppliedAgainIsANewApplication(): void
+    {
+        $order = $this->createOrder('WEB');
+        $giftCard = $this->createGiftCard('GIFT-A', 5_000, 'WEB');
+
+        $applicator = $this->createApplicator();
+        $applicator->apply($order, $giftCard);
+        $applicator->remove($order, $giftCard);
+
+        // Which is why "newly applied" cannot be the whole defence: it is still repeatable, just at
+        // the cost of a round trip. The limiter caps how often a success may forgive failures.
+        self::assertTrue($applicator->apply($order, $giftCard));
     }
 
     public function testRemovingACardThatIsNotOnTheOrderIsRefusedWithoutConsultingTheRepository(): void

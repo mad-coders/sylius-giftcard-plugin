@@ -104,7 +104,7 @@ final readonly class GiftCardCartController
         }
 
         try {
-            $this->giftCardApplicator->apply($cart, $code);
+            $newlyApplied = $this->giftCardApplicator->apply($cart, $code);
         } catch (GiftCardNotFoundException | GiftCardNotRedeemableException | ChannelMismatchException) {
             // One message for all three, deliberately. Saying "there is no such code" for one and
             // "this card is expired" for another tells an anonymous caller which codes are real,
@@ -121,7 +121,14 @@ final readonly class GiftCardCartController
 
         // A code that works clears whatever this client got wrong before it: the limiter is there to
         // stop guessing, and somebody holding a real card is not guessing.
-        $this->redemptionLimiter?->clear($request);
+        //
+        // Only when the card was *newly* applied. Re-posting a code already on the cart succeeds,
+        // flushes and flashes exactly like the first time - addGiftCard() early-returns - and costs
+        // the card nothing, so counting it as a redemption would sell an attacker unlimited guessing
+        // for the price of one small gift card. The limiter caps the clears on top of this.
+        if ($newlyApplied) {
+            $this->redemptionLimiter?->clear($request);
+        }
         $this->addFlash($request, self::FLASH_SUCCESS, 'madcoders_sylius_gift_card.cart.applied');
 
         return $this->redirectBack($request, $cart);

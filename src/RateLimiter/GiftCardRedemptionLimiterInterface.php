@@ -37,6 +37,14 @@ interface GiftCardRedemptionLimiterInterface
 
     /**
      * Forgets this client's failed attempts, after one of them turned out to be a real code.
+     *
+     * Call this only when a card was **newly** redeemed. Re-submitting a code that is already on the
+     * cart succeeds without changing anything and without debiting the card, so treating that as a
+     * redemption would let one cheap card refill the allowance for ever.
+     *
+     * Implementations are expected to cap how often this can take effect, because even a genuinely
+     * new redemption is repeatable - remove the card, apply it again - and so is not, on its own,
+     * evidence that the caller is not guessing.
      */
     public function clear(Request $request): void;
 }
