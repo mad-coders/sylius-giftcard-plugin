@@ -115,3 +115,96 @@ Feature: Applying a gift card to my cart
         And I have proceeded through checkout process
         When I look at the checkout summary
         Then the summary should say nothing about gift cards
+
+    @ui
+    Scenario: I can redeem a gift card from the checkout, next to what I am about to pay
+        # The panel used to exist only on the cart, so a customer already in checkout had to go
+        # back to find it - at exactly the moment they are looking at what they will be charged.
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has a gift card "GIFT-40" worth "$40.00"
+        And I have proceeded through checkout process
+        When I look at the checkout summary
+        Then I should be able to redeem a gift card from the checkout
+        When I apply the gift card "GIFT-40" from the checkout
+        Then I should be told in the checkout that the gift card was applied
+        And I should still be in the checkout
+        And the gift card "GIFT-40" should be applied in the checkout
+        And the summary should tell me I will be charged "$60.00"
+
+    @ui
+    Scenario: I can take a gift card back off from the checkout
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has a gift card "GIFT-40" worth "$40.00"
+        And I have proceeded through checkout process
+        And I look at the checkout summary
+        And I apply the gift card "GIFT-40" from the checkout
+        When I remove the gift card "GIFT-40" from the checkout
+        Then I should still be in the checkout
+        And no gift card should be applied in the checkout
+        And the summary should say nothing about gift cards
+
+    @ui
+    Scenario: An unknown code is refused in the checkout
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And I have proceeded through checkout process
+        And I look at the checkout summary
+        When I apply the gift card "GIFT-NOPE" from the checkout
+        Then I should be told in the checkout that the code is not valid
+        And I should still be in the checkout
+        And no gift card should be applied in the checkout
+
+    @ui
+    Scenario: An expired card is refused in the checkout
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has an expired gift card "GIFT-OLD" worth "$40.00"
+        And I have proceeded through checkout process
+        And I look at the checkout summary
+        When I apply the gift card "GIFT-OLD" from the checkout
+        Then I should be told in the checkout that the card cannot be redeemed
+        And I should still be in the checkout
+        And no gift card should be applied in the checkout
+
+    @ui
+    Scenario: A disabled card is refused in the checkout
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has a disabled gift card "GIFT-OFF" worth "$40.00"
+        And I have proceeded through checkout process
+        And I look at the checkout summary
+        When I apply the gift card "GIFT-OFF" from the checkout
+        Then I should be told in the checkout that the card cannot be redeemed
+        And I should still be in the checkout
+        And no gift card should be applied in the checkout
+
+    @ui
+    Scenario: The redeem field is on the earlier checkout steps too, and sends me back to them
+        # The summary step blanks Sylius' sidebar and gets the panel a different way, so the earlier
+        # steps need their own coverage - and this is the scenario that proves applying a card from
+        # a step returns the customer to that step instead of dumping them back in the cart.
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And the store has a gift card "GIFT-40" worth "$40.00"
+        And I have proceeded through checkout process
+        When I go to the payment step
+        Then the payment step should let me redeem a gift card too
+        When I apply the gift card "GIFT-40" from the payment step
+        Then I should still be on the payment step
+        And the payment step should tell me I will be charged "$60.00"
+
+    @ui
+    Scenario: A refusal on the payment step is not silent
+        # The checkout steps render no flashes of their own - only the cart and the summary step do -
+        # so the panel renders its own messages. Without that the page came back byte-identical and
+        # the customer was told nothing, while the unread message surfaced later on whichever page
+        # did render flashes, attached to the wrong action.
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And I have proceeded through checkout process
+        When I go to the payment step
+        And I apply the gift card "GIFT-NOPE" from the payment step
+        Then I should be told on the payment step that the code is not valid
+        And I should still be on the payment step

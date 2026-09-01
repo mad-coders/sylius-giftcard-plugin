@@ -1,0 +1,94 @@
+{#
+    The apply/remove panel, shared by the cart page and the checkout sidebar.
+
+    One partial rather than two, so the two places a customer can redeem a card cannot drift apart -
+    a fix to the refusal handling or the CSRF token has to land in both or neither.
+
+    Both forms post to the plugin's own controller and work without JavaScript, which is what lets
+    the non-JS Behat suite cover the whole redemption flow.
+
+    Parameters:
+      order      the cart being redeemed against
+      return_to  key from GiftCardCartController::RETURN_ROUTES - where to send the customer back to
+      compact    render for a narrow column (the checkout sidebar) rather than the cart page
+#}
+{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
+
+{#
+    The panel renders its own messages rather than relying on the page to render flashes.
+
+    Only the cart and the checkout summary step render flashes at all; the addressing, shipping and
+    payment steps do not, so a refusal there was silent and the unread message then surfaced on
+    whichever later page did render flashes, attached to the wrong action.
+
+    These use plugin-owned flash types, so a page that renders Sylius' own flashes cannot show them
+    a second time. The test attribute is Sylius' so the existing notification checker still reads
+    them - they are flash messages, just rendered by the panel that caused them.
+#}
+{% if app.session is not null and app.session.started %}
+    {% for type, alert_class in { (constant('Madcoders\\SyliusGiftCardPlugin\\Controller\\Shop\\GiftCardCartController::FLASH_SUCCESS')): 'success', (constant('Madcoders\\SyliusGiftCardPlugin\\Controller\\Shop\\GiftCardCartController::FLASH_ERROR')): 'danger' } %}
+        {% for message in app.session.flashbag.get(type) %}
+            <div class="alert alert-{{ alert_class }} my-2" role="alert" data-test-sylius-flash-message>
+                <div {{ sylius_test_html_attribute('flash-messages') }}>
+                    {{ message|trans({}, 'flashes') }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+
+{% if order.giftCards is defined and order.giftCards|length > 0 %}
+    <ul class="list-unstyled mb-3" {{ sylius_test_html_attribute('applied-gift-cards') }}>
+        {% for gift_card in order.giftCards %}
+            <li class="d-flex justify-content-between align-items-center mb-2"
+                {{ sylius_test_html_attribute('applied-gift-card') }}>
+                <span>
+                    <span class="badge text-bg-secondary me-2"
+                          {{ sylius_test_html_attribute('applied-gift-card-code') }}>{{ gift_card.code }}</span>
+                    {% if not compact %}
+                        <span class="text-muted">
+                            {{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}:
+                            <span {{ sylius_test_html_attribute('applied-gift-card-balance') }}>
+                                {{ money.convertAndFormat(gift_card.amount) }}
+                            </span>
+                        </span>
+                    {% endif %}
+                </span>
+
+                {# A POST with a token: removal mutates the cart, so a link would let a prefetcher
+                   or a third-party page strip a customer's gift card. #}
+                <form method="post"
+                      action="{{ path('madcoders_sylius_gift_card_shop_cart_remove', {'code': gift_card.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('madcoders_sylius_gift_card_remove') }}">
+                    <input type="hidden" name="_return_to" value="{{ return_to }}">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            {{ sylius_test_html_attribute('remove-gift-card') }}>
+                        {{ 'madcoders_sylius_gift_card.ui.remove'|trans }}
+                    </button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post"
+      action="{{ path('madcoders_sylius_gift_card_shop_cart_apply') }}"
+      {{ sylius_test_html_attribute('gift-card-form') }}>
+    <div class="input-group">
+        <input type="text"
+               name="madcoders_sylius_gift_card_code[code]"
+               class="form-control"
+               placeholder="{{ 'madcoders_sylius_gift_card.ui.enter_gift_card_code'|trans }}"
+               {{ sylius_test_html_attribute('gift-card-code-input') }}>
+        <input type="hidden"
+               name="madcoders_sylius_gift_card_code[_token]"
+               value="{{ csrf_token('madcoders_sylius_gift_card') }}">
+        <input type="hidden" name="_return_to" value="{{ return_to }}">
+        <button type="submit"
+                class="btn btn-outline-gray"
+                {{ sylius_test_html_attribute('apply-gift-card-button') }}>
+            {{ 'madcoders_sylius_gift_card.ui.apply_gift_card'|trans }}
+        </button>
+    </div>
+</form>

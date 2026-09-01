@@ -1,12 +1,9 @@
 {#
     The gift card panel on the cart page.
 
-    Rendered outside Sylius' cart <form> on purpose - see config/twig_hooks/shop.yaml. It posts to
-    the plugin's own controller and works without JavaScript, which is what lets the non-JS Behat
-    suite cover the whole redemption flow.
+    Rendered outside Sylius' cart <form> on purpose - see config/twig_hooks/shop.yaml. The panel
+    itself lives in a shared partial, because the checkout sidebar carries the same one.
 #}
-{% import "@SyliusShop/shared/macro/money.html.twig" as money %}
-
 {% set cart = hookable_metadata.context.cart|default(null) %}
 
 {% if cart is not null and not cart.empty %}
@@ -14,57 +11,11 @@
         <div class="p-4 bg-light">
             <h5 class="mb-3">{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}</h5>
 
-            {% if cart.giftCards is defined and cart.giftCards|length > 0 %}
-                <ul class="list-unstyled mb-3" {{ sylius_test_html_attribute('applied-gift-cards') }}>
-                    {% for gift_card in cart.giftCards %}
-                        <li class="d-flex justify-content-between align-items-center mb-2"
-                            {{ sylius_test_html_attribute('applied-gift-card') }}>
-                            <span>
-                                <span class="badge text-bg-secondary me-2"
-                                      {{ sylius_test_html_attribute('applied-gift-card-code') }}>{{ gift_card.code }}</span>
-                                <span class="text-muted">
-                                    {{ 'madcoders_sylius_gift_card.ui.remaining_balance'|trans }}:
-                                    <span {{ sylius_test_html_attribute('applied-gift-card-balance') }}>
-                                        {{ money.convertAndFormat(gift_card.amount) }}
-                                    </span>
-                                </span>
-                            </span>
-
-                            {# A POST with a token: removal mutates the cart, so a link would let a
-                               prefetcher or a third-party page strip a customer's discount. #}
-                            <form method="post"
-                                  action="{{ path('madcoders_sylius_gift_card_shop_cart_remove', {'code': gift_card.code}) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('madcoders_sylius_gift_card_remove') }}">
-                                <button type="submit"
-                                        class="btn btn-sm btn-outline-danger"
-                                        {{ sylius_test_html_attribute('remove-gift-card') }}>
-                                    {{ 'madcoders_sylius_gift_card.ui.remove'|trans }}
-                                </button>
-                            </form>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            <form method="post"
-                  action="{{ path('madcoders_sylius_gift_card_shop_cart_apply') }}"
-                  {{ sylius_test_html_attribute('gift-card-form') }}>
-                <div class="input-group">
-                    <input type="text"
-                           name="madcoders_sylius_gift_card_code[code]"
-                           class="form-control"
-                           placeholder="{{ 'madcoders_sylius_gift_card.ui.enter_gift_card_code'|trans }}"
-                           {{ sylius_test_html_attribute('gift-card-code-input') }}>
-                    <input type="hidden"
-                           name="madcoders_sylius_gift_card_code[_token]"
-                           value="{{ csrf_token('madcoders_sylius_gift_card') }}">
-                    <button type="submit"
-                            class="btn btn-outline-gray"
-                            {{ sylius_test_html_attribute('apply-gift-card-button') }}>
-                        {{ 'madcoders_sylius_gift_card.ui.apply_gift_card'|trans }}
-                    </button>
-                </div>
-            </form>
+            {% include '@MadcodersSyliusGiftCardPlugin/shop/common/gift_card_panel.html.twig' with {
+                'order': cart,
+                'return_to': 'cart',
+                'compact': false,
+            } only %}
         </div>
     </div>
 {% endif %}

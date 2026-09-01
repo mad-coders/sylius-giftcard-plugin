@@ -35,10 +35,66 @@ final class SummaryPage extends ShopPage implements SummaryPageInterface
         return $this->hasElement('gift_card_total');
     }
 
+    public function hasGiftCardPanel(): bool
+    {
+        return $this->hasElement('gift_card_panel');
+    }
+
+    public function applyGiftCard(string $code): void
+    {
+        $this->getElement('gift_card_code_input')->setValue($code);
+        $this->getElement('apply_gift_card_button')->press();
+    }
+
+    public function removeGiftCard(string $code): void
+    {
+        foreach ($this->getAppliedGiftCardRows() as $row) {
+            $codeElement = $row->find('css', '[data-test-applied-gift-card-code]');
+
+            if (null !== $codeElement && trim($codeElement->getText()) === $code) {
+                $row->find('css', '[data-test-remove-gift-card]')?->press();
+
+                return;
+            }
+        }
+
+        throw new \InvalidArgumentException(sprintf('There is no applied gift card "%s" in the checkout.', $code));
+    }
+
+    /** @return list<string> */
+    public function getAppliedGiftCardCodes(): array
+    {
+        $codes = [];
+
+        foreach ($this->getAppliedGiftCardRows() as $row) {
+            $codeElement = $row->find('css', '[data-test-applied-gift-card-code]');
+
+            if (null !== $codeElement) {
+                $codes[] = trim($codeElement->getText());
+            }
+        }
+
+        return $codes;
+    }
+
+    /** @return list<\Behat\Mink\Element\NodeElement> */
+    private function getAppliedGiftCardRows(): array
+    {
+        if (!$this->hasElement('applied_gift_cards')) {
+            return [];
+        }
+
+        return array_values($this->getElement('applied_gift_cards')->findAll('css', '[data-test-applied-gift-card]'));
+    }
+
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
             'amount_to_pay' => '[data-test-checkout-amount-to-pay]',
+            'applied_gift_cards' => '[data-test-applied-gift-cards]',
+            'apply_gift_card_button' => '[data-test-apply-gift-card-button]',
+            'gift_card_code_input' => '[data-test-gift-card-code-input]',
+            'gift_card_panel' => '[data-test-checkout-gift-card-panel]',
             'gift_card_total' => '[data-test-checkout-gift-card-total]',
         ]);
     }
