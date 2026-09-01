@@ -9,6 +9,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
@@ -59,10 +60,21 @@ final class GiftCardConfigurationType extends AbstractResourceType
                     ),
                 ],
             ])
+            // Required, and refused if it cannot be parsed. Both constraints live on the model in
+            // config/validation/GiftCardConfiguration.xml rather than here, so a configuration
+            // written by an importer or a data fixture is judged by the same rules as one typed
+            // into this form.
             ->add('validityPeriod', TextType::class, [
                 'label' => 'madcoders_sylius_gift_card.ui.validity_period',
-                'required' => false,
+                'required' => true,
                 'help' => 'madcoders_sylius_gift_card.ui.validity_period_help',
+            ])
+            ->add('tenderMode', EnumType::class, [
+                'class' => GiftCardTenderMode::class,
+                'label' => 'madcoders_sylius_gift_card.ui.tender_mode',
+                'required' => true,
+                'help' => 'madcoders_sylius_gift_card.ui.tender_mode_help',
+                'choice_label' => static fn (GiftCardTenderMode $mode): string => 'madcoders_sylius_gift_card.ui.tender_mode_choice.' . $mode->value,
             ])
             ->add('saleMode', EnumType::class, [
                 'class' => GiftCardSaleMode::class,

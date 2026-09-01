@@ -23,3 +23,5 @@ Consequences / Rules).
 | [0012](0012-rate-limiting-gift-card-redemption.md) | Redemption rate limited on the client address, one message for every refusal |
 | [0013](0013-gift-card-sale-mode.md) | Selling gift cards is a per-channel mode, enforced three times |
 | [0014](0014-customer-chosen-gift-card-amount.md) | The customer chooses the amount; the order processor is what makes it a price |
+| [0015](0015-every-gift-card-expires.md) | Every gift card expires, and one service decides when |
+| [0016](0016-a-gift-card-does-not-buy-a-gift-card.md) | A gift card does not buy a gift card (completes 0015) |

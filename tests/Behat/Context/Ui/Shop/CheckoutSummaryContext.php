@@ -141,6 +141,43 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
+     * @When I try to place my order
+     */
+    public function iTryToPlaceMyOrder(): void
+    {
+        $this->summaryPage->confirmOrder();
+    }
+
+    /**
+     * @Then I should be told at the checkout that a gift card cannot pay for a gift card
+     */
+    public function iShouldBeToldAtTheCheckoutThatAGiftCardCannotPayForAGiftCard(): void
+    {
+        // The `sylius_checkout_complete` group, which is the last point at which the customer has
+        // not been charged.
+        Assert::contains(
+            $this->summaryPage->getValidationErrors(),
+            'A gift card cannot be used to pay for a gift card.',
+            'The checkout let an order through whose gift cards could settle nothing.',
+        );
+    }
+
+    /**
+     * @Then the checkout should not have objected to my gift card
+     */
+    public function theCheckoutShouldNotHaveObjectedToMyGiftCard(): void
+    {
+        // This constraint runs on every checkout in the shop. An over-eager violation would stop
+        // the shop taking any order at all, so the ordinary case is asserted as loudly as the
+        // refusal.
+        Assert::notContains(
+            $this->summaryPage->getValidationErrors(),
+            'gift card',
+            'The checkout refused an order it had no business refusing.',
+        );
+    }
+
+    /**
      * @When I go to the payment step
      */
     public function iGoToThePaymentStep(): void

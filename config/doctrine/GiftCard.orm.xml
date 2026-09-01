@@ -15,7 +15,12 @@
         <field name="initialAmount" column="initial_amount" type="integer" nullable="true" />
         <field name="amount" column="amount" type="integer" />
         <field name="enabled" column="enabled" type="boolean" />
-        <field name="expiresAt" column="expires_at" type="datetime" nullable="true" />
+        <!--
+            NOT NULL: every gift card expires, and this is the layer nothing can talk its way past -
+            not an importer, not a console command, not a host application's own code. See
+            docs/adr-log/0015-every-gift-card-expires.md.
+        -->
+        <field name="expiresAt" column="expires_at" type="datetime" nullable="false" />
         <field name="origin" column="origin" type="string" length="16" enum-type="Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin" />
         <field name="customMessage" column="custom_message" type="text" nullable="true" />
         <field name="createdAt" column="created_at" type="datetime" nullable="true" />

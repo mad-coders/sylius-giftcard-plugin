@@ -207,6 +207,21 @@ final class GiftCardCartContext implements Context
     }
 
     /**
+     * @Then I should be told a gift card cannot pay for a gift card
+     */
+    public function iShouldBeToldAGiftCardCannotPayForAGiftCard(): void
+    {
+        // A message of its own, unlike every other refusal, and only safe because the basket is
+        // judged before the code is looked up - a scenario applying an unknown code and getting
+        // this same message is what pins that. The customer can act on it, so telling them "this
+        // code cannot be used" would send them looking at their card instead of their basket.
+        $this->notificationChecker->checkNotification(
+            'A gift card cannot be used to pay for a gift card.',
+            NotificationType::failure(),
+        );
+    }
+
+    /**
      * @Then I should be told I have tried too many gift card codes
      */
     public function iShouldBeToldIHaveTriedTooManyGiftCardCodes(): void

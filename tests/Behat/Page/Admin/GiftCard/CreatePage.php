@@ -22,4 +22,29 @@ final class CreatePage extends BaseCreatePage implements CreatePageInterface
     {
         $this->getDocument()->selectFieldOption('Channel', $channelName);
     }
+
+    public function getExpiryDate(): string
+    {
+        $value = $this->getDocument()->findField('Expires at')?->getValue();
+
+        // A single_text date widget holds one string. Mink types getValue() loosely because a
+        // multi-select holds an array, which this field never is.
+        return is_string($value) ? $value : '';
+    }
+
+    public function specifyExpiryDate(string $expiresAt): void
+    {
+        $this->getDocument()->fillField('Expires at', $expiresAt);
+    }
+
+    public function getValidationMessages(): string
+    {
+        $messages = [];
+
+        foreach ($this->getDocument()->findAll('css', '.invalid-feedback') as $error) {
+            $messages[] = trim($error->getText());
+        }
+
+        return implode(' ', $messages);
+    }
 }

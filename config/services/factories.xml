@@ -15,6 +15,7 @@
                  decorates="madcoders_sylius_gift_card.factory.gift_card"
                  decoration-priority="0">
             <argument type="service" id="madcoders_sylius_gift_card.factory.gift_card.decorator.inner" />
+            <argument type="service" id="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
         </service>
 
         <service id="Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactoryInterface"

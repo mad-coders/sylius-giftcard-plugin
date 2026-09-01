@@ -15,6 +15,7 @@ madcoders_sylius_gift_card:
             too_long: 'Your message is too long - please keep it to {{ limit }} characters or fewer.'
     order:
         gift_card_not_sold_in_channel: Your cart contains a gift card, and gift cards are not sold in this channel. Please remove it to continue.
+        gift_card_cannot_pay_for_gift_card: A gift card cannot be used to pay for a gift card. Remove the gift card from your basket, or remove the gift card payment, to continue.
     gift_card:
         code:
             not_blank: Please enter a gift card code.
@@ -24,6 +25,8 @@ madcoders_sylius_gift_card:
             positive: The amount must be greater than zero.
         amount:
             positive: The amount must be greater than zero.
+        expires_at:
+            not_blank: Please enter the date this gift card expires.
     gift_card_configuration:
         amount_presets:
             invalid: 'Enter the preset amounts separated by commas, for example "25, 50, 100".'
@@ -33,3 +36,6 @@ madcoders_sylius_gift_card:
             inverted: The largest amount cannot be smaller than the smallest one.
         code_length:
             too_short: 'The code length must be at least 12 characters - a shorter code is guessable.'
+        validity_period:
+            not_blank: Please enter how long a new gift card stays valid, for example "1 year".
+            unparseable: 'This is not a period the shop understands. Use a relative expression such as "1 year", "18 months" or "30 days".'

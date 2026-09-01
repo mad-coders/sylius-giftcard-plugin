@@ -27,7 +27,8 @@
 
             <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.expires_at'|trans }}</dt>
             <dd class="col-8">
-                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.never_expires'|trans }}
+                {# Every card expires - see docs/adr-log/0015-every-gift-card-expires.md. #}
+                {{ gift_card.expiresAt|date('d-m-Y') }}
             </dd>
 
             {# The two customer links are the point of the model: who paid, and who is spending it. #}

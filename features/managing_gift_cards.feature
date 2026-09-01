@@ -115,25 +115,55 @@ Feature: Managing gift cards
         And the issued card's code should have 12 characters after the prefix "XMAS-"
 
     @ui
-    Scenario: A card created without an expiry takes the channel's validity period
+    Scenario: A card created by hand takes the channel's validity period, pre-filled
+        # The date is a term of the sale, so the administrator sees it before saving rather than
+        # having it computed behind their back.
         Given the channel's gift cards are valid for "30 days"
         When I want to create a new gift card
-        And I specify its initial amount as "75.00"
+        Then the expiry date should already be filled in about 30 days from now
+        When I specify its initial amount as "75.00"
         And I add this gift card
         Then the issued card should expire in about 30 days
 
     @ui
-    Scenario: A validity period that cannot be parsed issues a card that never expires
-        # Rather than one that is already expired. A card issued dead is worse than one that never
-        # expires, because the customer only finds out at the till.
-        Given the channel's gift cards are valid for the unparseable period "not a period"
+    Scenario: A channel with no configuration at all still issues a card that expires
+        # The case issue #31 exists for. Nothing configured used to mean nothing expires, which is
+        # an indefinite liability nobody chose - see docs/adr-log/0015-every-gift-card-expires.md.
         When I want to create a new gift card
         And I specify its initial amount as "75.00"
         And I add this gift card
-        # The prefix proves the configuration was read at all - without it, "never expires" would
-        # also be the answer if the configuration were ignored, and this would test nothing.
-        Then the issued card's code should start with "BADCFG-"
-        And the issued card should never expire
+        Then the issued card should expire in about 365 days
+
+    @ui
+    Scenario: A card cannot be created without an expiry date
+        # The administrator may move the date. They may not remove it: a card with no expiry is the
+        # state the whole change exists to make unreachable.
+        Given the channel's gift cards are valid for "30 days"
+        When I want to create a new gift card
+        And I specify its initial amount as "75.00"
+        And I clear its expiry date
+        And I add this gift card
+        Then I should be told the expiry date is required
+        And no gift card should have been created
+
+    @ui
+    Scenario: A validity period is required on the configuration
+        # A blank one used to issue cards that never expire, silently.
+        When I want to configure gift cards for the "United States" channel
+        And I clear the validity period
+        And I save this configuration
+        Then I should be told the validity period is required
+        And no gift card configuration should have been saved
+
+    @ui
+    Scenario: A validity period that cannot be parsed is refused
+        # "1 yaer" saved cleanly before this and quietly issued cards that never expired, so the
+        # operator walked away believing they had configured something.
+        When I want to configure gift cards for the "United States" channel
+        And I set the validity period to "1 yaer"
+        And I save this configuration
+        Then I should be told the validity period is not a period
+        And no gift card configuration should have been saved
 
     @ui
     Scenario: Configuring how a channel issues gift card codes

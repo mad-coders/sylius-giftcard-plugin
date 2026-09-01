@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Madcoders\SyliusGiftCardPlugin\Fixture;
 
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
 use Sylius\Bundle\CoreBundle\Fixture\AbstractResourceFixture;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
@@ -25,6 +26,9 @@ class GiftCardConfigurationFixture extends AbstractResourceFixture
                 ->scalarNode('code_prefix')->end()
                 ->scalarNode('validity_period')->end()
                 ->scalarNode('sale_mode')->end()
+                ->enumNode('tender_mode')
+                    ->values(array_column(GiftCardTenderMode::cases(), 'value'))
+                ->end()
                 ->booleanNode('enabled')->end()
                 ->enumNode('amount_mode')
                     ->values(array_column(GiftCardAmountMode::cases(), 'value'))

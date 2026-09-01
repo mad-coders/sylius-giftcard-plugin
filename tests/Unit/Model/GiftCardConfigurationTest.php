@@ -7,6 +7,7 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Model;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
 use PHPUnit\Framework\TestCase;
 
 final class GiftCardConfigurationTest extends TestCase
@@ -25,51 +26,28 @@ final class GiftCardConfigurationTest extends TestCase
         self::assertSame(GiftCardSaleMode::AdminOnly, $configuration->getSaleMode());
     }
 
-    public function testItCalculatesAnExpiryDateFromItsValidityPeriod(): void
+    public function testANewConfigurationValidatesCardsForOneYear(): void
     {
-        $configuration = new GiftCardConfiguration();
-        $configuration->setValidityPeriod('1 year');
-
-        $expiresAt = $configuration->calculateExpiryDate(new \DateTimeImmutable('2026-08-03 10:00:00'));
-
-        self::assertNotNull($expiresAt);
-        self::assertSame('2027-08-03 10:00:00', $expiresAt->format('Y-m-d H:i:s'));
+        // The expiry date itself is GiftCardExpiryCalculator's job; what the model owes is a
+        // sensible period out of the box, so a channel created in code still expires its cards.
+        self::assertSame('1 year', (new GiftCardConfiguration())->getValidityPeriod());
     }
 
-    public function testCardsDoNotExpireWhenNoValidityPeriodIsSet(): void
+    public function testANewConfigurationDoesNotLetAGiftCardPayForAGiftCard(): void
     {
-        $configuration = new GiftCardConfiguration();
-        $configuration->setValidityPeriod(null);
-
-        self::assertNull($configuration->calculateExpiryDate());
+        // The default that closes the rollover loophole - see
+        // docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md. It deliberately changes what
+        // an upgrading shop does, so it is pinned here.
+        self::assertSame(GiftCardTenderMode::GoodsOnly, (new GiftCardConfiguration())->getTenderMode());
     }
 
-    public function testCardsDoNotExpireWhenTheValidityPeriodIsBlank(): void
+    public function testAChannelCanBeSetToLetAGiftCardPayForAnything(): void
     {
         $configuration = new GiftCardConfiguration();
-        $configuration->setValidityPeriod('   ');
+        $configuration->setTenderMode(GiftCardTenderMode::Anything);
 
-        self::assertNull($configuration->calculateExpiryDate());
-    }
-
-    public function testAnUnparseableValidityPeriodDoesNotIssueAnAlreadyExpiredCard(): void
-    {
-        // DateInterval::createFromDateString() yields an all-zero interval for input it cannot
-        // parse, which would otherwise expire the card the instant it is created.
-        $configuration = new GiftCardConfiguration();
-        $configuration->setValidityPeriod('not a period');
-
-        self::assertNull($configuration->calculateExpiryDate(new \DateTimeImmutable('2026-08-03 10:00:00')));
-    }
-
-    public function testItDefaultsToOneYearOfValidity(): void
-    {
-        $configuration = new GiftCardConfiguration();
-
-        $expiresAt = $configuration->calculateExpiryDate(new \DateTimeImmutable('2026-08-03 10:00:00'));
-
-        self::assertNotNull($expiresAt);
-        self::assertSame('2027-08-03', $expiresAt->format('Y-m-d'));
+        self::assertSame(GiftCardTenderMode::Anything, $configuration->getTenderMode());
+        self::assertTrue($configuration->getTenderMode()->allowsGiftCardsToPayForGiftCards());
     }
 
     public function testAChannelSellsGiftCardsAtTheProductPriceUntilItIsToldOtherwise(): void

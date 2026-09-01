@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            The one place that turns a channel's validity period into a date. Everything that
+            issues a card goes through it, and it cannot return null - see
+            docs/adr-log/0015-every-gift-card-expires.md.
+        -->
+        <service id="madcoders_sylius_gift_card.calculator.gift_card_expiry"
+                 class="Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculator" />
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculatorInterface"
+                 alias="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
+    </services>
+
+</container>

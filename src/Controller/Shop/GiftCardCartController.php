@@ -9,6 +9,7 @@ use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotRedeemableException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardsNotAcceptedOnOrderException;
 use Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardCodeType;
 use Madcoders\SyliusGiftCardPlugin\RateLimiter\GiftCardRedemptionLimiterInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -105,6 +106,17 @@ final readonly class GiftCardCartController
 
         try {
             $newlyApplied = $this->giftCardApplicator->apply($cart, $code);
+        } catch (GiftCardsNotAcceptedOnOrderException) {
+            // A message of its own, unlike the three below, and safe to give: the applicator asks
+            // about the basket before it looks the code up, so this answer arrives for every code
+            // alike and tells nobody which ones are real. It also has to be specific, because the
+            // customer can fix it - by taking the gift card out of their basket - and "this code
+            // cannot be used" would send them looking at the wrong thing entirely.
+            //
+            // Not counted as a failed attempt either. Nothing was guessed: the basket was refused.
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.gift_card_cannot_pay_for_gift_card');
+
+            return $this->redirectBack($request, $cart);
         } catch (GiftCardNotFoundException | GiftCardNotRedeemableException | ChannelMismatchException) {
             // One message for all three, deliberately. Saying "there is no such code" for one and
             // "this card is expired" for another tells an anonymous caller which codes are real,

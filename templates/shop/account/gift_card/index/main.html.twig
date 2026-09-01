@@ -35,7 +35,8 @@
                                 {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
                             </td>
                             <td>
-                                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.never_expires'|trans }}
+                                {# Every card expires - see docs/adr-log/0015-every-gift-card-expires.md. #}
+                                {{ gift_card.expiresAt|date('d-m-Y') }}
                             </td>
                             <td class="text-end">
                                 <a href="{{ path('madcoders_sylius_gift_card_shop_account_show', {'id': gift_card.id}) }}"

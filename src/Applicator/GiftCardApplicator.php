@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Madcoders\SyliusGiftCardPlugin\Applicator;
 
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotRedeemableException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardsNotAcceptedOnOrderException;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderTrait;
@@ -22,12 +24,23 @@ final readonly class GiftCardApplicator implements GiftCardApplicatorInterface
     public function __construct(
         private GiftCardRepositoryInterface $giftCardRepository,
         private OrderProcessorInterface $orderProcessor,
+        private GiftCardTenderCheckerInterface $giftCardTenderChecker,
     ) {
     }
 
     public function apply(BaseOrderInterface $order, GiftCardInterface|string $giftCard): bool
     {
         $order = $this->assertGiftCardAwareOrder($order);
+
+        // Asked about the basket BEFORE the code is looked up, and deliberately so. This refusal
+        // has to say something specific - "a gift card cannot pay for a gift card" - and any
+        // specific answer that arrives only for real codes is an oracle telling an anonymous
+        // caller which codes exist. Checked first, it says the same thing for every code, real or
+        // invented.
+        if (!$this->giftCardTenderChecker->allowsRedemptionOn($order)) {
+            throw new GiftCardsNotAcceptedOnOrderException();
+        }
+
         $giftCard = $this->resolve($giftCard);
 
         if (!$giftCard->isRedeemable()) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Operator;
 
 use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculator;
 use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardPurchaseCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactory;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
@@ -284,7 +285,7 @@ final class OrderGiftCardOperatorTest extends TestCase
         $purchaseChecker->method('canBeBoughtIn')->willReturn($sellable);
 
         return new OrderGiftCardOperator(
-            new GiftCardFactory($inner),
+            new GiftCardFactory($inner, new GiftCardExpiryCalculator()),
             $codeGenerator,
             $configurationProvider,
             $this->createMock(ObjectManager::class),

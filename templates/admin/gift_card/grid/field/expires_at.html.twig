@@ -1,6 +1,6 @@
-{% if data.expiresAt is null %}
-    <span class="text-secondary">{{ 'madcoders_sylius_gift_card.ui.never_expires'|trans }}</span>
-{% elseif data.isExpired() %}
+{# Every card expires - see docs/adr-log/0015-every-gift-card-expires.md - so the only question
+   left is whether it already has. #}
+{% if data.isExpired() %}
     <span class="text-danger" {{ sylius_test_html_attribute('gift-card-expired') }}>
         {{ data.expiresAt|date('d-m-Y') }}
     </span>

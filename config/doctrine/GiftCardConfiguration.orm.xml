@@ -19,6 +19,12 @@
                 <option name="default">sellable</option>
             </options>
         </field>
+        <!-- The default matches the migration, so a host is left in sync per doctrine:schema:validate. -->
+        <field name="tenderMode" column="tender_mode" type="string" length="16" enum-type="Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode">
+            <options>
+                <option name="default">goods_only</option>
+            </options>
+        </field>
         <!--
             The default is declared here as well as in the migration: the column is added to a table
             that already has rows, so it needs one, and `doctrine:schema:validate` compares the two.

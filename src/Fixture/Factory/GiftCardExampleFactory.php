@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Madcoders\SyliusGiftCardPlugin\Fixture\Factory;
 
+use Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
@@ -25,9 +26,6 @@ use Webmozart\Assert\Assert;
  */
 class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFactoryInterface
 {
-    /** How a fixture asks for a card with no expiry date at all, whatever the channel configures. */
-    public const string NEVER_EXPIRES = 'never';
-
     private readonly OptionsResolver $optionsResolver;
 
     /**
@@ -42,6 +40,7 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         private readonly GiftCardCodeGeneratorInterface $giftCardCodeGenerator,
         private readonly GiftCardConfigurationProviderInterface $giftCardConfigurationProvider,
         private readonly GiftCardBalanceModifierInterface $giftCardBalanceModifier,
+        private readonly GiftCardExpiryCalculatorInterface $giftCardExpiryCalculator,
     ) {
         $this->optionsResolver = new OptionsResolver();
 
@@ -86,10 +85,7 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         Assert::nullOrIsInstanceOf($redeemer, CustomerInterface::class);
 
         $expiresAt = $options['expires_at'];
-        Assert::true(
-            null === $expiresAt || self::NEVER_EXPIRES === $expiresAt || $expiresAt instanceof \DateTimeInterface,
-            'expires_at must be a date, null, or "never".',
-        );
+        Assert::nullOrIsInstanceOf($expiresAt, \DateTimeInterface::class);
 
         $configuration = $this->giftCardConfigurationProvider->getForChannel($channel);
 
@@ -102,12 +98,11 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
         $giftCard->setEnabled($enabled);
         $giftCard->setCustomMessage($customMessage);
         $giftCard->setPurchaser($purchaser);
-        $giftCard->setExpiresAt(match (true) {
-            self::NEVER_EXPIRES === $expiresAt => null,
-            $expiresAt instanceof \DateTimeInterface => $expiresAt,
-            // Not specified: the channel's configuration decides, which is what a real card gets.
-            default => $configuration?->calculateExpiryDate(),
-        });
+        // A fixture may name a date - an expired card is worth demonstrating - but it cannot ask for
+        // no date at all: every card expires, and a fixture suite that could produce one which
+        // never does would be describing a state the shop can no longer reach. Saying nothing gets
+        // the channel's own period, which is what a real card gets.
+        $giftCard->setExpiresAt($expiresAt ?? $this->giftCardExpiryCalculator->calculate($configuration));
 
         // Fixtures need to describe a partly-spent card - that is the interesting state for the
         // account page. Spending it down goes through the balance modifier rather than the model
@@ -147,18 +142,13 @@ class GiftCardExampleFactory extends AbstractExampleFactory implements ExampleFa
             ->setDefault('enabled', true)
             ->setAllowedTypes('enabled', 'bool')
 
-            // null means "let the channel's configuration decide"; the string `never` is how a
-            // fixture says a card should outlive the configured validity period, which is otherwise
-            // impossible to express - a null here is indistinguishable from not saying anything.
+            // Null means "let the channel's configuration decide". There is deliberately no way to
+            // ask for a card that never expires - see docs/adr-log/0015-every-gift-card-expires.md.
             ->setDefault('expires_at', null)
             // Allowed types are checked before normalizers run, so a date string has to be accepted
             // here as well as the object the normalizer turns it into.
             ->setAllowedTypes('expires_at', ['null', 'string', \DateTimeInterface::class])
-            ->setNormalizer('expires_at', static function (Options $options, mixed $value): \DateTimeInterface|string|null {
-                if (self::NEVER_EXPIRES === $value) {
-                    return self::NEVER_EXPIRES;
-                }
-
+            ->setNormalizer('expires_at', static function (Options $options, mixed $value): ?\DateTimeInterface {
                 if (is_string($value)) {
                     return new \DateTime($value);
                 }

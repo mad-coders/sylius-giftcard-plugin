@@ -9,6 +9,7 @@ use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Controller\Shop\GiftCardCartController;
 use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardsNotAcceptedOnOrderException;
 use Madcoders\SyliusGiftCardPlugin\RateLimiter\GiftCardRedemptionLimiterInterface;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -156,6 +157,36 @@ final class GiftCardCartControllerTest extends TestCase
             $this->flashes($request, GiftCardCartController::FLASH_SUCCESS),
         );
         self::assertSame('/cart', $response->getTargetUrl());
+    }
+
+    public function testABasketThatTakesNoGiftCardsGetsAMessageOfItsOwn(): void
+    {
+        // The one refusal that is allowed to be specific, because the applicator judges the basket
+        // before it looks the code up - so it says the same thing for a real code and an invented
+        // one. The customer can act on this, and "this code cannot be used" would send them looking
+        // at their card instead of their basket.
+        $request = $this->applyRequest();
+
+        $this->apply($request, $this->applicatorThrowing(new GiftCardsNotAcceptedOnOrderException()));
+
+        self::assertSame(
+            ['madcoders_sylius_gift_card.cart.gift_card_cannot_pay_for_gift_card'],
+            $this->flashes($request, GiftCardCartController::FLASH_ERROR),
+        );
+    }
+
+    public function testABasketRefusalIsNotCountedAsAGuess(): void
+    {
+        // Nothing was guessed - the basket was refused - so spending the client's allowance on it
+        // would let a shop's own rule lock its customers out.
+        $limiter = $this->createMock(GiftCardRedemptionLimiterInterface::class);
+        $limiter->expects(self::never())->method('recordFailure');
+
+        $this->apply(
+            $this->applyRequest(),
+            $this->applicatorThrowing(new GiftCardsNotAcceptedOnOrderException()),
+            $limiter,
+        );
     }
 
     private function applicatorThrowing(\Throwable $exception): GiftCardApplicatorInterface

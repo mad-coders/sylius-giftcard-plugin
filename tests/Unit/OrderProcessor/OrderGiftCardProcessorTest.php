@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\OrderProcessor;
 
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCard;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
@@ -14,6 +15,7 @@ use Sylius\Component\Core\Model\OrderItem;
 use Sylius\Component\Core\Model\OrderItemUnit;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Order\Factory\AdjustmentFactoryInterface;
+use Sylius\Component\Order\Model\OrderInterface as BaseOrderInterface;
 use Symfony\Component\Translation\IdentityTranslator;
 use Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\Order;
 
@@ -170,9 +172,53 @@ final class OrderGiftCardProcessorTest extends TestCase
         self::assertSame(7_000, $payment->getAmount());
     }
 
-    private function createProcessor(): OrderGiftCardProcessor
+    public function testItNeverLetsAGiftCardPayForAGiftCard(): void
     {
-        return new OrderGiftCardProcessor($this->createAdjustmentFactory(), new IdentityTranslator());
+        // The cap from #41. The customer's shoes are settled, the gift card next to them is not,
+        // and the payment still asks for the full difference - capping the coverage must never
+        // shrink what the shop is paid, or it would hand over a card nobody paid for.
+        $order = $this->createOrder(10_000);
+        $order->addGiftCard($this->createGiftCard('GIFT-A', 10_000));
+
+        $this->createProcessor(settleable: 6_000)->process($order);
+
+        self::assertSame(10_000, $order->getTotal());
+        self::assertSame(4_000, self::paymentAmountOf($order), 'the gift card line is still payable in cash');
+
+        $adjustment = $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT)->first();
+        self::assertNotFalse($adjustment);
+        self::assertSame(-6_000, $adjustment->getAmount());
+    }
+
+    public function testAnOrderWithNothingSettleableChargesTheFullAmount(): void
+    {
+        // The gift-card-only basket. Nothing is covered, nothing is recorded, and the customer pays
+        // in full - even though a card is still attached, because the checkout constraint (not this
+        // processor) is what tells them to take it off.
+        $order = $this->createOrder(10_000);
+        $order->addGiftCard($this->createGiftCard('GIFT-A', 10_000));
+
+        $this->createProcessor(settleable: 0)->process($order);
+
+        self::assertSame(10_000, self::paymentAmountOf($order));
+        self::assertCount(0, $order->getAdjustments(AdjustmentInterface::ORDER_GIFT_CARD_ADJUSTMENT));
+    }
+
+    private function createProcessor(?int $settleable = null): OrderGiftCardProcessor
+    {
+        $tenderChecker = $this->createMock(GiftCardTenderCheckerInterface::class);
+        $tenderChecker
+            ->method('settleableTotalOf')
+            // Null means "no gift card lines here", which is every test above: the whole order is
+            // settleable, exactly as it was before the tender rule existed.
+            ->willReturnCallback(static fn (BaseOrderInterface $order): int => $settleable ?? $order->getTotal())
+        ;
+
+        return new OrderGiftCardProcessor(
+            $this->createAdjustmentFactory(),
+            new IdentityTranslator(),
+            $tenderChecker,
+        );
     }
 
     private function createAdjustmentFactory(): AdjustmentFactoryInterface

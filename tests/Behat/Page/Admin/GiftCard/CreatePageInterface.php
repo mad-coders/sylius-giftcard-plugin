@@ -13,4 +13,12 @@ interface CreatePageInterface extends BaseCreatePageInterface
     public function specifyInitialAmount(string $amount): void;
 
     public function chooseChannel(string $channelName): void;
+
+    /** What the form offers as the expiry date, as an ISO-ish string the browser would submit. */
+    public function getExpiryDate(): string;
+
+    public function specifyExpiryDate(string $expiresAt): void;
+
+    /** Every validation message on the form, joined. */
+    public function getValidationMessages(): string;
 }

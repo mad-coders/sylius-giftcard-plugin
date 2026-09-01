@@ -8,6 +8,12 @@ use FriendsOfBehat\PageObjectExtension\Page\PageInterface;
 
 interface SummaryPageInterface extends PageInterface
 {
+    /** Presses Sylius' own confirmation button, so the checkout-complete constraints run. */
+    public function confirmOrder(): void;
+
+    /** Whatever the `sylius_checkout_complete` validation group refused, or an empty string. */
+    public function getValidationErrors(): string;
+
     public function getGiftCardTotal(): string;
 
     public function getAmountToPay(): string;

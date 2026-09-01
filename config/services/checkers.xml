@@ -12,6 +12,20 @@
 
         <service id="Madcoders\SyliusGiftCardPlugin\Checker\GiftCardPurchaseCheckerInterface"
                  alias="madcoders_sylius_gift_card.checker.gift_card_purchase" />
+
+        <!--
+            The single answer to how much of an order gift cards may settle. Shared by the
+            applicator, the checkout constraint and the order processor - three copies of this rule
+            would drift, which is how a gift card came to be buyable with a gift card in the first
+            place. See docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
+        -->
+        <service id="madcoders_sylius_gift_card.checker.gift_card_tender"
+                 class="Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderChecker">
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface"
+                 alias="madcoders_sylius_gift_card.checker.gift_card_tender" />
     </services>
 
 </container>

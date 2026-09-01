@@ -7,6 +7,7 @@ namespace Madcoders\SyliusGiftCardPlugin\Applicator;
 use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotRedeemableException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardsNotAcceptedOnOrderException;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Sylius\Component\Core\Model\OrderInterface as BaseOrderInterface;
 
@@ -21,6 +22,9 @@ interface GiftCardApplicatorInterface
      *              treat a successful call as "a card was redeemed just now" have to be able to tell
      *              the two apart. The rate limiter does: see GiftCardRedemptionLimiterInterface::clear().
      *
+     * @throws GiftCardsNotAcceptedOnOrderException when the order itself takes no gift cards, whatever
+     *                                              code is offered. Thrown before the code is resolved,
+     *                                              so it reveals nothing about which codes exist.
      * @throws GiftCardNotFoundException
      * @throws GiftCardNotRedeemableException
      * @throws ChannelMismatchException

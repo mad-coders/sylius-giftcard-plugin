@@ -296,7 +296,12 @@ final class GiftCardContext implements Context
         $expiresAt = $this->issuedCard()->getExpiresAt();
         Assert::notNull($expiresAt, 'The card was issued without an expiry date.');
 
-        // A day either side, so the assertion does not depend on the clock ticking over mid-run.
+        self::assertIsAboutDaysAway($expiresAt, $days);
+    }
+
+    /** A day either side, so the assertion does not depend on the clock ticking over mid-run. */
+    private static function assertIsAboutDaysAway(\DateTimeInterface $expiresAt, int $days): void
+    {
         $actual = (new \DateTimeImmutable())->diff($expiresAt)->days;
 
         Assert::greaterThanEq($actual, $days - 1, sprintf('The card expires in %d days, not about %d.', $actual, $days));
@@ -304,14 +309,44 @@ final class GiftCardContext implements Context
     }
 
     /**
-     * @Then the issued card should never expire
+     * @Then the expiry date should already be filled in about :days days from now
      */
-    public function theIssuedCardShouldNeverExpire(): void
+    public function theExpiryDateShouldAlreadyBeFilledInAboutDaysFromNow(int $days): void
     {
-        Assert::null(
-            $this->issuedCard()->getExpiresAt(),
-            'The card was given an expiry date from a validity period that cannot be parsed.',
+        // Read off the form, not the database: an expiry is a term of the sale, so the point is
+        // that the administrator can see and change the date before they save it.
+        $expiresAt = $this->createPage->getExpiryDate();
+        Assert::notEmpty($expiresAt, 'The create form offered an empty expiry date.');
+
+        self::assertIsAboutDaysAway(new \DateTimeImmutable($expiresAt), $days);
+    }
+
+    /**
+     * @When I clear its expiry date
+     */
+    public function iClearItsExpiryDate(): void
+    {
+        $this->createPage->specifyExpiryDate('');
+    }
+
+    /**
+     * @Then I should be told the expiry date is required
+     */
+    public function iShouldBeToldTheExpiryDateIsRequired(): void
+    {
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'enter the date this gift card expires',
+            'The form accepted a gift card with no expiry date.',
         );
+    }
+
+    /**
+     * @Then no gift card should have been created
+     */
+    public function noGiftCardShouldHaveBeenCreated(): void
+    {
+        Assert::isEmpty($this->giftCardRepository->findAll(), 'A gift card was created despite the form being rejected.');
     }
 
     /**

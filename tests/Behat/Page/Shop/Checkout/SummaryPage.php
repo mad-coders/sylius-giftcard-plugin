@@ -77,6 +77,16 @@ final class SummaryPage extends ShopPage implements SummaryPageInterface
         return $codes;
     }
 
+    public function confirmOrder(): void
+    {
+        $this->getElement('confirm_button')->press();
+    }
+
+    public function getValidationErrors(): string
+    {
+        return $this->hasElement('validation_errors') ? trim($this->getElement('validation_errors')->getText()) : '';
+    }
+
     /** @return list<\Behat\Mink\Element\NodeElement> */
     private function getAppliedGiftCardRows(): array
     {
@@ -92,6 +102,10 @@ final class SummaryPage extends ShopPage implements SummaryPageInterface
         return array_merge(parent::getDefinedElements(), [
             'amount_to_pay' => '[data-test-checkout-amount-to-pay]',
             'applied_gift_cards' => '[data-test-applied-gift-cards]',
+            // Sylius' own selectors on its own summary template, so the plugin reaches the confirm
+            // button and the checkout-complete violations without owning that page.
+            'confirm_button' => '[data-test-button="confirmation-button"]',
+            'validation_errors' => '[data-test-validation-error]',
             'apply_gift_card_button' => '[data-test-apply-gift-card-button]',
             'gift_card_code_input' => '[data-test-gift-card-code-input]',
             'gift_card_panel' => '[data-test-checkout-gift-card-panel]',

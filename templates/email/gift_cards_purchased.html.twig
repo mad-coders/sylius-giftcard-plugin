@@ -22,11 +22,14 @@
             {{ 'madcoders_sylius_gift_card.ui.initial_amount'|trans({}, 'messages', localeCode) }}:
             {{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD'), localeCode) }}
 
-            {% if gift_card.expiresAt is not null %}
-                <br>
-                {{ 'madcoders_sylius_gift_card.ui.expires_at'|trans({}, 'messages', localeCode) }}:
-                {{ gift_card.expiresAt|date('d-m-Y') }}
-            {% endif %}
+            {#
+                Always shown. Every card expires, and several jurisdictions require the date to
+                reach the customer at the point of sale - see
+                docs/adr-log/0015-every-gift-card-expires.md.
+            #}
+            <br>
+            {{ 'madcoders_sylius_gift_card.ui.expires_at'|trans({}, 'messages', localeCode) }}:
+            {{ gift_card.expiresAt|date('d-m-Y') }}
 
             {#
                 The buyer's own words back to them. Customer-supplied text, so it is printed as
