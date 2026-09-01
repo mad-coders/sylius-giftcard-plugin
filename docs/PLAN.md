@@ -47,7 +47,7 @@ GiftCard
 ├── initialAmount       immutable once set (minor units)
 ├── amount              remaining balance (minor units)
 ├── enabled             a disabled card cannot be redeemed
-├── expiresAt           nullable
+├── expiresAt           required; every card expires (ADR 0015)
 ├── origin              how the card came to exist: admin | order
 ├── purchaser           Customer who bought the card          <- both links are first-class
 ├── redeemer            Customer who redeemed the card        <-
@@ -67,7 +67,10 @@ GiftCardConfiguration    per-channel settings
 ├── channel              one-to-one
 ├── enabled
 ├── codeLength / codePrefix
-└── validityPeriod       e.g. "1 year"; used to compute expiresAt on creation
+├── validityPeriod       required, e.g. "1 year"; the only input to the expiry calculator
+├── saleMode             whether the shop may sell gift cards here (ADR 0013)
+├── amountMode / amountPresets / minimumAmount / maximumAmount   (ADR 0014)
+└── tenderMode           whether a gift card may pay for a gift card (ADR 0016)
 ```
 
 Extension points on Sylius models (traits the host application applies to its own entities):
