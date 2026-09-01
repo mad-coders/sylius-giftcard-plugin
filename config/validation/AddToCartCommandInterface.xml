@@ -9,8 +9,13 @@
         Added to Sylius' own constraints on this command rather than replacing them - Symfony merges
         the metadata for a class across every mapping file that names it. The `sylius` group is the
         one the add-to-cart form validates with.
+
+        Targeted at the interface rather than Sylius' concrete AddToCartCommand so a host that swaps
+        the command class through AddToCartCommandFactory is still covered. Symfony merges class
+        constraints from every implemented interface, and skips interfaces the parent class already
+        implements, so this is added exactly once.
     -->
-    <class name="Sylius\Bundle\OrderBundle\Controller\AddToCartCommand">
+    <class name="Sylius\Bundle\OrderBundle\Controller\AddToCartCommandInterface">
         <constraint name="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardPurchaseAllowed">
             <option name="groups">
                 <value>sylius</value>

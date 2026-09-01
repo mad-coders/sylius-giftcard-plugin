@@ -15,6 +15,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
 use Madcoders\SyliusGiftCardPlugin\Operator\OrderGiftCardOperator;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\Channel;
 use Sylius\Component\Core\Model\Customer;
 use Sylius\Component\Core\Model\OrderItem;
@@ -145,7 +146,41 @@ final class OrderGiftCardOperatorTest extends TestCase
         self::assertCount(0, $operator->giftCardsBoughtOn($order));
     }
 
-    private function createOperator(bool $sellable = true): OrderGiftCardOperator
+    public function testRefusingToIssueOnAPaidOrderIsLoggedLoudly(): void
+    {
+        // The customer has been charged and gets no card. If this is silent, the only way anyone
+        // finds out is a complaint - so the refusal has to be discoverable in production.
+        $order = $this->createOrder(giftCardUnits: 2, unitPrice: 5000);
+
+        $context = [];
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects(self::once())
+            ->method('warning')
+            ->willReturnCallback(static function (string $message, array $loggedContext) use (&$context): void {
+                $context = $loggedContext;
+            })
+        ;
+
+        $this->createOperator(sellable: false, logger: $logger)->generate($order);
+
+        self::assertSame(2, $context['gift_card_units']);
+        self::assertSame('WEB', $context['channel_code']);
+    }
+
+    public function testAnOrderWithoutGiftCardsIsNotLoggedInAChannelThatDoesNotSellThem(): void
+    {
+        // Every ordinary order in an admin-only channel passes through here. Warning on each one
+        // would bury the case that matters under noise.
+        $order = $this->createOrder(giftCardUnits: 0, unitPrice: 5000, ordinaryUnits: 3);
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::never())->method('warning');
+
+        $this->createOperator(sellable: false, logger: $logger)->generate($order);
+    }
+
+    private function createOperator(bool $sellable = true, ?LoggerInterface $logger = null): OrderGiftCardOperator
     {
         /** @var FactoryInterface<GiftCardInterface> $inner */
         $inner = $this->createMock(FactoryInterface::class);
@@ -166,8 +201,9 @@ final class OrderGiftCardOperatorTest extends TestCase
             new GiftCardFactory($inner),
             $codeGenerator,
             $configurationProvider,
-            $purchaseChecker,
             $this->createMock(ObjectManager::class),
+            $purchaseChecker,
+            $logger,
         );
     }
 

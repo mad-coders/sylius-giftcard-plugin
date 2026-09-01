@@ -13,6 +13,8 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\ProductInterface;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
@@ -26,13 +28,22 @@ use Sylius\Component\Core\Model\OrderItemInterface;
  */
 final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInterface
 {
+    private LoggerInterface $logger;
+
+    /**
+     * The checker and the logger are appended rather than slotted in, so a host that redefined this
+     * service with positional arguments keeps its existing four bound to the same parameters and
+     * fails loudly on arity instead of silently binding the manager into the checker's slot.
+     */
     public function __construct(
         private GiftCardFactoryInterface $giftCardFactory,
         private GiftCardCodeGeneratorInterface $giftCardCodeGenerator,
         private GiftCardConfigurationProviderInterface $giftCardConfigurationProvider,
-        private GiftCardPurchaseCheckerInterface $giftCardPurchaseChecker,
         private ObjectManager $giftCardManager,
+        private GiftCardPurchaseCheckerInterface $giftCardPurchaseChecker,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     public function generate(OrderInterface $order): void
@@ -42,10 +53,25 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
             return;
         }
 
-        // Checked here as well as at the cart, because the two are separated by however long the
-        // customer takes to pay. A cart filled while the channel was still selling gift cards must
-        // not hand out a card once the channel has stopped.
-        if (!$this->giftCardPurchaseChecker->canBeBoughtIn($channel)) {
+        $units = $this->giftCardUnitsOf($order);
+
+        // Checked here as well as at the cart and at checkout, because a cart outlives the setting:
+        // a customer can fill it while the channel still sells gift cards and pay days after it
+        // stops. This is the last line, and by the time it runs the customer has been charged - so
+        // it is loud. Anyone reaching it means the checkout constraint was bypassed (an order
+        // completed through a path that does not validate, or the mode changed between validation
+        // and payment), and somebody has to reconcile the money by hand.
+        if ([] !== $units && !$this->giftCardPurchaseChecker->canBeBoughtIn($channel)) {
+            $this->logger->warning(
+                'Refused to issue gift cards for a paid order: channel does not sell gift cards. The customer has been charged and no card was issued - this needs reconciling by hand.',
+                [
+                    'order_number' => $order->getNumber(),
+                    'order_id' => $order->getId(),
+                    'channel_code' => $channel->getCode(),
+                    'gift_card_units' => \count($units),
+                ],
+            );
+
             return;
         }
 
@@ -54,7 +80,7 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
         /** @var CustomerInterface|null $customer */
         $customer = $order->getCustomer();
 
-        foreach ($this->giftCardUnitsOf($order) as $unit) {
+        foreach ($units as $unit) {
             // Only ever issue a card for a unit that has none. Nothing guarantees a transition
             // fires exactly once, and a second run would hand out free money.
             if (null !== $unit->getGiftCard()) {

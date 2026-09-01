@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+
+    <!--
+        `sylius_checkout_complete` is the group Sylius validates the order with on the final
+        checkout step - the same one carrying OrderProductEligibility. Refusing here means the
+        customer is stopped before they are charged.
+
+        Targeted at the interface rather than Sylius' concrete Order so a host that does not extend
+        it is still covered; Symfony merges class constraints from every implemented interface, and
+        skips interfaces the parent already implements, so this is added exactly once.
+    -->
+    <class name="Sylius\Component\Core\Model\OrderInterface">
+        <constraint name="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\OrderGiftCardPurchaseAllowed">
+            <option name="groups">
+                <value>sylius_checkout_complete</value>
+            </option>
+        </constraint>
+    </class>
+
+</constraint-mapping>

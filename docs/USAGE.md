@@ -44,7 +44,11 @@ an admin can reinstate them.
 
 Set **Gift card sales** to *Issued by an administrator only* for a channel that hands cards out as
 goodwill or compensation and never sells them. Adding a gift card product to the cart is refused,
-and an order that was already in a cart when the mode changed issues nothing when it is paid.
+completing checkout with one already in the cart is refused, and an order that somehow reaches
+payment anyway issues nothing and logs a warning naming the order.
+
+The customer is stopped before they are charged. The add-to-cart button is still shown, though, so
+their first feedback is an error after clicking rather than a control that was never offered.
 
 The product keeps its gift card flag, so switching the mode back resumes selling. **Redeeming is
 unaffected in either mode** - a card an administrator issued is spendable in the shop exactly as a

@@ -21,6 +21,15 @@ final class MadcodersSyliusGiftCardPlugin extends Bundle
         $container->addCompilerPass(new RegisterGiftCardAdjustmentClearingPass());
     }
 
+    /**
+     * The repository root, not `src/`, because the plugin keeps its configuration in `config/`
+     * rather than the older `src/Resources/config/`.
+     *
+     * FrameworkBundle scans `<bundle path>/config/validation` for constraint mapping files, so this
+     * override is what registers `config/validation/*.xml`. Removing it would silently unregister
+     * every constraint in there - see the wiring test in
+     * tests/Functional/Validator/GiftCardPurchaseConstraintWiringTest.php.
+     */
     #[\Override]
     public function getPath(): string
     {

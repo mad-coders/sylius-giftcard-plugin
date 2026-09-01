@@ -51,10 +51,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   shown in the configuration list, so an operator running several channels can see which of them
   sell gift cards without opening each one.
 
-  It is enforced in two places: adding a gift card product to the cart is refused, **and** paying
-  such an order issues nothing. The second is what protects the money - a customer fills a cart and
-  pays minutes or days later, so a check only at the cart would let every cart that predates the
-  change through, for as long as the oldest unpaid order lives.
+  It is enforced at each of the three points where a customer can move from wanting a gift card to
+  holding one: adding one to the cart is refused, **completing checkout with one in the cart is
+  refused**, and paying such an order issues nothing. The checkout refusal is the one that matters,
+  because it is the last point at which the customer has not yet been charged - a cart outlives the
+  setting, so a check only at the cart would let every cart that predates the change through, for as
+  long as the oldest unpaid order lives. It also covers raising the quantity of a gift card already
+  in the cart, which Sylius does through a path that never runs the add-to-cart check at all.
+
+  The guard at issue stays as a backstop and now **logs a warning** when it fires, naming the order
+  and the channel. Anything reaching it has been charged and has no card, and that needs reconciling
+  by hand rather than waiting for a complaint.
+
+  One rough edge: the add-to-cart button still renders, and still renders enabled, so in admin-only
+  mode the customer's first feedback is an error after clicking rather than a control that was never
+  offered. The refusal is correct, but late.
 
   **Redeeming is untouched in either mode.** A card an administrator handed out is money the shop
   has already promised; a mode that refused to take it back would turn a goodwill gesture into a
@@ -73,6 +84,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Breaking for hosts that redefine `madcoders_sylius_gift_card.operator.order_gift_card`
+  positionally.** `OrderGiftCardOperator::__construct()` takes two more arguments: a
+  `GiftCardPurchaseCheckerInterface` and an optional PSR-3 `LoggerInterface`. Both are **appended**,
+  so the existing four keep their positions and an out-of-date definition fails on arity rather than
+  binding the entity manager into the checker's slot. A host that redefined the service needs to add
+  `madcoders_sylius_gift_card.checker.gift_card_purchase` as the fifth argument; the logger may be
+  omitted, and is passed with `on-invalid="null"` so the plugin still works without MonologBundle.
 - Gift card messages are rendered by the panel itself, under plugin-owned flash types, rather than
   left to the page. Only the cart and the checkout summary step render flashes at all, so a refusal
   on the shipping or payment step was silent - and the unread message then surfaced on whichever

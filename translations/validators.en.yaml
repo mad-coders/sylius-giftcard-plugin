@@ -3,3 +3,5 @@
 madcoders_sylius_gift_card:
     cart_item:
         gift_card_not_sold_in_channel: Gift cards are not sold in this channel.
+    order:
+        gift_card_not_sold_in_channel: Your cart contains a gift card, and gift cards are not sold in this channel. Please remove it to continue.

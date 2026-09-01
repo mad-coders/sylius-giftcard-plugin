@@ -18,6 +18,11 @@ final class MadcodersSyliusGiftCardPluginTest extends TestCase
         // than under src/Resources/, so the bundle path must point one level above src/.
         self::assertFileExists($plugin->getPath() . '/config/config.yaml');
         self::assertFileExists($plugin->getPath() . '/config/services.xml');
+
+        // Nothing registers config/validation explicitly - FrameworkBundle finds it by scanning
+        // `<bundle path>/config/validation`. Move the directory or the bundle path and every
+        // constraint in there silently stops being applied.
+        self::assertDirectoryExists($plugin->getPath() . '/config/validation');
     }
 
     public function testItExposesTheExpectedConfigurationAlias(): void
