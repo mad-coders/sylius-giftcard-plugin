@@ -43,6 +43,14 @@ interface GiftCardConfigurationInterface extends ResourceInterface, Timestampabl
     public function setValidityPeriod(?string $validityPeriod): void;
 
     /**
+     * Whether the shop may sell gift cards in this channel, or only an administrator may issue
+     * them. Redeeming is never gated by this - see {@see GiftCardSaleMode}.
+     */
+    public function getSaleMode(): GiftCardSaleMode;
+
+    public function setSaleMode(GiftCardSaleMode $saleMode): void;
+
+    /**
      * The expiry date a card created now would get, or null when cards in this channel do not
      * expire.
      */

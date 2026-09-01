@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+
+    <!--
+        Added to Sylius' own constraints on this command rather than replacing them - Symfony merges
+        the metadata for a class across every mapping file that names it. The `sylius` group is the
+        one the add-to-cart form validates with.
+    -->
+    <class name="Sylius\Bundle\OrderBundle\Controller\AddToCartCommand">
+        <constraint name="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardPurchaseAllowed">
+            <option name="groups">
+                <value>sylius</value>
+            </option>
+        </constraint>
+    </class>
+
+</constraint-mapping>

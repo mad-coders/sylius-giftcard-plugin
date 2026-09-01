@@ -1,0 +1,3 @@
+madcoders_sylius_gift_card:
+    cart_item:
+        gift_card_not_sold_in_channel: Karty podarunkowe nie są sprzedawane w tym kanale.

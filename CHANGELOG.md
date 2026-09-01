@@ -44,6 +44,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A channel can now be set to issue gift cards **by an administrator only**, so a shop that hands
+  cards out as goodwill or compensation is not forced to sell them as well. The setting lives on the
+  channel's gift card configuration as a mode rather than a flag - "sellable to logged-in customers
+  only" is the obvious next answer, and a boolean would need another column to say it. The mode is
+  shown in the configuration list, so an operator running several channels can see which of them
+  sell gift cards without opening each one.
+
+  It is enforced in two places: adding a gift card product to the cart is refused, **and** paying
+  such an order issues nothing. The second is what protects the money - a customer fills a cart and
+  pays minutes or days later, so a check only at the cart would let every cart that predates the
+  change through, for as long as the oldest unpaid order lives.
+
+  **Redeeming is untouched in either mode.** A card an administrator handed out is money the shop
+  has already promised; a mode that refused to take it back would turn a goodwill gesture into a
+  complaint. See `docs/adr-log/0013-gift-card-sale-mode.md`.
+
+  Existing shops are unaffected: the mode defaults to sellable, in the model, in the column default
+  and for a channel with no configuration at all. Closes #32.
+
 - The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
   shipping and payment steps and on the summary page. It existed only on the cart before, so a
   customer already in checkout had to go back to find it - at exactly the moment they are looking at

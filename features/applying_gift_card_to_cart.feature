@@ -20,6 +20,19 @@ Feature: Applying a gift card to my cart
         And I should have "$60.00" left to pay
 
     @ui
+    Scenario: A card issued by an administrator is spendable in a channel that does not sell gift cards
+        # The whole point of admin-only mode is handing cards out as goodwill or compensation. A
+        # card the shop refuses to take is worth nothing, so the mode gates selling and only
+        # selling - the redeem panel and the redemption itself are untouched.
+        Given the channel issues gift cards by an administrator only
+        And the store has a gift card "GIFT-40" worth "$40.00"
+        When I apply the gift card "GIFT-40"
+        Then I should be notified that the gift card has been applied
+        And the gift card "GIFT-40" should be applied to my cart
+        And my cart total should be "$100.00"
+        And I should have "$60.00" left to pay
+
+    @ui
     Scenario: Applying two gift cards stacks them
         Given the store has a gift card "GIFT-40" worth "$40.00"
         And the store has a gift card "GIFT-25" worth "$25.00"

@@ -1,0 +1,5 @@
+# Constraint violation messages. Symfony translates these in the `validators` domain, not
+# `messages`, so a key put in the wrong catalogue reaches the customer as the key itself.
+madcoders_sylius_gift_card:
+    cart_item:
+        gift_card_not_sold_in_channel: Gift cards are not sold in this channel.

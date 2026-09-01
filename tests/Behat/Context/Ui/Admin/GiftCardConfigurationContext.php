@@ -6,6 +6,7 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardConfigurationRepositoryInterface;
 use Sylius\Behat\Page\Admin\Crud\IndexPageInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -62,6 +63,14 @@ final readonly class GiftCardConfigurationContext implements Context
     }
 
     /**
+     * @When I set gift cards to be issued by an administrator only
+     */
+    public function iSetGiftCardsToBeIssuedByAnAdministratorOnly(): void
+    {
+        $this->createPage->chooseSaleMode('Issued by an administrator only');
+    }
+
+    /**
      * @When I save this configuration
      */
     public function iSaveThisConfiguration(): void
@@ -82,6 +91,35 @@ final readonly class GiftCardConfigurationContext implements Context
 
         Assert::same($configuration->getCodeLength(), $length);
         Assert::same($configuration->getCodePrefix(), $prefix);
+    }
+
+    /**
+     * @Then the :channel channel should issue gift cards by an administrator only
+     */
+    public function theChannelShouldIssueGiftCardsByAnAdministratorOnly(ChannelInterface $channel): void
+    {
+        $configuration = $this->repository->findOneByChannel($channel);
+        Assert::isInstanceOf($configuration, GiftCardConfiguration::class, 'No configuration was saved for that channel.');
+
+        Assert::same($configuration->getSaleMode(), GiftCardSaleMode::AdminOnly);
+    }
+
+    /**
+     * @Then the list should show :channel as issuing gift cards by an administrator only
+     */
+    public function theListShouldShowAsIssuingGiftCardsByAnAdministratorOnly(ChannelInterface $channel): void
+    {
+        // Read off the grid rather than the database: the point of this is that an operator can see
+        // which channels sell gift cards without opening every configuration in turn.
+        $this->indexPage->open();
+
+        Assert::true(
+            $this->indexPage->isSingleResourceOnPage([
+                'channel' => (string) $channel->getName(),
+                'saleMode' => 'Issued by an administrator only',
+            ]),
+            'The configuration list does not show the sale mode.',
+        );
     }
 
     /**

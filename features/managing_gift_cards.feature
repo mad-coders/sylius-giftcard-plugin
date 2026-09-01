@@ -135,6 +135,17 @@ Feature: Managing gift cards
         And the configuration for "United States" should appear in the list
 
     @ui
+    Scenario: Setting a channel to issue gift cards by an administrator only
+        # A shop that hands cards out as goodwill or compensation and never sells them. The mode is
+        # shown in the list because an operator running several channels needs to see which of them
+        # sell gift cards without opening each configuration in turn.
+        When I want to configure gift cards for the "United States" channel
+        And I set gift cards to be issued by an administrator only
+        And I save this configuration
+        Then the "United States" channel should issue gift cards by an administrator only
+        And the list should show "United States" as issuing gift cards by an administrator only
+
+    @ui
     Scenario: A code length below the minimum is refused
         # Not a preference - a short code is guessable, and a guessable gift card code is money
         # anybody can spend. The model clamps it as a backstop, but an operator who asks for a

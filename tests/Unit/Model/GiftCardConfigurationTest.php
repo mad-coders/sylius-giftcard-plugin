@@ -5,10 +5,25 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Model;
 
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use PHPUnit\Framework\TestCase;
 
 final class GiftCardConfigurationTest extends TestCase
 {
+    public function testANewConfigurationSellsGiftCardsInTheShop(): void
+    {
+        // The upgrade contract: adding a mode must not stop an existing shop selling gift cards.
+        self::assertSame(GiftCardSaleMode::Sellable, (new GiftCardConfiguration())->getSaleMode());
+    }
+
+    public function testAChannelCanBeSetToIssueGiftCardsByAdministratorOnly(): void
+    {
+        $configuration = new GiftCardConfiguration();
+        $configuration->setSaleMode(GiftCardSaleMode::AdminOnly);
+
+        self::assertSame(GiftCardSaleMode::AdminOnly, $configuration->getSaleMode());
+    }
+
     public function testItCalculatesAnExpiryDateFromItsValidityPeriod(): void
     {
         $configuration = new GiftCardConfiguration();

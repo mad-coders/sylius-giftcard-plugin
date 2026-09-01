@@ -22,6 +22,11 @@ madcoders_sylius_gift_card:
         code_length_help: 'Number of random characters after the prefix. Minimum 12 - a shorter code is guessable, and a gift card code is money.'
         validity_period: Validity period
         validity_period_help: How long a new card stays valid, for example "1 year". Leave empty for cards that never expire.
+        sale_mode: Gift card sales
+        sale_mode_help: Whether customers can buy gift cards in this channel. Cards already issued can always be redeemed, whichever you choose.
+        sale_mode_choice:
+            sellable: Sold in the shop
+            admin_only: Issued by an administrator only
         custom_message: Custom message
         purchaser: Bought by
         redeemer: Used by

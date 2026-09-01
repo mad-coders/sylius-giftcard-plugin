@@ -65,6 +65,12 @@ madcoders_sylius_gift_card:
         redeemer: Używający
         remaining_balance: Pozostałe środki
         remove: Usuń
+        sale_mode: Sprzedaż kart podarunkowych
+        sale_mode_choice:
+            admin_only: Wydawane wyłącznie przez administratora
+            sellable: Sprzedawane w sklepie
+        sale_mode_help: Czy klienci mogą kupować karty podarunkowe w tym kanale. Wydane
+            karty można zrealizować niezależnie od wyboru.
         take_from_balance: Odejmij od salda
         transaction_type:
             credit: Dodano

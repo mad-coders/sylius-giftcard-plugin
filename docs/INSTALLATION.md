@@ -219,14 +219,18 @@ bin/console doctrine:migrations:migrate
 
 This creates `madcoders_gift_card__gift_card`, `madcoders_gift_card__gift_card_transaction`,
 `madcoders_gift_card__configuration` and the `madcoders_gift_card__order_gift_cards` join table, and
-adds the `gift_card` column to `sylius_product`. The migration is written against the Schema API, so
-it runs on MySQL, MariaDB and PostgreSQL alike.
+adds the `gift_card` column to `sylius_product`. The migrations are written against the Schema API,
+so they run on MySQL, MariaDB and PostgreSQL alike.
+
+There is more than one migration, and a plugin upgrade can add another - always run
+`doctrine:migrations:migrate` after updating the package, not only on first install.
 
 ## 8. Configure a channel
 
 Gift cards are channel-scoped. Give each channel a configuration under
-*Marketing > Gift card configuration* in the admin - code prefix, code length and validity period.
-A channel without one still works; the model defaults apply.
+*Marketing > Gift card configuration* in the admin - code prefix, code length, validity period, and
+whether the channel sells gift cards or only issues them from the back office. A channel without one
+still works; the model defaults apply, which include selling gift cards.
 
 ## What the plugin registers for you
 

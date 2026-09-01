@@ -23,6 +23,7 @@ class GiftCardConfigurationFixture extends AbstractResourceFixture
                 ->integerNode('code_length')->min(1)->end()
                 ->scalarNode('code_prefix')->end()
                 ->scalarNode('validity_period')->end()
+                ->scalarNode('sale_mode')->end()
                 ->booleanNode('enabled')->end()
         ;
     }

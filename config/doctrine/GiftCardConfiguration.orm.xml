@@ -13,6 +13,12 @@
         <field name="codeLength" column="code_length" type="integer" />
         <field name="codePrefix" column="code_prefix" type="string" length="16" nullable="true" />
         <field name="validityPeriod" column="validity_period" type="string" length="64" nullable="true" />
+        <!-- The default matches the migration, so a host is left in sync per doctrine:schema:validate. -->
+        <field name="saleMode" column="sale_mode" type="string" length="16" enum-type="Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode">
+            <options>
+                <option name="default">sellable</option>
+            </options>
+        </field>
         <field name="enabled" column="enabled" type="boolean" />
         <field name="createdAt" column="created_at" type="datetime" nullable="true" />
         <field name="updatedAt" column="updated_at" type="datetime" nullable="true" />

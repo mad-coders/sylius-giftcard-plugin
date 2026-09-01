@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Madcoders\SyliusGiftCardPlugin\Operator;
 
 use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardPurchaseCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactoryInterface;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
@@ -29,6 +30,7 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
         private GiftCardFactoryInterface $giftCardFactory,
         private GiftCardCodeGeneratorInterface $giftCardCodeGenerator,
         private GiftCardConfigurationProviderInterface $giftCardConfigurationProvider,
+        private GiftCardPurchaseCheckerInterface $giftCardPurchaseChecker,
         private ObjectManager $giftCardManager,
     ) {
     }
@@ -37,6 +39,13 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
     {
         $channel = $order->getChannel();
         if (null === $channel) {
+            return;
+        }
+
+        // Checked here as well as at the cart, because the two are separated by however long the
+        // customer takes to pay. A cart filled while the channel was still selling gift cards must
+        // not hand out a card once the channel has stopped.
+        if (!$this->giftCardPurchaseChecker->canBeBoughtIn($channel)) {
             return;
         }
 

@@ -34,6 +34,12 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
 
     protected ?string $validityPeriod = '1 year';
 
+    /**
+     * Sellable by default, so a shop upgrading into this feature keeps selling gift cards exactly
+     * as it did before.
+     */
+    protected GiftCardSaleMode $saleMode = GiftCardSaleMode::Sellable;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -84,6 +90,16 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
     public function setValidityPeriod(?string $validityPeriod): void
     {
         $this->validityPeriod = $validityPeriod;
+    }
+
+    public function getSaleMode(): GiftCardSaleMode
+    {
+        return $this->saleMode;
+    }
+
+    public function setSaleMode(GiftCardSaleMode $saleMode): void
+    {
+        $this->saleMode = $saleMode;
     }
 
     public function calculateExpiryDate(?\DateTimeImmutable $from = null): ?\DateTimeImmutable
