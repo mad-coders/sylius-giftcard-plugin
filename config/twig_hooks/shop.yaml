@@ -1,5 +1,13 @@
 sylius_twig_hooks:
     hooks:
+        # The amount and the message, inside Sylius' own add-to-cart form. Priority 150 puts them
+        # between the variant table (200) and the quantity (100): the customer decides what the card
+        # is worth before deciding how many to buy.
+        'sylius_shop.product.show.content.info.summary.add_to_cart':
+            madcoders_gift_card_fields:
+                template: '@MadcodersSyliusGiftCardPlugin/shop/product/add_to_cart/gift_card.html.twig'
+                priority: 150
+
         # Rendered between the cart form (priority 100) and the suggested products (0), which puts
         # it *outside* Sylius' cart <form> - the gift card panel posts its own form, and nesting
         # one form inside another is invalid HTML.

@@ -115,7 +115,7 @@ sylius_resource:
 
 ## 6. Extend your Sylius entities
 
-The plugin adds state to three Sylius models: `Order`, `OrderItemUnit` and `Product`.
+The plugin adds state to four Sylius models: `Order`, `OrderItem`, `OrderItemUnit` and `Product`.
 
 > **These classes already exist in your application.** Sylius Standard ships all three under
 > `src/Entity/`, and they usually already carry other plugins' interfaces and traits - a stock
@@ -155,6 +155,19 @@ cannot initialise its own collection, because `Order` already has a constructor.
 
 If your `Order` already has a constructor, add the `initializeGiftCards()` call to it rather than
 declaring a second one.
+
+**OrderItem** - the amount and the message the customer chose for this line.
+
+```diff
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderItemInterface as GiftCardOrderItemInterface;
++ use Madcoders\SyliusGiftCardPlugin\Model\OrderItemTrait as GiftCardOrderItemTrait;
+
+- class OrderItem extends BaseOrderItem
++ class OrderItem extends BaseOrderItem implements GiftCardOrderItemInterface
+  {
++     use GiftCardOrderItemTrait;
+  }
+```
 
 **OrderItemUnit** - the gift card generated for a purchased unit.
 
@@ -197,6 +210,9 @@ sylius_order:
         order:
             classes:
                 model: App\Entity\Order\Order
+        order_item:
+            classes:
+                model: App\Entity\Order\OrderItem
         order_item_unit:
             classes:
                 model: App\Entity\Order\OrderItemUnit

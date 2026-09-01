@@ -74,6 +74,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Existing shops are unaffected: the mode defaults to sellable, in the model, in the column default
   and for a channel with no configuration at all. Closes #32.
 
+- **Customers choose what a gift card is worth.** A channel's gift card configuration now decides how
+  the amount is picked: the product's price as before, a list of preset amounts, any amount within a
+  minimum and maximum, or presets plus a free amount. Presets and bounds are per channel and in that
+  channel's currency. The chosen amount becomes the order line's price, so the order total, the taxes
+  and the payment all reflect it, and the issued card is worth exactly that. Closes #34.
+- **Customers can leave a short message with a gift card.** Up to 255 characters, shown on the form,
+  enforced server side, stored on the cards issued for that line only, and shown with the code in the
+  delivery email, on the card's page in the customer's account and in the admin. It is untrusted text
+  and is rendered as text everywhere - with a test that proves it rather than assuming it. Closes #35.
+- Two gift cards bought in one order keep their own amount and message even when they are the same
+  product. Sylius merges cart lines whose variants match and discards the incoming one, so without
+  this the second card silently inherited the first card's amount and message - and the customer was
+  charged for two of whichever they picked first.
+- Both fields sit on the gift card product page inside Sylius' own add-to-cart form, as plain HTML:
+  the presets are radio buttons styled as cards, the free amount is a number input, the message is a
+  textarea. Nothing needs JavaScript to decide what gets submitted.
 - The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
   shipping and payment steps and on the summary page. It existed only on the cart before, so a
   customer already in checkout had to go back to find it - at exactly the moment they are looking at
@@ -91,6 +107,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   binding the entity manager into the checker's slot. A host that redefined the service needs to add
   `madcoders_sylius_gift_card.checker.gift_card_purchase` as the fifth argument; the logger may be
   omitted, and is passed with `on-invalid="null"` so the plugin still works without MonologBundle.
+- **A card's face value now excludes tax charged on top of the price.** It is what was paid for the
+  unit, promotions included, minus any non-neutral tax adjustment. A tax-exclusive shop previously
+  issued a 55 card to a customer who paid 50 plus tax - the mis-issue ADR 0010 named and did not fix
+  - so the same choice was worth different amounts depending on how the shop prices.
+
+  Tax-inclusive shops are unaffected: they record included tax as a *neutral* adjustment, which
+  Sylius does not count in `getAdjustmentsTotal()`, so there is nothing to subtract and the gross
+  price stands. That is correct - the customer asked for a 50 card and paid 50.
+
+  **Upgrading a tax-exclusive shop:** cards issued from now on are worth the pre-tax amount, so a
+  customer who previously received a 55 card for a 50 product now receives a 50 one. This includes
+  **orders already placed and awaiting payment**, whose cards have not been issued yet - the customer
+  may be holding an order confirmation quoting the larger figure. Cards already issued are not
+  touched. Either settle outstanding gift card orders before upgrading, or expect to top up the
+  affected cards by hand from the admin.
+- **Host applications must apply `OrderItemInterface` and `OrderItemTrait` to their `OrderItem`**, and
+  register the override, exactly as they already do for `Order`, `OrderItemUnit` and `Product`. That
+  is where the chosen amount and the message live. See `docs/INSTALLATION.md` step 6, and run the new
+  migration.
 - Gift card messages are rendered by the panel itself, under plugin-owned flash types, rather than
   left to the page. Only the cart and the checkout summary step render flashes at all, so a refusal
   on the shipping or payment step was silent - and the unread message then surfaced on whichever
@@ -110,6 +145,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `make serve-test` (and `make serve`) served the application with PHP's default 128M memory limit
+  and without `variables_order=EGPCS`. The first meant the shop 500s with a blank page on any request
+  that warms a cold container; the second meant `APP_ENV` never reached Symfony, so `make serve-test`
+  quietly booted `dev` against the dev database. Both are why the `@javascript` Behat suite could not
+  be run locally by following the documented workflow.
 - The gift card configuration form silently ignored a code length below the minimum. `setCodeLength()`
   raises anything shorter to 12 as a backstop, so by the time the field was validated it held the
   raised value and the constraint passed - an operator who asked for 4-character codes was given

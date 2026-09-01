@@ -15,13 +15,51 @@ Each channel gets a **gift card configuration** under *Marketing > Gift card con
 | Code length | Number of random characters after the prefix. |
 | Validity period | How long a new card stays valid, as a relative date expression such as `1 year` or `6 months`. Leave empty for cards that never expire. |
 | Gift card sales | Whether customers may buy gift cards in this channel, or only an administrator may issue them. |
+| How the amount is chosen | Whether a customer pays the product's price or picks the amount. See below. |
+| Preset amounts | The amounts offered as ready-made choices, comma separated, in the channel's currency - for example `25, 50, 100`. Used by the preset modes. |
+| Smallest amount / Largest amount | The bounds a customer may type within. Used by the free-amount modes. |
 
 A channel without a configuration still works - the defaults on the model apply (16 characters, no
-prefix, one year, gift cards sold in the shop).
+prefix, one year, gift cards sold in the shop at the product's price).
 
 Generated codes avoid the characters people misread off a card or an email (`0`/`O`, `1`/`I`/`L`,
 `5`/`S`) and come from a cryptographically secure source, because a guessable gift card code is a
 way to spend other people's money.
+
+## Choosing the amount
+
+Each channel decides how a customer buying a gift card picks what it is worth:
+
+| Mode | What the customer sees |
+|---|---|
+| The product's price | Nothing to choose. The card is worth the product's channel price, as before this setting existed. |
+| A list of preset amounts | The channel's presets, as radio buttons. Nothing else is accepted. |
+| Any amount within a range | A box to type an amount, with the bounds shown next to it. |
+| Preset amounts, or any amount within a range | Both: the presets, plus an "other amount" option and a box. |
+
+The controls are plain HTML - radio buttons and a number input - so the page works without
+JavaScript.
+
+**The amount is refused server side, not just on the form.** An amount the channel does not offer is
+discarded on every order recalculation, and the line falls back to the product's price, so a request
+that never went near the form cannot buy a 500 card for a penny. See
+[ADR 0014](adr-log/0014-customer-chosen-gift-card-amount.md).
+
+Presets and bounds are per channel and expressed in that channel's currency, entered in major units
+with two decimal places - the same convention as every other money field in the admin.
+
+## Letting the customer write a message
+
+Every gift card product page offers an optional **message**, up to 255 characters. It is stored on
+the cards issued for that order line - buying two cards in one order keeps a message each - and shown
+with the code in the delivery email, on the card's page in the customer's account, and in the admin.
+
+A message is customer-supplied text, so it is rendered as text everywhere it appears, never as
+markup.
+
+Two gift cards of the same product bought in one order stay two separate lines when their amount or
+message differs, so each card carries what was asked for it. Two identical ones merge into a quantity
+of two, exactly as any other product would.
 
 ## Selling gift cards
 
@@ -30,11 +68,14 @@ Mark a product as a gift card by ticking **This product is a gift card** on the 
 When an order containing that product is **paid**:
 
 - one card is issued **per purchased unit** - buying three gift cards gives three separate codes;
-- each card's face value is **what was actually paid for that unit**, adjustments included, not the
-  product's list price. A discounted gift card issues a card worth the discounted price, so a
-  promotion cannot be turned into free money;
+- each card's face value is **what was actually paid for that unit, less any tax charged on top of
+  the price**. Promotions are included, so a discounted gift card issues a card worth the discounted
+  price and a promotion cannot be turned into free money. Tax added on top is excluded, because it is
+  not part of what the card is worth. A tax-inclusive shop is unaffected - Sylius records included
+  tax as a neutral adjustment, so there is nothing to subtract and the gross price stands. Either
+  way, a customer who asks for a 50 card gets a 50 card;
 - the buyer is recorded as the card's **purchaser**;
-- the codes are emailed to the buyer.
+- the codes, and any message the buyer wrote, are emailed to the buyer.
 
 Issuing waits for payment, so an unpaid order never hands out spendable codes. If the order is
 later **cancelled**, the cards it issued are disabled - not deleted, so their history survives and

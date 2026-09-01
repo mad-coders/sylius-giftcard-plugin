@@ -94,6 +94,32 @@ final class GiftCardPage extends ShopPage implements GiftCardPageInterface
         return trim($this->getElement('order_total')->getText());
     }
 
+    public function countItems(): int
+    {
+        return count($this->getDocument()->findAll('css', '[data-test-cart-item]'));
+    }
+
+    /**
+     * The unit price shown against each line, in the order the cart lists them.
+     *
+     * @return list<string>
+     */
+    public function getItemUnitPrices(): array
+    {
+        $prices = [];
+
+        foreach ($this->getDocument()->findAll('css', '[data-test-cart-item-unit-price]') as $price) {
+            $prices[] = trim($price->getText());
+        }
+
+        return $prices;
+    }
+
+    public function getItemsTotal(): string
+    {
+        return trim($this->getElement('items_total')->getText());
+    }
+
     /** @return array<array-key, NodeElement> */
     private function getAppliedGiftCardRows(): array
     {
@@ -114,6 +140,7 @@ final class GiftCardPage extends ShopPage implements GiftCardPageInterface
             'amount_to_pay' => '[data-test-cart-amount-to-pay]',
             'gift_card_total' => '[data-test-cart-gift-card-total]',
             'order_total' => '[data-test-cart-grand-total]',
+            'items_total' => '[data-test-cart-items-total]',
         ]);
     }
 }

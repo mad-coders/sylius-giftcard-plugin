@@ -25,6 +25,18 @@ use Sylius\Resource\Model\ToggleableInterface;
  */
 interface GiftCardInterface extends ResourceInterface, TimestampableInterface, ToggleableInterface
 {
+    /**
+     * How long a custom message may be.
+     *
+     * A card carries a greeting, not a letter, and the value is a constant rather than a per-channel
+     * setting so that the shop form, the model and the validator can never disagree about it.
+     *
+     * Both columns that hold a message - the gift card's and the order item's - are `text`, so
+     * raising this needs no migration. Lowering it does not either, but leaves stored messages
+     * longer than the new limit; they are read back unchanged and only refused on the next write.
+     */
+    public const int CUSTOM_MESSAGE_MAX_LENGTH = 255;
+
     public function getId(): ?int;
 
     public function getCode(): ?string;

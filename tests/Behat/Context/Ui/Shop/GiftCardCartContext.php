@@ -19,6 +19,57 @@ final class GiftCardCartContext implements Context
     }
 
     /**
+     * @When I look at my cart
+     */
+    public function iLookAtMyCart(): void
+    {
+        $this->giftCardPage->open();
+    }
+
+    /**
+     * @Then my cart should hold :count separate line/lines
+     */
+    public function myCartShouldHoldSeparateLines(int $count): void
+    {
+        $this->openCartIfNeeded();
+
+        Assert::same(
+            $this->giftCardPage->countItems(),
+            $count,
+            'Two gift cards bought for different amounts must not be collapsed into one line.',
+        );
+    }
+
+    /**
+     * @Then the lines should be priced :prices
+     */
+    public function theLinesShouldBePriced(string $prices): void
+    {
+        $this->openCartIfNeeded();
+
+        $parts = preg_split('/\s*(?:,|and)\s*/', trim($prices));
+        Assert::isArray($parts);
+
+        $expected = array_map(static fn (string $price): string => trim($price), $parts);
+        $actual = $this->giftCardPage->getItemUnitPrices();
+
+        sort($expected);
+        sort($actual);
+
+        Assert::same($actual, $expected);
+    }
+
+    /**
+     * @Then my cart should come to :total
+     */
+    public function myCartShouldComeTo(string $total): void
+    {
+        $this->openCartIfNeeded();
+
+        Assert::same($this->giftCardPage->getItemsTotal(), $total);
+    }
+
+    /**
      * @When I apply the gift card :code
      * @When I try to apply the gift card :code
      */

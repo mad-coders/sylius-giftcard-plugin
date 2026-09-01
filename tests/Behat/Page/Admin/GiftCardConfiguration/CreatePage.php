@@ -33,6 +33,33 @@ final class CreatePage extends BaseCreatePage implements CreatePageInterface
         $this->getDocument()->selectFieldOption('Gift card sales', $saleMode);
     }
 
+    public function chooseAmountMode(string $mode): void
+    {
+        $this->getDocument()->selectFieldOption('How the amount is chosen', $mode);
+    }
+
+    public function specifyAmountPresets(string $presets): void
+    {
+        $this->getDocument()->fillField('Preset amounts', $presets);
+    }
+
+    public function specifyAmountBounds(string $minimum, string $maximum): void
+    {
+        $this->getDocument()->fillField('Smallest amount', $minimum);
+        $this->getDocument()->fillField('Largest amount', $maximum);
+    }
+
+    public function getValidationMessages(): string
+    {
+        $messages = [];
+
+        foreach ($this->getDocument()->findAll('css', '.invalid-feedback') as $error) {
+            $messages[] = trim($error->getText());
+        }
+
+        return implode(' ', $messages);
+    }
+
     public function getCodeLengthValidationMessage(): string
     {
         // Matched on Bootstrap's class rather than the `<field>_errorN` id Symfony gives an error:

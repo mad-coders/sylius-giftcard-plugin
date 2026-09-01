@@ -49,6 +49,9 @@ sylius_order:
         order:
             classes:
                 model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\Order
+        order_item:
+            classes:
+                model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\OrderItem
         order_item_unit:
             classes:
                 model: Tests\Madcoders\SyliusGiftCardPlugin\Entity\Order\OrderItemUnit

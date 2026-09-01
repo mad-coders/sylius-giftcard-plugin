@@ -10,14 +10,16 @@ use Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactoryInterface;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
+use Madcoders\SyliusGiftCardPlugin\Model\OrderItemInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderItemUnitInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\ProductInterface;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Core\Model\OrderItemInterface;
+use Sylius\Component\Core\Model\OrderItemInterface as BaseOrderItemInterface;
 
 /**
  * Handles the gift cards *bought on* an order. The cards *spent on* an order are somebody else's
@@ -87,10 +89,7 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
                 continue;
             }
 
-            // The face value is what was actually paid for the unit, adjustments included - not the
-            // product's list price. Issuing a card worth more than the customer paid for it would
-            // turn any promotion on a gift card product into an arbitrage.
-            $amount = $unit->getTotal();
+            $amount = $this->faceValueOf($unit);
             if ($amount <= 0) {
                 continue;
             }
@@ -105,6 +104,14 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
             $giftCard->setCode($this->giftCardCodeGenerator->generate($configuration));
             $giftCard->setPurchaser($customer);
             $giftCard->setOrderItemUnit($unit);
+
+            // The message the customer wrote on the line this unit belongs to. Two lines bought in
+            // one order therefore keep their own messages, and a line bought in quantity three puts
+            // the same message on all three cards.
+            $orderItem = $unit->getOrderItem();
+            if ($orderItem instanceof OrderItemInterface) {
+                $giftCard->setCustomMessage($orderItem->getGiftCardMessage());
+            }
 
             // The unit holds the inverse side of the association, so Doctrine will not persist the
             // card by reachability - it has to be told. Flushing is left to whatever is driving the
@@ -148,6 +155,32 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
     }
 
     /**
+     * What a purchased unit puts on the card it issues.
+     *
+     * The value of the goods, not the invoice line: what was actually paid for the unit, promotions
+     * included, minus any tax charged on top of it.
+     *
+     * - **Promotions are included** because a card worth more than the customer paid for it turns
+     *   any promotion on a gift card product into an arbitrage.
+     * - **Tax charged on top is excluded** because it is not part of what the card is worth. A
+     *   tax-exclusive shop adds the tax as a non-neutral adjustment, so it is inside `getTotal()`;
+     *   leaving it in would hand a customer who asked for a 50 card a 55 one.
+     *
+     * The subtraction is deliberately a **no-op in a tax-inclusive shop**, and that is the whole
+     * reason it is written this way. Such a shop records included tax as a *neutral* adjustment, and
+     * `getAdjustmentsTotal()` sums only non-neutral ones - so there is nothing to subtract and the
+     * gross price stands, which is correct: the customer asked for a 50 card and paid 50.
+     *
+     * Do not "improve" this by summing the adjustments directly or by reaching for `getTaxTotal()`,
+     * both of which include neutral tax. That would subtract the VAT a tax-inclusive shop already
+     * has inside its price, under-issuing every card in every such shop by the full tax rate.
+     */
+    private function faceValueOf(OrderItemUnitInterface $unit): int
+    {
+        return $unit->getTotal() - $unit->getAdjustmentsTotal(AdjustmentInterface::TAX_ADJUSTMENT);
+    }
+
+    /**
      * Every unit on the order that belongs to a gift card product.
      *
      * @return list<OrderItemUnitInterface>
@@ -156,7 +189,7 @@ final readonly class OrderGiftCardOperator implements OrderGiftCardOperatorInter
     {
         $units = [];
 
-        /** @var OrderItemInterface $item */
+        /** @var BaseOrderItemInterface $item */
         foreach ($order->getItems() as $item) {
             $product = $item->getProduct();
 

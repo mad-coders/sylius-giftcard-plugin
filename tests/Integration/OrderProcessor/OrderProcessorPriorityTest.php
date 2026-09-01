@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\OrderProcessor;
+namespace Tests\Madcoders\SyliusGiftCardPlugin\Integration\OrderProcessor;
 
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +16,11 @@ use PHPUnit\Framework\TestCase;
  *
  * Both priorities are read from the real XML - ours and Sylius' - so the test fails if either side
  * moves, including when a Sylius upgrade renumbers its own chain.
+ *
+ * It lives in the **integration** suite, not the unit one, precisely because of that last clause.
+ * CI's fast job runs `--testsuite=unit` against whatever Composer happens to resolve - one Sylius
+ * version - while the version matrix runs `--testsuite=non-unit` across every supported one. A guard
+ * against Sylius renumbering its chain that only ever sees the newest Sylius is not a guard.
  */
 final class OrderProcessorPriorityTest extends TestCase
 {
@@ -51,6 +56,46 @@ final class OrderProcessorPriorityTest extends TestCase
             self::syliusPriority('sylius.order_processing.order_adjustments_clearer'),
             self::giftCardPriority(),
             'Sylius\' adjustments clearer must run before the gift card processor.',
+        );
+    }
+
+    public function testTheChosenAmountProcessorRunsAfterSyliusPriceRecalculator(): void
+    {
+        // Sylius resets every item's unit price from channel pricing. A customer-chosen price that
+        // ran before it would be wiped on the very next cart change.
+        self::assertLessThan(
+            self::syliusPriority('sylius.order_processing.order_prices_recalculator'),
+            self::chosenAmountPriority(),
+            'The chosen amount processor must run after Sylius\' price recalculator, whose work it '
+            . 'overrides for gift card lines.',
+        );
+    }
+
+    public function testTheChosenAmountProcessorRunsBeforePromotionsTaxesAndThePayment(): void
+    {
+        // Everything that measures the order has to measure the amount the customer agreed to pay.
+        foreach ([
+            'sylius.order_processing.order_promotion_processor',
+            'sylius.order_processing.order_taxes_processor',
+            'sylius.order_processing.order_payment_processor.checkout',
+        ] as $serviceId) {
+            self::assertGreaterThan(
+                self::syliusPriority($serviceId),
+                self::chosenAmountPriority(),
+                sprintf(
+                    'The chosen amount processor must run before "%s", which would otherwise measure '
+                    . 'the channel price rather than the amount the customer chose.',
+                    $serviceId,
+                ),
+            );
+        }
+    }
+
+    private static function chosenAmountPriority(): int
+    {
+        return self::priorityOf(
+            \dirname(__DIR__, 3) . '/config/services/order_processing.xml',
+            'madcoders_sylius_gift_card.order_processing.gift_card_chosen_amount_processor',
         );
     }
 

@@ -27,6 +27,15 @@
                 {{ 'madcoders_sylius_gift_card.ui.expires_at'|trans({}, 'messages', localeCode) }}:
                 {{ gift_card.expiresAt|date('d-m-Y') }}
             {% endif %}
+
+            {#
+                The buyer's own words back to them. Customer-supplied text, so it is printed as
+                text - Twig escapes it, and nothing here marks it safe or filters it through `raw`.
+            #}
+            {% if gift_card.customMessage is not empty %}
+                <br>
+                <em>{{ gift_card.customMessage }}</em>
+            {% endif %}
         </p>
     {% endfor %}
 

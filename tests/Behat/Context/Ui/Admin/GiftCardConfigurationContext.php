@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardConfigurationRepositoryInterface;
@@ -68,6 +69,38 @@ final readonly class GiftCardConfigurationContext implements Context
     public function iSetGiftCardsToBeIssuedByAnAdministratorOnly(): void
     {
         $this->createPage->chooseSaleMode('Issued by an administrator only');
+    }
+
+    /**
+     * @When I let customers choose from preset amounts
+     */
+    public function iLetCustomersChooseFromPresetAmounts(): void
+    {
+        $this->createPage->chooseAmountMode('A list of preset amounts');
+    }
+
+    /**
+     * @When I let customers choose any amount within a range
+     */
+    public function iLetCustomersChooseAnyAmountWithinARange(): void
+    {
+        $this->createPage->chooseAmountMode('Any amount within a range');
+    }
+
+    /**
+     * @When I offer the amounts :presets
+     */
+    public function iOfferTheAmounts(string $presets): void
+    {
+        $this->createPage->specifyAmountPresets($presets);
+    }
+
+    /**
+     * @When I allow amounts between :minimum and :maximum
+     */
+    public function iAllowAmountsBetween(string $minimum, string $maximum): void
+    {
+        $this->createPage->specifyAmountBounds($minimum, $maximum);
     }
 
     /**
@@ -138,6 +171,60 @@ final readonly class GiftCardConfigurationContext implements Context
     }
 
     /**
+     * @Then the :channel channel should offer gift cards of :presets
+     */
+    public function theChannelShouldOfferGiftCardsOf(ChannelInterface $channel, string $presets): void
+    {
+        $configuration = $this->repository->findOneByChannel($channel);
+        Assert::isInstanceOf($configuration, GiftCardConfiguration::class, 'No configuration was saved for that channel.');
+
+        Assert::same($configuration->getAmountMode(), GiftCardAmountMode::Presets);
+        Assert::same($configuration->getAmountPresets(), self::toMinorUnitsList($presets));
+    }
+
+    /**
+     * @Then the :channel channel should allow any amount between :minimum and :maximum
+     */
+    public function theChannelShouldAllowAnyAmountBetween(
+        ChannelInterface $channel,
+        string $minimum,
+        string $maximum,
+    ): void {
+        $configuration = $this->repository->findOneByChannel($channel);
+        Assert::isInstanceOf($configuration, GiftCardConfiguration::class, 'No configuration was saved for that channel.');
+
+        Assert::same($configuration->getAmountMode(), GiftCardAmountMode::Range);
+        Assert::same($configuration->getMinimumAmount(), self::toMinorUnits($minimum));
+        Assert::same($configuration->getMaximumAmount(), self::toMinorUnits($maximum));
+    }
+
+    /**
+     * @Then I should be told the preset amounts are not amounts
+     */
+    public function iShouldBeToldThePresetAmountsAreNotAmounts(): void
+    {
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'separated by commas',
+            'The form accepted a preset list that is not a list of amounts.',
+        );
+    }
+
+    /**
+     * @Then I should be told the range needs both bounds
+     */
+    public function iShouldBeToldTheRangeNeedsBothBounds(): void
+    {
+        // A channel offering a free amount without knowing its bounds offers nothing at runtime, so
+        // the operator has to be told rather than left believing the channel is set up.
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'both the smallest and the largest',
+            'The form accepted a range with a bound missing.',
+        );
+    }
+
+    /**
      * @Then no gift card configuration should have been saved
      */
     public function noGiftCardConfigurationShouldHaveBeenSaved(): void
@@ -156,5 +243,27 @@ final readonly class GiftCardConfigurationContext implements Context
             $this->indexPage->isSingleResourceOnPage(['channel' => (string) $channel->getName()]),
             'The configuration is not listed.',
         );
+    }
+
+    private static function toMinorUnits(string $amount): int
+    {
+        $normalised = preg_replace('/[^0-9.]/', '', $amount) ?? '';
+
+        return (int) round(((float) $normalised) * 100);
+    }
+
+    /** @return list<int> */
+    private static function toMinorUnitsList(string $amounts): array
+    {
+        $parts = preg_split('/\s*(?:,|and)\s*/', trim($amounts));
+
+        if (false === $parts) {
+            return [];
+        }
+
+        return array_values(array_map(
+            self::toMinorUnits(...),
+            array_filter($parts, static fn (string $part): bool => '' !== trim($part)),
+        ));
     }
 }

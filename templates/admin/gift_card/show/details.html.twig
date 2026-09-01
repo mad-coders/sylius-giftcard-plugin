@@ -43,6 +43,17 @@
 
             <dt class="col-4">{{ 'sylius.ui.enabled'|trans }}</dt>
             <dd class="col-8">{{ (gift_card.enabled ? 'sylius.ui.yes' : 'sylius.ui.no')|trans }}</dd>
+
+            {#
+                Written by whoever bought the card, so it reaches this screen as untrusted text.
+                Printed as text: Twig escapes it, and nothing here marks it safe or uses `raw`.
+            #}
+            {% if gift_card.customMessage is not empty %}
+                <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.custom_message'|trans }}</dt>
+                <dd class="col-8" {{ sylius_test_html_attribute('gift-card-custom-message') }}>
+                    {{ gift_card.customMessage }}
+                </dd>
+            {% endif %}
         </dl>
     </div>
 </div>

@@ -1,0 +1,64 @@
+{#
+    The amount and the message a customer chooses when buying a gift card.
+
+    Rendered inside Sylius' own add-to-cart form, so the choice travels with the item that form
+    creates rather than needing a second form on the page. Sylius ends that form with
+    `render_rest: false`, so every field here is rendered explicitly - anything left out simply would
+    not appear.
+
+    Deliberately free of JavaScript: the presets are radio buttons styled as cards, the free amount
+    is a number input, and nothing on this page needs a script to decide what gets submitted.
+#}
+{% set form = hookable_metadata.context.form %}
+{% set cart_item = form.cartItem is defined ? form.cartItem : null %}
+
+{% if cart_item is not null %}
+    {% set amount = cart_item.children.giftCardAmount is defined ? cart_item.children.giftCardAmount : null %}
+    {% set message = cart_item.children.giftCardMessage is defined ? cart_item.children.giftCardMessage : null %}
+
+    {% if amount is not null %}
+        <div class="mb-3" {{ sylius_test_html_attribute('gift-card-amount') }}>
+            {% if amount.preset is defined %}
+                <label class="form-label d-block">
+                    {{ 'madcoders_sylius_gift_card.ui.choose_amount'|trans }}
+                </label>
+
+                <div class="d-flex flex-wrap gap-2 mb-2" role="radiogroup">
+                    {% for choice in amount.preset %}
+                        <div>
+                            {{ form_widget(choice, { attr: { class: 'btn-check' } }) }}
+                            <label class="btn btn-outline-primary" for="{{ choice.vars.id }}"
+                                   {{ sylius_test_html_attribute('gift-card-amount-option', choice.vars.value) }}>
+                                {{ choice.vars.label|trans }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if amount.custom is defined %}
+                <div class="mb-2" {{ sylius_test_html_attribute('gift-card-custom-amount') }}>
+                    {{ form_label(amount.custom) }}
+                    {{ form_widget(amount.custom) }}
+
+                    {% if amount.vars.minimum_amount is not null and amount.vars.maximum_amount is not null %}
+                        <div class="form-text">
+                            {{ 'madcoders_sylius_gift_card.ui.amount_between'|trans({
+                                '%minimum%': amount.vars.minimum_amount|sylius_format_money(amount.vars.currency_code),
+                                '%maximum%': amount.vars.maximum_amount|sylius_format_money(amount.vars.currency_code),
+                            }) }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {{ form_errors(amount) }}
+        </div>
+    {% endif %}
+
+    {% if message is not null %}
+        <div class="mb-3" {{ sylius_test_html_attribute('gift-card-message') }}>
+            {{ form_row(message) }}
+        </div>
+    {% endif %}
+{% endif %}

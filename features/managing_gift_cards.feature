@@ -146,6 +146,52 @@ Feature: Managing gift cards
         And the list should show "United States" as issuing gift cards by an administrator only
 
     @ui
+    Scenario: Offering customers a list of amounts to choose from
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose from preset amounts
+        And I offer the amounts "25, 50, 100"
+        And I save this configuration
+        Then the "United States" channel should offer gift cards of "$25.00, $50.00 and $100.00"
+
+    @ui
+    Scenario: Letting customers name their own amount within a range
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose any amount within a range
+        And I allow amounts between "10" and "500"
+        And I save this configuration
+        Then the "United States" channel should allow any amount between "$10.00" and "$500.00"
+
+    @ui
+    Scenario: A preset that is not an amount is refused
+        # Also pins the translation domain: a constraint's message is looked up in `validators`, so
+        # the same key sitting in messages.en.yaml renders as the raw key on the page.
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose from preset amounts
+        And I offer the amounts "25, fifty, 100"
+        And I save this configuration
+        Then I should be told the preset amounts are not amounts
+        And no gift card configuration should have been saved
+
+    @ui
+    Scenario: A worthless preset is refused rather than dropped
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose from preset amounts
+        And I offer the amounts "25, 0, 100"
+        And I save this configuration
+        Then I should be told the preset amounts are not amounts
+        And no gift card configuration should have been saved
+
+    @ui
+    Scenario: A range with a bound missing is refused
+        # A channel that offers a free amount without knowing its bounds offers nothing at all at
+        # runtime, which is the safe behaviour but a silent one. The operator has to be told.
+        When I want to configure gift cards for the "United States" channel
+        And I let customers choose any amount within a range
+        And I save this configuration
+        Then I should be told the range needs both bounds
+        And no gift card configuration should have been saved
+
+    @ui
     Scenario: A code length below the minimum is refused
         # Not a preference - a short code is guessable, and a guessable gift card code is money
         # anybody can spend. The model clamps it as a backstop, but an operator who asks for a

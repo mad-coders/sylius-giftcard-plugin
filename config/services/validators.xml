@@ -20,6 +20,23 @@
             <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_purchase" />
             <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_order_purchase_allowed" />
         </service>
+
+        <!--
+            Refuses an amount the channel does not offer, and says which of the two reasons it is so
+            the customer is told the bounds rather than just "invalid".
+
+            No `alias` on the tag, unlike the two above: this constraint does not override
+            validatedBy(), so the factory looks the validator up by its class name - which is what
+            the tag registers when no alias is given.
+        -->
+        <service id="madcoders_sylius_gift_card.validator.chosen_gift_card_amount"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\ChosenGiftCardAmountValidator">
+            <argument type="service" id="sylius.context.channel" />
+            <argument type="service" id="sylius.context.locale" />
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <argument type="service" id="sylius.formatter.money" />
+            <tag name="validator.constraint_validator" />
+        </service>
     </services>
 
 </container>

@@ -106,6 +106,38 @@ final readonly class AccountGiftCardContext implements Context
     }
 
     /**
+     * @Then I should see the message :message on the card
+     */
+    public function iShouldSeeTheMessageOnTheCard(string $message): void
+    {
+        Assert::same($this->showPage->getCustomMessage(), $message);
+    }
+
+    /**
+     * The message is written by whoever bought the card, so it reaches this page as untrusted text.
+     *
+     * Asserted against the page's HTML rather than its rendered text: read as text, injected markup
+     * and escaped markup look identical, so an assertion made there would pass either way.
+     *
+     * @Then the card's page should show :raw as text rather than as markup
+     */
+    public function theCardsPageShouldShowAsTextRatherThanAsMarkup(string $raw): void
+    {
+        $html = $this->session->getPage()->getContent();
+
+        Assert::false(
+            str_contains($html, $raw),
+            sprintf('The page carries "%s" as markup, so a customer message can inject HTML.', $raw),
+        );
+
+        Assert::contains(
+            $html,
+            htmlspecialchars($raw, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'),
+            sprintf('The page does not carry "%s" escaped, so the message is missing.', $raw),
+        );
+    }
+
+    /**
      * @Then I should be refused access
      */
     public function iShouldBeRefusedAccess(): void

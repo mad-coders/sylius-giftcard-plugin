@@ -1,6 +1,15 @@
 madcoders_sylius_gift_card:
     cart_item:
+        amount:
+            not_a_preset: Wybierz jedną z dostępnych kwot.
+            out_of_range: Kwota musi mieścić się między {{ minimum }} a {{ maximum }}.
+            required: Wybierz, na jaką kwotę ma opiewać karta podarunkowa.
         gift_card_not_sold_in_channel: Karty podarunkowe nie są sprzedawane w tym kanale.
+        message:
+            too_long: Wiadomość jest za długa - zmieść się w {{ limit }} znakach.
+    gift_card_configuration:
+        amount_presets:
+            invalid: Podaj kwoty oddzielone przecinkami, na przykład "25, 50, 100".
     order:
         gift_card_not_sold_in_channel: Twój koszyk zawiera kartę podarunkową, a karty podarunkowe
             nie są sprzedawane w tym kanale. Usuń ją, aby kontynuować.

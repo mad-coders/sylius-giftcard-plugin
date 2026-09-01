@@ -16,6 +16,13 @@ madcoders_sylius_gift_card:
             not_blank: Podaj wartość karty podarunkowej.
             positive: Kwota musi być większa od zera.
     gift_card_configuration:
+        amount_presets:
+            required: Ten tryb udostępnia gotowe kwoty, więc trzeba podać co najmniej
+                jedną.
+        bounds:
+            inverted: Największa kwota nie może być mniejsza od najmniejszej.
+            required: W tym trybie klient wpisuje kwotę, więc trzeba podać zarówno
+                najmniejszą, jak i największą.
         code_length:
             too_short: Długość kodu musi wynosić co najmniej 12 znaków - krótszy kod
                 da się odgadnąć.
@@ -31,10 +38,23 @@ madcoders_sylius_gift_card:
         adjust_balance: Koryguj saldo
         adjustment_direction: Kierunek
         amount: Kwota
+        amount_between: Wpisz dowolną kwotę od %minimum% do %maximum%.
+        amount_mode: Sposób wyboru kwoty
+        amount_mode.fixed: Cena produktu
+        amount_mode.presets: Lista gotowych kwot
+        amount_mode.presets_and_range: Gotowe kwoty albo dowolna kwota z przedziału
+        amount_mode.range: Dowolna kwota z przedziału
+        amount_mode_help: Czy klient kupujący kartę podarunkową w tym kanale płaci
+            cenę produktu, czy sam wybiera kwotę.
+        amount_presets: Gotowe kwoty
+        amount_presets_help: Kwoty oferowane jako gotowe do wyboru, oddzielone przecinkami,
+            w walucie kanału - na przykład "25, 50, 100". Używane przez tryby z gotowymi
+            kwotami.
         amount_to_pay: Do zapłaty
         apply_gift_card: Zastosuj
         balance_after: Saldo po operacji
         balance_history: Historia salda
+        choose_amount: Wybierz kwotę
         code: Kod
         code_help: Pozostaw puste, aby wygenerować kod na podstawie konfiguracji kanału.
         code_length: Długość kodu
@@ -49,6 +69,9 @@ madcoders_sylius_gift_card:
             dla kanału.
         gift_card: Karta podarunkowa
         gift_card_code: Kod karty podarunkowej
+        gift_card_message: Wiadomość
+        gift_card_message_help: Opcjonalnie. Do %limit% znaków, pokazywana razem z
+            kodem przy dostarczeniu.
         gift_cards: Karty podarunkowe
         gift_cards_i_bought: Karty, które kupiłem
         gift_cards_i_use: Karty, których używam
@@ -56,11 +79,20 @@ madcoders_sylius_gift_card:
         is_gift_card: Ten produkt jest kartą podarunkową
         is_gift_card_help: Zakup wygeneruje kartę podarunkową dla każdej sztuki, o
             wartości zapłaconej za tę sztukę.
+        maximum_amount: Największa kwota
+        maximum_amount_help: Najwięcej, ile klient może wpisać. Używane przez tryby
+            z dowolną kwotą. Gotowe kwoty są oferowane niezależnie od tego, czy się
+            w nim mieszczą.
+        minimum_amount: Najmniejsza kwota
+        minimum_amount_help: Najmniej, ile klient może wpisać. Używane przez tryby
+            z dowolną kwotą. Gotowe kwoty są oferowane niezależnie od tego, czy się
+            w nim mieszczą.
         my_gift_cards: Moje karty podarunkowe
         never_expires: Nigdy
         no_gift_cards_bought: Nie kupiłeś jeszcze żadnej karty podarunkowej.
         no_gift_cards_used: Nie używasz jeszcze żadnej karty podarunkowej.
         no_transactions: Ta karta podarunkowa nie była jeszcze używana.
+        other_amount: Inna kwota
         purchaser: Kupujący
         redeemer: Używający
         remaining_balance: Pozostałe środki
