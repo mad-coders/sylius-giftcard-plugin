@@ -141,11 +141,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
   - Run `bin/console doctrine:migrations:migrate`. `Version20260902100000` gives every card without
     an expiry date one, measured from **that card's own creation date** plus its channel's validity
-    period (a year where the channel has no usable one), then makes the column NOT NULL. It prints
-    how many cards it dated, and **how many of those are already expired as a result** - a card
-    created three years ago in a channel with a one-year period comes out dead. That is money a
-    holder can no longer spend, so tell them before you run it, not after. `Version20260902110000`
-    then adds the tender mode column.
+    period (a year where the channel has no usable one), then makes the column NOT NULL. A card
+    created three years ago in a channel with a one-year period comes out **already expired** - money
+    a holder can no longer spend - so tell them before you run it, not after. `docs/INSTALLATION.md`
+    gives the two queries that count the affected cards before and after.
+    `Version20260902110000` then adds the tender mode column.
   - **Every channel loses the ability to buy gift cards with gift cards, including channels you
     never configured.** Unlike the sale mode, this default deliberately does not preserve the old
     behaviour: the old behaviour was the hole. A shop that wants it back sets *What a gift card pays

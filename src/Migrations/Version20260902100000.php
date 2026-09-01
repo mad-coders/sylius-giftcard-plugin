@@ -71,10 +71,15 @@ final class Version20260902100000 extends AbstractMigration
      * every write goes through addSql() with bound parameters, so the migration is still one
      * transaction and still shows its work under --dry-run.
      *
-     * It reports what it did, including how many cards it dated into the past. That number matters:
-     * a card issued three years ago in a channel with a one-year period comes out already expired,
-     * which is what "measured from the card's creation date" means and is money a holder can no
-     * longer spend. Tell the holders before running this, not after.
+     * It reports what it did through the migration logger, including how many cards it dated into
+     * the past. That number matters: a card issued three years ago in a channel with a one-year
+     * period comes out already expired, which is what "measured from the card's creation date"
+     * means and is money a holder can no longer spend.
+     *
+     * **Do not rely on seeing that report on the console.** Whether it surfaces depends entirely on
+     * where the host application routes the migrations logger, and in a stock Sylius application it
+     * goes nowhere - verified, not assumed. The number an operator actually needs is one query, and
+     * docs/INSTALLATION.md gives it to them. Tell the holders before running this, not after.
      */
     private function backfillExpiryDates(): void
     {

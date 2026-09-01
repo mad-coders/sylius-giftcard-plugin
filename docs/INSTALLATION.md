@@ -244,8 +244,26 @@ There is more than one migration, and a plugin upgrade can add another - always 
 > **Upgrading from RC.2:** `Version20260902100000` gives every gift card that has no expiry date one,
 > measured from that card's own creation date plus its channel's validity period, and then makes the
 > column NOT NULL. A card created three years ago in a channel with a one-year period therefore comes
-> out **already expired**, which is money its holder can no longer spend. The migration prints how
-> many cards it dated and how many of those are now in the past. Tell the holders before you run it.
+> out **already expired**, which is money its holder can no longer spend. Tell the holders before you
+> run it, not after.
+>
+> Count them **before** upgrading, while the nulls are still there:
+>
+> ```sql
+> SELECT COUNT(*) FROM madcoders_gift_card__gift_card WHERE expires_at IS NULL;
+> ```
+>
+> and afterwards, to see which of those are now dead:
+>
+> ```sql
+> SELECT code, created_at, expires_at
+> FROM madcoders_gift_card__gift_card
+> WHERE expires_at < NOW() AND amount > 0
+> ORDER BY expires_at;
+> ```
+>
+> Anything that comes back is a card with money on it that can no longer be spent. Re-dating those by
+> hand, or topping up replacements from the admin, is a decision only you can make.
 
 ## 8. Configure a channel
 

@@ -93,8 +93,13 @@ unusual period has to change the date by hand, and can see exactly what they are
 - **This is a behaviour change for anyone on RC.2.** Cards that had no expiry get one from their
   creation date, which means a card created three years ago in a channel with a one-year period
   comes out **already expired**. That is what "measured from the card's creation date" means, and it
-  is money a holder can no longer spend. The migration reports how many cards it dated into the
-  past. Tell the holders before running it, not after.
+  is money a holder can no longer spend. Tell the holders before running it, not after.
+
+  The migration counts those cards and reports them through the migration logger, but that report
+  **cannot be relied on**: whether it reaches a console depends entirely on where the host routes
+  that logger, and in a stock Sylius application it goes nowhere. `docs/INSTALLATION.md` therefore
+  gives the operator the two queries instead - one before the upgrade, one after - which is the only
+  answer that does not depend on somebody else's logging configuration.
 - Templates no longer branch on a null expiry, and the purchase email always states the date -
   which is the point of the jurisdictional half of this.
 - The `madcoders_sylius_gift_card.ui.never_expires` translation key is gone from both catalogues.
