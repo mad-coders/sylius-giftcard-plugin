@@ -128,20 +128,14 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
-     * @Then I should be told in the checkout that the code is not valid
+     * @Then I should be told in the checkout that the code cannot be used
      */
-    public function iShouldBeToldInTheCheckoutThatTheCodeIsNotValid(): void
+    public function iShouldBeToldInTheCheckoutThatTheCodeCannotBeUsed(): void
     {
-        $this->notificationChecker->checkNotification('There is no gift card with this code.', NotificationType::failure());
-    }
-
-    /**
-     * @Then I should be told in the checkout that the card cannot be redeemed
-     */
-    public function iShouldBeToldInTheCheckoutThatTheCardCannotBeRedeemed(): void
-    {
+        // One message for every reason, in the checkout as on the cart: an unknown code and a real
+        // but unusable one have to be indistinguishable from outside.
         $this->notificationChecker->checkNotification(
-            'This gift card cannot be used - it may be expired, disabled or already spent.',
+            'This gift card code cannot be used. Check it and try again.',
             NotificationType::failure(),
         );
     }
@@ -190,13 +184,16 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
-     * @Then I should be told on the payment step that the code is not valid
+     * @Then I should be told on the payment step that the code cannot be used
      */
-    public function iShouldBeToldOnThePaymentStepThatTheCodeIsNotValid(): void
+    public function iShouldBeToldOnThePaymentStepThatTheCodeCannotBeUsed(): void
     {
         // The checkout steps render no flashes of their own, so the panel renders its own messages.
         // Without that this page comes back byte-identical and the customer is told nothing.
-        $this->notificationChecker->checkNotification('There is no gift card with this code.', NotificationType::failure());
+        $this->notificationChecker->checkNotification(
+            'This gift card code cannot be used. Check it and try again.',
+            NotificationType::failure(),
+        );
     }
 
     /**

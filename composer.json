@@ -51,9 +51,13 @@
         "symfony/dotenv": "^6.4 || ^7.4",
         "symfony/http-client": "^6.4 || ^7.4",
         "symfony/intl": "^6.4 || ^7.4",
+        "symfony/rate-limiter": "^6.4 || ^7.4",
         "symfony/runtime": "^6.4 || ^7.4",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4",
         "symfony/webpack-encore-bundle": "^2.2"
+    },
+    "suggest": {
+        "symfony/rate-limiter": "Throttles failed gift card redemption attempts. Without it the plugin boots and works, but the redeem field accepts unlimited guesses - see docs/INSTALLATION.md."
     },
     "config": {
         "sort-packages": true,

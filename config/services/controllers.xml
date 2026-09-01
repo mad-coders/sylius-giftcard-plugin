@@ -12,6 +12,9 @@
             <argument type="service" id="sylius.manager.order" />
             <argument type="service" id="router" />
             <argument type="service" id="security.csrf.token_manager" />
+            <!-- Only registered when symfony/rate-limiter is installed and the limiter is switched
+                 on; otherwise this resolves to null and redemption is unthrottled, as it was. -->
+            <argument type="service" id="madcoders_sylius_gift_card.rate_limiter.redemption" on-invalid="null" />
         </service>
 
         <service id="Madcoders\SyliusGiftCardPlugin\Controller\Admin\AdjustGiftCardBalanceController" public="true">

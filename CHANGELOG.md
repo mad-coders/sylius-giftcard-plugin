@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- Redeeming a gift card is rate limited. A client that keeps submitting codes that do not work is
+  refused after a configurable number of failures - ten per fifteen minutes by default - and the
+  refusal is logged at `warning` on the `security` channel with the client and the attempt count, so
+  a shop can alert on it. Only failures count and a successful redemption clears the tally, so a
+  customer using the cards they hold never meets the limiter. The endpoint is an anonymous POST and a
+  gift card code is money to whoever holds it, so unlimited attempts were a brute-force oracle.
+  Removing a card is deliberately not limited: it resolves against the cart and never consults the
+  repository. Closes #33.
+- A failed redemption now says the same thing whatever went wrong. "There is no gift card with this
+  code", "this gift card cannot be used - it may be expired, disabled or already spent" and "this
+  gift card cannot be used in this store" were three answers to the question *does this code exist?*,
+  asked by anybody, as often as they liked. They are replaced by one message,
+  `madcoders_sylius_gift_card.cart.not_usable`. The distinction has not been lost, it moved to where
+  it is safe: *My gift cards* in the customer account shows the cards that are actually theirs, with
+  balances, behind a login. The `cart.not_found`, `cart.not_redeemable` and `cart.channel_mismatch`
+  translation keys are gone - a host that overrode them should override `cart.not_usable` and
+  `cart.too_many_attempts` instead. See `docs/adr-log/0012-rate-limiting-gift-card-redemption.md`.
+
 ### Added
 
 - The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,

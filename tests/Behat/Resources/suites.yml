@@ -5,6 +5,9 @@ default:
         madcoders_gift_card_cart:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                # Failed redemption attempts outlive the database rollback - they live in a cache
+                # pool - and every scenario redeems from the same client address.
+                - madcoders_sylius_gift_card.behat.context.hook.rate_limit
 
                 - sylius.behat.context.transform.channel
                 - sylius.behat.context.transform.lexical

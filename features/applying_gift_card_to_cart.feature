@@ -63,8 +63,10 @@ Feature: Applying a gift card to my cart
 
     @ui
     Scenario: An unknown code is refused
+        # In the same words as a card that exists but cannot be used - see
+        # features/rate_limiting_gift_card_redemption.feature, which asserts both in one scenario.
         When I try to apply the gift card "GIFT-NOPE"
-        Then I should be notified that the gift card does not exist
+        Then I should be notified that the gift card cannot be used
         And no gift card should be applied to my cart
 
     @ui
@@ -152,7 +154,7 @@ Feature: Applying a gift card to my cart
         And I have proceeded through checkout process
         And I look at the checkout summary
         When I apply the gift card "GIFT-NOPE" from the checkout
-        Then I should be told in the checkout that the code is not valid
+        Then I should be told in the checkout that the code cannot be used
         And I should still be in the checkout
         And no gift card should be applied in the checkout
 
@@ -164,7 +166,7 @@ Feature: Applying a gift card to my cart
         And I have proceeded through checkout process
         And I look at the checkout summary
         When I apply the gift card "GIFT-OLD" from the checkout
-        Then I should be told in the checkout that the card cannot be redeemed
+        Then I should be told in the checkout that the code cannot be used
         And I should still be in the checkout
         And no gift card should be applied in the checkout
 
@@ -176,7 +178,7 @@ Feature: Applying a gift card to my cart
         And I have proceeded through checkout process
         And I look at the checkout summary
         When I apply the gift card "GIFT-OFF" from the checkout
-        Then I should be told in the checkout that the card cannot be redeemed
+        Then I should be told in the checkout that the code cannot be used
         And I should still be in the checkout
         And no gift card should be applied in the checkout
 
@@ -206,5 +208,5 @@ Feature: Applying a gift card to my cart
         And I have proceeded through checkout process
         When I go to the payment step
         And I apply the gift card "GIFT-NOPE" from the payment step
-        Then I should be told on the payment step that the code is not valid
+        Then I should be told on the payment step that the code cannot be used
         And I should still be on the payment step

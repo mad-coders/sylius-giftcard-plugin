@@ -251,6 +251,50 @@ These need no configuration on your side, but are worth knowing about:
   that code under `sylius_mailer.emails`.
 - **Admin and account menu entries**, added through Sylius' menu events.
 
+## Rate limiting the redeem field
+
+A gift card code is a bearer instrument, and the redeem field is an anonymous POST: without a limiter
+it accepts unlimited guesses. The plugin throttles **failed** attempts per client address - ten per
+fifteen minutes by default, on out of the box - logs every refusal at `warning` on the `security`
+channel, and never counts or logs a successful one. See
+`docs/adr-log/0012-rate-limiting-gift-card-redemption.md` for why the client address and not the
+session or the customer.
+
+**The limiter needs `symfony/rate-limiter`, which Sylius does not install.** Without it the plugin
+boots and redeems cards exactly as it otherwise would - unthrottled and silent about it. Install it:
+
+```bash
+composer require symfony/rate-limiter
+```
+
+Tune it, or turn it off, under the plugin's own configuration key:
+
+```yaml
+# config/packages/madcoders_sylius_gift_card.yaml
+
+madcoders_sylius_gift_card:
+    redemption_rate_limit:
+        enabled: true          # default; set false to accept unlimited attempts again
+        limit: 10              # failed attempts allowed per client per window
+        interval: '15 minutes' # any relative date format - '1 hour', '30 minutes'
+```
+
+**If you run more than one web node**, point the limiter's cache pool at shared storage. Its state
+lives in `madcoders_sylius_gift_card.cache.rate_limiter`, which defaults to `cache.app`; a limiter
+whose state is per-node is a limiter divided by the number of nodes:
+
+```yaml
+framework:
+    cache:
+        pools:
+            madcoders_sylius_gift_card.cache.rate_limiter:
+                adapter: cache.adapter.redis
+```
+
+**If you run behind a load balancer or CDN**, configure Symfony's `framework.trusted_proxies` -
+otherwise every request looks as though it comes from your own edge and the whole shop shares one
+allowance.
+
 ## Authorization
 
 Admin actions that move money check the role in the
