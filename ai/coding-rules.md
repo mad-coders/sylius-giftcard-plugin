@@ -84,6 +84,13 @@ needs an ADR.
   `admin/` and `shop/` to mirror Sylius.
 - **No hardcoded user-facing strings.** Everything goes through a translation key in
   `translations/messages.en.yaml`; other locales are added as translations land.
+- **A validation message lives in `translations/validators.*.yaml`, whoever raises it.** Symfony
+  resolves constraint violations in the `validators` domain and nothing else, so a message key put in
+  `messages` is handed back to the user as the key itself - no error, no warning, no log. That
+  includes messages the plugin translates itself before handing them to a `FormError`: call
+  `trans($key, [], 'validators')` rather than letting the translator's default domain decide, so
+  there is one catalogue for validation rather than two. `ConstraintMessagesLiveInTheValidatorsDomainTest`
+  walks the constraints and fails on any message that translates to its own key.
 - Grids and routes in YAML under `config/grids/` and `config/routes/`.
 
 ## Tests
