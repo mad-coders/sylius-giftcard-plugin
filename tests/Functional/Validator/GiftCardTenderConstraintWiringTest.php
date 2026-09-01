@@ -9,6 +9,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
 use Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardRedemptionAllowed;
 use Sylius\Component\Core\Model\Channel;
 use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\OrderItemUnit;
 use Sylius\Component\Core\Model\ProductVariant;
 use Sylius\Component\Currency\Model\Currency;
 use Sylius\Component\Locale\Model\Locale;
@@ -224,6 +225,12 @@ final class GiftCardTenderConstraintWiringTest extends KernelTestCase
         $item = new OrderItem();
         $item->setVariant($variant);
         $item->setUnitPrice(5_000);
+
+        // A line with no units is worth nothing, and Sylius never produces one - a real order item
+        // always has a unit per quantity. Without this the fixture's order total is zero, and every
+        // assertion about how much of it a gift card may settle is measuring an order that could
+        // not exist.
+        new OrderItemUnit($item);
 
         return $item;
     }

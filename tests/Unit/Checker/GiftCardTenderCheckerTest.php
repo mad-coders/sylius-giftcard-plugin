@@ -94,6 +94,20 @@ final class GiftCardTenderCheckerTest extends TestCase
         self::assertSame(10_000, $this->createChecker()->settleableTotalOf($order));
     }
 
+    public function testAGiftCardLinePricedAtZeroStillCountsAsAGiftCardLine(): void
+    {
+        // The rule keys on the *presence* of a gift card product, not on what it is worth. Reading
+        // it the other way would let a line priced at zero switch the rule off for the whole order,
+        // which is harmless today and exactly the kind of edge that becomes an exploit after the
+        // next pricing feature.
+        $order = new Order();
+        $order->setChannel(new Channel());
+        $this->addLine($order, 0, isGiftCard: true);
+
+        self::assertSame(0, $this->createChecker()->settleableTotalOf($order));
+        self::assertFalse($this->createChecker()->allowsRedemptionOn($order));
+    }
+
     public function testAnEmptyOrderIsNotRefusedForAReasonThatDoesNotApply(): void
     {
         // Nothing to settle, but nothing about gift cards either. Saying "a gift card cannot pay

@@ -35,14 +35,23 @@ final readonly class GiftCardTenderChecker implements GiftCardTenderCheckerInter
         // landed on that line, so subtracting it removes the gift card's own value and its own tax
         // and nothing else. Everything that is not a line - shipping, order-level adjustments -
         // stays settleable, which is right: a gift card is emailed, so the postage is for the goods.
-        return max(0, $total - $this->giftCardLinesTotalOf($order));
+        $giftCardLinesTotal = 0;
+
+        foreach ($this->giftCardLinesOf($order) as $item) {
+            $giftCardLinesTotal += $item->getTotal();
+        }
+
+        return max(0, $total - $giftCardLinesTotal);
     }
 
     public function allowsRedemptionOn(BaseOrderInterface $order): bool
     {
-        // Nothing to refuse: whatever is on this order, none of it is a gift card, so the rule
-        // has no opinion about it.
-        if (0 === $this->giftCardLinesTotalOf($order)) {
+        // Presence, not value. An order carrying no gift card products has nothing for this rule to
+        // say about it, so it is never refused here. Asking instead whether the gift card lines are
+        // *worth* anything would let a line priced at zero switch the rule off for the whole order -
+        // harmless today, and exactly the kind of edge that becomes an exploit after the next
+        // pricing feature.
+        if (!$this->hasGiftCardLines($order)) {
             return true;
         }
 
@@ -64,11 +73,22 @@ final readonly class GiftCardTenderChecker implements GiftCardTenderCheckerInter
             ->allowsGiftCardsToPayForGiftCards();
     }
 
-    /** The value of the gift card products on this order, in minor units. */
-    private function giftCardLinesTotalOf(BaseOrderInterface $order): int
+    private function hasGiftCardLines(BaseOrderInterface $order): bool
     {
-        $total = 0;
+        foreach ($this->giftCardLinesOf($order) as $item) {
+            return true;
+        }
 
+        return false;
+    }
+
+    /**
+     * The lines on this order that sell a gift card product.
+     *
+     * @return iterable<OrderItemInterface>
+     */
+    private function giftCardLinesOf(BaseOrderInterface $order): iterable
+    {
         foreach ($order->getItems() as $item) {
             if (!$item instanceof OrderItemInterface) {
                 continue;
@@ -81,9 +101,7 @@ final readonly class GiftCardTenderChecker implements GiftCardTenderCheckerInter
                 continue;
             }
 
-            $total += $item->getTotal();
+            yield $item;
         }
-
-        return $total;
     }
 }
