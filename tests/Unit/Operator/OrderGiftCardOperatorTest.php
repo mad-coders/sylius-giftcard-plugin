@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Operator;
 
 use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardPurchaseCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Factory\GiftCardFactory;
 use Madcoders\SyliusGiftCardPlugin\Generator\GiftCardCodeGeneratorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCard;
@@ -14,6 +15,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardOrigin;
 use Madcoders\SyliusGiftCardPlugin\Operator\OrderGiftCardOperator;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\Channel;
 use Sylius\Component\Core\Model\Customer;
 use Sylius\Component\Core\Model\OrderItem;
@@ -131,7 +133,54 @@ final class OrderGiftCardOperatorTest extends TestCase
         self::assertCount(0, $operator->giftCardsBoughtOn($order));
     }
 
-    private function createOperator(): OrderGiftCardOperator
+    public function testAChannelThatIssuesCardsByAdministratorOnlyIssuesNothingWhenAnOrderIsPaid(): void
+    {
+        // The cart is refused a gift card product in this mode, but a cart filled before the
+        // channel changed mode is already sitting there - and paying it must not hand out a card.
+        $order = $this->createOrder(giftCardUnits: 2, unitPrice: 5000);
+
+        $operator = $this->createOperator(sellable: false);
+        $operator->generate($order);
+        $operator->enable($order);
+
+        self::assertCount(0, $operator->giftCardsBoughtOn($order));
+    }
+
+    public function testRefusingToIssueOnAPaidOrderIsLoggedLoudly(): void
+    {
+        // The customer has been charged and gets no card. If this is silent, the only way anyone
+        // finds out is a complaint - so the refusal has to be discoverable in production.
+        $order = $this->createOrder(giftCardUnits: 2, unitPrice: 5000);
+
+        $context = [];
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects(self::once())
+            ->method('warning')
+            ->willReturnCallback(static function (string $message, array $loggedContext) use (&$context): void {
+                $context = $loggedContext;
+            })
+        ;
+
+        $this->createOperator(sellable: false, logger: $logger)->generate($order);
+
+        self::assertSame(2, $context['gift_card_units']);
+        self::assertSame('WEB', $context['channel_code']);
+    }
+
+    public function testAnOrderWithoutGiftCardsIsNotLoggedInAChannelThatDoesNotSellThem(): void
+    {
+        // Every ordinary order in an admin-only channel passes through here. Warning on each one
+        // would bury the case that matters under noise.
+        $order = $this->createOrder(giftCardUnits: 0, unitPrice: 5000, ordinaryUnits: 3);
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::never())->method('warning');
+
+        $this->createOperator(sellable: false, logger: $logger)->generate($order);
+    }
+
+    private function createOperator(bool $sellable = true, ?LoggerInterface $logger = null): OrderGiftCardOperator
     {
         /** @var FactoryInterface<GiftCardInterface> $inner */
         $inner = $this->createMock(FactoryInterface::class);
@@ -145,11 +194,16 @@ final class OrderGiftCardOperatorTest extends TestCase
         $configurationProvider = $this->createMock(GiftCardConfigurationProviderInterface::class);
         $configurationProvider->method('getForChannel')->willReturn(null);
 
+        $purchaseChecker = $this->createMock(GiftCardPurchaseCheckerInterface::class);
+        $purchaseChecker->method('canBeBoughtIn')->willReturn($sellable);
+
         return new OrderGiftCardOperator(
             new GiftCardFactory($inner),
             $codeGenerator,
             $configurationProvider,
             $this->createMock(ObjectManager::class),
+            $purchaseChecker,
+            $logger,
         );
     }
 

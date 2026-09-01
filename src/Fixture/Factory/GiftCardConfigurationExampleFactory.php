@@ -6,6 +6,7 @@ namespace Madcoders\SyliusGiftCardPlugin\Fixture\Factory;
 
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\AbstractExampleFactory;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
@@ -55,12 +56,16 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
         $enabled = $options['enabled'];
         Assert::boolean($enabled);
 
+        $saleMode = $options['sale_mode'];
+        Assert::string($saleMode);
+
         $configuration = $this->giftCardConfigurationFactory->createNew();
         $configuration->setChannel($channel);
         $configuration->setCodeLength($codeLength);
         $configuration->setCodePrefix($codePrefix);
         $configuration->setValidityPeriod($validityPeriod);
         $configuration->setEnabled($enabled);
+        $configuration->setSaleMode(GiftCardSaleMode::from($saleMode));
 
         return $configuration;
     }
@@ -83,6 +88,14 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
 
             ->setDefault('enabled', true)
             ->setAllowedTypes('enabled', 'bool')
+
+            // Taken as the backing value rather than the case, so a YAML fixture can say
+            // `sale_mode: admin_only`.
+            ->setDefault('sale_mode', GiftCardSaleMode::Sellable->value)
+            ->setAllowedValues('sale_mode', array_map(
+                static fn (GiftCardSaleMode $mode): string => $mode->value,
+                GiftCardSaleMode::cases(),
+            ))
         ;
     }
 }

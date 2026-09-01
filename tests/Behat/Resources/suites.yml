@@ -63,6 +63,8 @@ default:
                 - sylius.behat.context.setup.payment
                 - sylius.behat.context.setup.order
 
+                # Carries the per-channel configuration steps, which is where the sale mode lives.
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card_product
                 - madcoders_sylius_gift_card.behat.context.ui.shop.bought_gift_card
 

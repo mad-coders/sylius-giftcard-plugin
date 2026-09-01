@@ -16,5 +16,7 @@ interface CreatePageInterface extends BaseCreatePageInterface
 
     public function specifyValidityPeriod(string $period): void;
 
+    public function chooseSaleMode(string $saleMode): void;
+
     public function getCodeLengthValidationMessage(): string;
 }

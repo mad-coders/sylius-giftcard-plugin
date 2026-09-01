@@ -20,6 +20,14 @@ sylius_grid:
                 validityPeriod:
                     type: string
                     label: madcoders_sylius_gift_card.ui.validity_period
+                # A twig field rather than a string one: the stored value is an enum case, and an
+                # administrator scanning the list needs "Issued by an administrator only", not
+                # "admin_only".
+                saleMode:
+                    type: twig
+                    label: madcoders_sylius_gift_card.ui.sale_mode
+                    options:
+                        template: "@MadcodersSyliusGiftCardPlugin/admin/gift_card_configuration/grid/field/sale_mode.html.twig"
                 enabled:
                     type: twig
                     label: sylius.ui.enabled

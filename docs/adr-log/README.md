@@ -21,3 +21,4 @@ Consequences / Rules).
 | [0010](0010-gift-card-as-tender.md) | A gift card is tender, not a discount (supersedes 0004's mechanism) |
 | [0011](0011-symfony-workflow-only.md) | Symfony Workflow only, no winzou wiring (supersedes 0004's wiring) |
 | [0012](0012-rate-limiting-gift-card-redemption.md) | Redemption rate limited on the client address, one message for every refusal |
+| [0013](0013-gift-card-sale-mode.md) | Selling gift cards is a per-channel mode, enforced three times |

@@ -9,6 +9,7 @@ use Doctrine\Persistence\ObjectManager;
 use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -37,6 +38,22 @@ final class GiftCardContext implements Context
     public function theChannelIssuesGiftCardCodesLongPrefixedWith(int $length, string $prefix): void
     {
         $this->createConfiguration(['code_length' => $length, 'code_prefix' => $prefix]);
+    }
+
+    /**
+     * @Given the channel sells gift cards in the shop
+     */
+    public function theChannelSellsGiftCardsInTheShop(): void
+    {
+        $this->createConfiguration(['sale_mode' => GiftCardSaleMode::Sellable->value]);
+    }
+
+    /**
+     * @Given the channel issues gift cards by an administrator only
+     */
+    public function theChannelIssuesGiftCardsByAnAdministratorOnly(): void
+    {
+        $this->createConfiguration(['sale_mode' => GiftCardSaleMode::AdminOnly->value]);
     }
 
     /**

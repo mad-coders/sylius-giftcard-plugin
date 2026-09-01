@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!--
+            The alias in `validatedBy()` is what the validator factory looks up, so the tag has to
+            carry it - the class name alone would not be found.
+        -->
+        <service id="madcoders_sylius_gift_card.validator.gift_card_purchase_allowed"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardPurchaseAllowedValidator">
+            <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_purchase" />
+            <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_purchase_allowed" />
+        </service>
+
+        <service id="madcoders_sylius_gift_card.validator.order_gift_card_purchase_allowed"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\OrderGiftCardPurchaseAllowedValidator">
+            <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_purchase" />
+            <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_order_purchase_allowed" />
+        </service>
+    </services>
+
+</container>

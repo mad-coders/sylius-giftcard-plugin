@@ -1,0 +1,11 @@
+{# Whether this channel sells gift cards, or only issues them from the back office. Admin-only is
+   highlighted because it is the setting that turns customer purchases off.
+
+   `data` is the GiftCardSaleMode case itself - the grid field has no `path`, so it is the value at
+   the field's own name rather than the whole row. #}
+{% set admin_only = data.value == 'admin_only' %}
+
+<span class="badge {{ admin_only ? 'bg-warning text-dark' : 'bg-secondary' }}"
+      {{ sylius_test_html_attribute('gift-card-sale-mode', data.value) }}>
+    {{ ('madcoders_sylius_gift_card.ui.sale_mode_choice.' ~ data.value)|trans }}
+</span>

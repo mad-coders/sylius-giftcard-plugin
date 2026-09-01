@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Madcoders\SyliusGiftCardPlugin\Form\Type;
 
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -57,6 +59,13 @@ final class GiftCardConfigurationType extends AbstractResourceType
                 'label' => 'madcoders_sylius_gift_card.ui.validity_period',
                 'required' => false,
                 'help' => 'madcoders_sylius_gift_card.ui.validity_period_help',
+            ])
+            ->add('saleMode', EnumType::class, [
+                'class' => GiftCardSaleMode::class,
+                'label' => 'madcoders_sylius_gift_card.ui.sale_mode',
+                'required' => true,
+                'help' => 'madcoders_sylius_gift_card.ui.sale_mode_help',
+                'choice_label' => static fn (GiftCardSaleMode $mode): string => 'madcoders_sylius_gift_card.ui.sale_mode_choice.' . $mode->value,
             ])
             ->add('enabled', CheckboxType::class, [
                 'label' => 'sylius.ui.enabled',

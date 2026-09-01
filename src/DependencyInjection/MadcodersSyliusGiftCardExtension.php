@@ -40,15 +40,14 @@ final class MadcodersSyliusGiftCardExtension extends AbstractResourceExtension i
 
         $this->loadRedemptionRateLimiter($config['redemption_rate_limit'], $this->isRateLimitExplicitlyEnabled($configs), $loader, $container);
 
-        // Validation lives in its own directory rather than alongside the Doctrine mapping, so a
-        // host overriding one does not have to take the other.
-        $container->prependExtensionConfig('framework', [
-            'validation' => [
-                'mapping' => [
-                    'paths' => [\dirname(__DIR__, 2) . '/config/validation'],
-                ],
-            ],
-        ]);
+        // `config/validation` is deliberately NOT registered here. FrameworkBundle already scans
+        // `<bundle path>/config/validation` for every registered bundle, and this plugin's
+        // getPath() points at the repository root - so the files load exactly once, on their own.
+        //
+        // Prepending to `framework` from load() would have been a no-op anyway
+        // (MergeExtensionConfigurationPass runs every prepend() before it loads any extension, and
+        // loads FrameworkBundle first), and moving it to prepend() would make the same files load
+        // TWICE - two identical violations per add-to-cart.
     }
 
     public function prepend(ContainerBuilder $container): void

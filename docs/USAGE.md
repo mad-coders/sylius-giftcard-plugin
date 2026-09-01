@@ -14,9 +14,10 @@ Each channel gets a **gift card configuration** under *Marketing > Gift card con
 | Code prefix | Prepended to every generated code, e.g. `GIFT-`. Optional. |
 | Code length | Number of random characters after the prefix. |
 | Validity period | How long a new card stays valid, as a relative date expression such as `1 year` or `6 months`. Leave empty for cards that never expire. |
+| Gift card sales | Whether customers may buy gift cards in this channel, or only an administrator may issue them. |
 
 A channel without a configuration still works - the defaults on the model apply (16 characters, no
-prefix, one year).
+prefix, one year, gift cards sold in the shop).
 
 Generated codes avoid the characters people misread off a card or an email (`0`/`O`, `1`/`I`/`L`,
 `5`/`S`) and come from a cryptographically secure source, because a guessable gift card code is a
@@ -38,6 +39,20 @@ When an order containing that product is **paid**:
 Issuing waits for payment, so an unpaid order never hands out spendable codes. If the order is
 later **cancelled**, the cards it issued are disabled - not deleted, so their history survives and
 an admin can reinstate them.
+
+### Not selling them
+
+Set **Gift card sales** to *Issued by an administrator only* for a channel that hands cards out as
+goodwill or compensation and never sells them. Adding a gift card product to the cart is refused,
+completing checkout with one already in the cart is refused, and an order that somehow reaches
+payment anyway issues nothing and logs a warning naming the order.
+
+The customer is stopped before they are charged. The add-to-cart button is still shown, though, so
+their first feedback is an error after clicking rather than a control that was never offered.
+
+The product keeps its gift card flag, so switching the mode back resumes selling. **Redeeming is
+unaffected in either mode** - a card an administrator issued is spendable in the shop exactly as a
+bought one is. See `docs/adr-log/0013-gift-card-sale-mode.md`.
 
 ## Redeeming a gift card
 

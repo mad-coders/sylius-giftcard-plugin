@@ -28,6 +28,11 @@ final class CreatePage extends BaseCreatePage implements CreatePageInterface
         $this->getDocument()->fillField('Validity period', $period);
     }
 
+    public function chooseSaleMode(string $saleMode): void
+    {
+        $this->getDocument()->selectFieldOption('Gift card sales', $saleMode);
+    }
+
     public function getCodeLengthValidationMessage(): string
     {
         // Matched on Bootstrap's class rather than the `<field>_errorN` id Symfony gives an error:
