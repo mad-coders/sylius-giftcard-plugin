@@ -165,6 +165,7 @@ Feature: Applying a gift card to my cart
         And I look at the checkout summary
         When I apply the gift card "GIFT-OLD" from the checkout
         Then I should be told in the checkout that the card cannot be redeemed
+        And I should still be in the checkout
         And no gift card should be applied in the checkout
 
     @ui
@@ -176,6 +177,7 @@ Feature: Applying a gift card to my cart
         And I look at the checkout summary
         When I apply the gift card "GIFT-OFF" from the checkout
         Then I should be told in the checkout that the card cannot be redeemed
+        And I should still be in the checkout
         And no gift card should be applied in the checkout
 
     @ui
@@ -190,4 +192,19 @@ Feature: Applying a gift card to my cart
         When I go to the payment step
         Then the payment step should let me redeem a gift card too
         When I apply the gift card "GIFT-40" from the payment step
-        Then the payment step should tell me I will be charged "$60.00"
+        Then I should still be on the payment step
+        And the payment step should tell me I will be charged "$60.00"
+
+    @ui
+    Scenario: A refusal on the payment step is not silent
+        # The checkout steps render no flashes of their own - only the cart and the summary step do -
+        # so the panel renders its own messages. Without that the page came back byte-identical and
+        # the customer was told nothing, while the unread message surfaced later on whichever page
+        # did render flashes, attached to the wrong action.
+        Given the store ships everywhere for free
+        And the store allows paying offline
+        And I have proceeded through checkout process
+        When I go to the payment step
+        And I apply the gift card "GIFT-NOPE" from the payment step
+        Then I should be told on the payment step that the code is not valid
+        And I should still be on the payment step

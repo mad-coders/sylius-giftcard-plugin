@@ -176,6 +176,30 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
+     * @Then I should still be on the payment step
+     */
+    public function iShouldStillBeOnThePaymentStep(): void
+    {
+        // Asserted on the route, not on a number: the amount to pay is rendered with the same test
+        // attribute on every checkout step, so reading "$60.00" proves nothing about where the
+        // customer landed.
+        Assert::true(
+            $this->paymentStepPage->isOpen(),
+            'Applying a gift card from the payment step did not return the customer to it.',
+        );
+    }
+
+    /**
+     * @Then I should be told on the payment step that the code is not valid
+     */
+    public function iShouldBeToldOnThePaymentStepThatTheCodeIsNotValid(): void
+    {
+        // The checkout steps render no flashes of their own, so the panel renders its own messages.
+        // Without that this page comes back byte-identical and the customer is told nothing.
+        $this->notificationChecker->checkNotification('There is no gift card with this code.', NotificationType::failure());
+    }
+
+    /**
      * @Then the payment step should tell me I will be charged :amount
      */
     public function thePaymentStepShouldTellMeIWillBeCharged(string $amount): void

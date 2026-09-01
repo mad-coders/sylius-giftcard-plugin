@@ -16,14 +16,21 @@
     it is told is an open redirect. The controller accepts only these keys and falls back to the
     cart, so a forged value achieves nothing.
 #}
+{#
+    Deliberately absent from the addressing step.
+
+    Applying a card is a form post followed by a redirect, so the step's own form is re-rendered from
+    whatever has been persisted - anything typed and not yet submitted is gone. On the shipping,
+    payment and summary steps that costs a customer a radio button. On the addressing step it costs
+    them a whole address, typed out by hand, and they would have no idea why.
+#}
 {% set return_to = {
-    'sylius_shop_checkout_address': 'checkout_address',
     'sylius_shop_checkout_select_shipping': 'checkout_shipping',
     'sylius_shop_checkout_select_payment': 'checkout_payment',
     'sylius_shop_checkout_complete': 'checkout_complete',
-}[app.request.attributes.get('_route')]|default('cart') %}
+}[app.request.attributes.get('_route')]|default(null) %}
 
-{% if order is not null and not order.empty %}
+{% if return_to is not null and order is not null and not order.empty %}
     <div class="mt-4 pt-3 border-top" {{ sylius_test_html_attribute('checkout-gift-card-panel') }}>
         <h6 class="mb-3">{{ 'madcoders_sylius_gift_card.ui.gift_cards'|trans }}</h6>
 

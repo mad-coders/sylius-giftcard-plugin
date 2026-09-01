@@ -54,6 +54,28 @@ final class GiftCardCartControllerTest extends TestCase
         self::assertSame('/cart', $response->getTargetUrl());
     }
 
+    public function testAnArrayReturnTargetFallsBackToTheCartRatherThanA400(): void
+    {
+        // InputBag::get() throws a BadRequestException on a non-scalar value, before any cast can
+        // run, so `_return_to[]=cart` used to be a 400 rather than the documented fallback.
+        $response = $this->removeWithParameters(['_token' => 'nope', '_return_to' => ['cart']]);
+
+        self::assertSame('/cart', $response->getTargetUrl());
+    }
+
+    public function testItWillNotSendTheCustomerIntoCheckoutWithoutASavedCart(): void
+    {
+        // Sylius looks a checkout step's cart up by id, and its fallback cart context hands back an
+        // unsaved order - so redirecting there would be a 404. This is what an expired session with
+        // a checkout page left open looks like, which is the worst moment to show one.
+        $response = $this->removeWithParameters(
+            ['_token' => 'nope', '_return_to' => 'checkout_payment'],
+            cartHasId: false,
+        );
+
+        self::assertSame('/cart', $response->getTargetUrl());
+    }
+
     private function removeWithReturnTo(?string $returnTo): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         // Driven through removeAction with a bad CSRF token: that path returns the redirect without
@@ -65,11 +87,22 @@ final class GiftCardCartControllerTest extends TestCase
             $parameters['_return_to'] = $returnTo;
         }
 
+        return $this->removeWithParameters($parameters);
+    }
+
+    /** @param array<string, mixed> $parameters */
+    private function removeWithParameters(
+        array $parameters,
+        bool $cartHasId = true,
+    ): \Symfony\Component\HttpFoundation\RedirectResponse {
         $csrfTokenManager = $this->createMock(CsrfTokenManagerInterface::class);
         $csrfTokenManager->method('isTokenValid')->willReturn(false);
 
+        $cart = $this->createMock(\Madcoders\SyliusGiftCardPlugin\Model\OrderInterface::class);
+        $cart->method('getId')->willReturn($cartHasId ? 1 : null);
+
         $cartContext = $this->createMock(CartContextInterface::class);
-        $cartContext->method('getCart')->willReturn($this->createMock(\Madcoders\SyliusGiftCardPlugin\Model\OrderInterface::class));
+        $cartContext->method('getCart')->willReturn($cart);
 
         $controller = new GiftCardCartController(
             $cartContext,

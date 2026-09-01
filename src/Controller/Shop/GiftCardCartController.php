@@ -34,6 +34,18 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final readonly class GiftCardCartController
 {
+    /**
+     * Flash types the plugin's own panel renders, rather than Sylius' 'success' and 'error'.
+     *
+     * The checkout steps do not render flashes at all - only the cart and the summary step do - so a
+     * refusal on the payment step was silent, and the unread message then surfaced on whichever
+     * later page happened to render flashes, attached to the wrong action. The panel renders these
+     * itself, so the customer gets the same answer wherever they redeem from.
+     */
+    public const string FLASH_SUCCESS = 'madcoders_gift_card_success';
+
+    public const string FLASH_ERROR = 'madcoders_gift_card_error';
+
     private const array RETURN_ROUTES = [
         'cart' => 'sylius_shop_cart_summary',
         'checkout_address' => 'sylius_shop_checkout_address',
@@ -56,58 +68,58 @@ final readonly class GiftCardCartController
     {
         $cart = $this->getCart();
         if (null === $cart) {
-            return $this->redirectBack($request);
+            return $this->redirectToCart();
         }
 
         $form = $this->formFactory->create(GiftCardCodeType::class);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.code_required');
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.code_required');
 
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         }
 
         $submittedCode = $form->get('code')->getData();
         $code = is_string($submittedCode) ? trim($submittedCode) : '';
 
         if ('' === $code) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.code_required');
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.code_required');
 
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         }
 
         try {
             $this->giftCardApplicator->apply($cart, $code);
         } catch (GiftCardNotFoundException) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.not_found');
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.not_found');
 
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         } catch (GiftCardNotRedeemableException) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.not_redeemable');
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.not_redeemable');
 
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         } catch (ChannelMismatchException) {
-            $this->addFlash($request, 'error', 'madcoders_sylius_gift_card.cart.channel_mismatch');
+            $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.channel_mismatch');
 
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         }
 
         $this->orderManager->flush();
-        $this->addFlash($request, 'success', 'madcoders_sylius_gift_card.cart.applied');
+        $this->addFlash($request, self::FLASH_SUCCESS, 'madcoders_sylius_gift_card.cart.applied');
 
-        return $this->redirectBack($request);
+        return $this->redirectBack($request, $cart);
     }
 
     public function removeAction(Request $request, string $code): RedirectResponse
     {
         $cart = $this->getCart();
         if (null === $cart) {
-            return $this->redirectBack($request);
+            return $this->redirectToCart();
         }
 
         if (!$this->isCsrfTokenValid('madcoders_sylius_gift_card_remove', (string) $request->request->get('_token'))) {
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         }
 
         try {
@@ -115,13 +127,13 @@ final readonly class GiftCardCartController
         } catch (GiftCardNotFoundException) {
             // Deliberately the same outcome as a successful removal: the card was not on this cart,
             // and saying whether the code exists at all would leak which codes are real.
-            return $this->redirectBack($request);
+            return $this->redirectBack($request, $cart);
         }
 
         $this->orderManager->flush();
-        $this->addFlash($request, 'success', 'madcoders_sylius_gift_card.cart.removed');
+        $this->addFlash($request, self::FLASH_SUCCESS, 'madcoders_sylius_gift_card.cart.removed');
 
-        return $this->redirectBack($request);
+        return $this->redirectBack($request, $cart);
     }
 
     private function getCart(): ?OrderInterface
@@ -155,12 +167,29 @@ final readonly class GiftCardCartController
      * Only the keys of RETURN_ROUTES are accepted, so an unknown or forged value can do nothing
      * except send the customer to their cart.
      */
-    private function redirectBack(Request $request): RedirectResponse
+    private function redirectBack(Request $request, ?OrderInterface $cart): RedirectResponse
     {
-        $key = (string) $request->request->get('_return_to', 'cart');
+        // A checkout step with no saved cart behind it is a 404 - Sylius looks the cart up by id and
+        // the fallback cart context hands back an unsaved order. That happens when the session
+        // expires with a checkout page open, which is exactly when the customer is least able to
+        // understand a 404. The cart page handles having nothing to show.
+        if (null === $cart || null === $cart->getId()) {
+            return $this->redirectToCart();
+        }
+
+        // Read through all() rather than get()/getString(): both throw a 400 on a non-scalar value
+        // before any cast can run, and `_return_to[]=cart` should fall back to the cart like every
+        // other unrecognised value rather than becoming a bad request.
+        $raw = $request->request->all()['_return_to'] ?? null;
+        $key = is_string($raw) ? $raw : 'cart';
 
         return new RedirectResponse(
             $this->urlGenerator->generate(self::RETURN_ROUTES[$key] ?? self::RETURN_ROUTES['cart']),
         );
+    }
+
+    private function redirectToCart(): RedirectResponse
+    {
+        return new RedirectResponse($this->urlGenerator->generate(self::RETURN_ROUTES['cart']));
     }
 }

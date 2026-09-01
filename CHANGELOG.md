@@ -13,10 +13,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   shipping and payment steps and on the summary page. It existed only on the cart before, so a
   customer already in checkout had to go back to find it - at exactly the moment they are looking at
   what they are about to pay. Applying or removing a card returns them to the step they were on.
+  Not on the addressing step: applying is a post and redirect, so anything typed into that step's
+  form and not yet submitted would be lost, and on that step it is a whole hand-typed address.
   Closes #30.
 
 ### Changed
 
+- Gift card messages are rendered by the panel itself, under plugin-owned flash types, rather than
+  left to the page. Only the cart and the checkout summary step render flashes at all, so a refusal
+  on the shipping or payment step was silent - and the unread message then surfaced on whichever
+  later page did render flashes, attached to the wrong action.
 - The apply and remove endpoints accept an optional `_return_to` field naming where to send the
   customer afterwards. It is resolved through a whitelist of keys, never a submitted URL or the
   referer, so a forged value can only send them to their own cart. Anything already posting to these
