@@ -5,7 +5,7 @@
    the field's own name rather than the whole row. #}
 {% set admin_only = data.value == 'admin_only' %}
 
-<span class="badge {{ admin_only ? 'bg-warning text-dark' : 'bg-secondary' }}"
+<span class="badge {{ admin_only ? 'text-bg-warning' : 'text-bg-secondary' }}"
       {{ sylius_test_html_attribute('gift-card-sale-mode', data.value) }}>
     {{ ('madcoders_sylius_gift_card.ui.sale_mode_choice.' ~ data.value)|trans }}
 </span>

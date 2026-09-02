@@ -49,6 +49,7 @@ madcoders_sylius_gift_card:
             ta karta ma być ważna inaczej; pola nie można wyczyścić.
         expires_at_not_recorded: Nie zapisano
         gift_card: Karta podarunkowa
+        gift_card_configurations: Konfiguracja kart podarunkowych
         gift_card_code: Kod karty podarunkowej
         gift_card_message: Wiadomość
         gift_card_message_help: Opcjonalnie. Do %limit% znaków, pokazywana razem z

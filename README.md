@@ -19,13 +19,16 @@ until 1.0.0 is tagged.
 
 - **Sell gift cards** as ordinary Sylius products. A card is generated per purchased unit when the
   order is paid, and emailed to the customer.
-- **Redeem gift cards** against an order total. Cards are applied as order adjustments, so they
-  stack, compose with promotions, and can never push a total below zero.
+- **Redeem gift cards** against what the customer owes, from the cart or from the checkout. A card
+  is money, not a discount: the order total stays at the full value of the goods and the *payment*
+  is what shrinks. Cards stack, and together they can never cover more than is owed. See
+  [ADR 0010](docs/adr-log/0010-gift-card-as-tender.md).
 - **Track the balance.** A gift card knows both the customer who *bought* it and the customer who
   *uses* it, so the person actually spending the card sees its remaining balance and history in
   their account - even though someone else paid for it.
 - **Administer cards** from the Sylius admin: create them manually, adjust balances, and configure
-  code format and validity per channel.
+  code format, validity, whether cards are sold at all, and how a customer chooses an amount - all
+  per channel. Every gift card has an expiry date, and every balance change leaves a ledger entry.
 - **Treat codes as money.** The redeem field is rate limited per client, refusals say the same thing
   whether or not the code exists, and no code ever reaches a log, a flash or an exception message.
   Needs `symfony/rate-limiter`; see [`docs/INSTALLATION.md`](docs/INSTALLATION.md).
