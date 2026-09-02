@@ -7,64 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
+## [1.0.0-RC.3] - 2026-09-02
 
-- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), so a contributor can read
-  the mail the plugin sends. A gift card's code reaches the customer by email, and there was no way
-  to see it: `MAILER_DSN` is `null://null`. That default is unchanged, so CI still needs no mail
-  server - point the mailer at mailpit in `tests/TestApplication/.env.local` when you want to read
-  it. See `docs/CONTRIBUTING.md`.
+Third release candidate, and the first that installs. **Anyone on RC.1 or RC.2 must upgrade**: in
+both of those the plugin's migrations never ran, so `doctrine:migrations:migrate` created no gift
+card tables at all, silently. That is fixed here, and a CI job now installs the plugin into a clean
+Sylius on every pull request so it cannot regress.
 
-### Fixed
+Beyond that this candidate adds the features a shop actually needs to sell gift cards: a redeem
+field in the checkout as well as the cart, customer-chosen amounts with a message, a per-channel
+switch for whether cards are sold at all, mandatory expiry dates, rate limiting on redemption, and a
+rule that a gift card cannot buy a gift card. It also ships a user guide.
 
-- **Validation on the admin gift card forms never ran.** `GiftCardType` and
-  `GiftCardConfigurationType` were registered with only the `madcoders_sylius_gift_card` validation
-  group while their constraints sat in `Default`, and Symfony evaluates a constraint only when the
-  two intersect - so the `NotBlank` and `Positive` on the initial amount, the `UniqueEntity` on the
-  code and the minimum code length were all skipped in silence. Both forms now validate with
-  `Default` as well, so every one of them is evaluated, without taking the resource group away from a
-  host that has declared constraints in it. See
-  `docs/adr-log/0017-resource-forms-validate-with-default-too.md`. Closes #44.
-- The gift card configuration form no longer raises the code-length error twice. It carried a
-  hand-written `POST_SUBMIT` listener that reported a short code length itself, added on the belief
-  that the field's own `GreaterThanOrEqual` could never fire because the model raises a short value
-  to the minimum first. It can: a field constraint validates the submitted value, not the model. With
-  the group mismatch above fixed, both fired and the operator was shown the same sentence twice. The
-  listener is gone; the constraint does the job alone.
-- **A blank or zero initial amount gave the administrator a 500.** With the constraints inert, the
-  submitted value went straight to `GiftCard::setInitialAmount()`, which refuses both by throwing.
-  Symfony writes a submitted value onto the object before it validates it, so making the constraints
-  run was not enough on its own: the field now declines the write when the value is one the model
-  would refuse, and the administrator is told which field is wrong instead.
-- **A duplicate gift card code was refused by the unique index rather than by the form**, as a
-  driver-level integrity violation. It is now a field error naming the code, which is what somebody
-  importing a batch of pre-printed cards needs to see.
-- **An administrator could issue or edit a gift card into the past**, making a spendable balance
-  unspendable with no warning and no entry in the card's history - a customer's $200 quietly worth
-  nothing. The expiry date can no longer be moved into the past: a card cannot be issued already
-  expired, and a live card's date cannot be edited backwards. Bringing an expiry forward to a date
-  still in the future is untouched, and a card that had *already* expired stays editable, so the
-  cards the mandatory-expiry migration dated into the past can still be disabled or corrected.
-  Deliberate retirement goes through the balance instead - adjusting a card to zero takes it out of
-  circulation *and* writes a ledger entry, which backdating never did. See
-  `docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md`. Closes #45.
-- The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's
-  `bg-secondary`, which sets a background but no foreground colour, so "Sold in the shop" rendered as
-  a blank grey pill. Now uses `text-bg-secondary`, as the rest of the plugin already did.
-- The gift card configuration index rendered its own translation key as the page heading, breadcrumb
-  and browser title: `madcoders_sylius_gift_card.ui.gift_card_configurations` was never defined.
-- The gift card show page rendered `sylius.ui.yes` and `sylius.ui.no` verbatim. Sylius 2 does not
-  ship those keys; the field now uses `sylius.ui.enabled` / `sylius.ui.disabled`, which it does, and
-  which read better for a field labelled Enabled.
-
-### Documentation
-
-- Corrected the README, which still described redemption in the pre-tender terms the plugin
-  abandoned: cards applied "against an order total" as "order adjustments" that "can never push a
-  total below zero". Under ADR 0010 the total is precisely what a gift card does not touch. It now
-  says the payment shrinks and the total does not, and links to the ADR.
-- The README's admin bullet now mentions the sale mode, amount modes, mandatory expiry and the
-  balance ledger, all of which shipped without it being updated.
+Upgrading from RC.2 changes behaviour in three ways worth reading before you deploy: every gift card
+now needs an expiry date and the migration dates existing cards from when they were created, which
+can leave some already expired; a card's face value now excludes tax; and a gift card can no longer
+pay for a gift card. Each is described under Changed, and in `docs/INSTALLATION.md`.
 
 ### Security
 
@@ -77,20 +35,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the cheapest card in the shop. The endpoint is an anonymous POST and a gift card code is money to
   whoever holds it, so unlimited attempts were a brute-force oracle. Removing a card is deliberately
   not limited: it resolves against the cart and never consults the repository. Closes #33.
+
 - The limiter keys on the client **network** - IPv6 aggregated to its /64 - because a routed /64 comes
   free with any cheap VPS, and a second, looser window watches the whole shop for guessing spread
   across many addresses. The shop-wide window alerts at `error` rather than blocking by default;
   `shop_blocks: true` makes it enforce.
+
 - The limiter **stands down, loudly, rather than lock a shop out**. A request carrying forwarding
   headers while `framework.trusted_proxies` is unset would otherwise put every customer behind a CDN
   in one bucket, so eleven wrong codes would stop redemption for everybody. That case logs a warning
   and is not limited. Configure trusted proxies - see `docs/INSTALLATION.md`.
+
 - `symfony/lock` is suggested alongside `symfony/rate-limiter` and wired when present. Without it the
   counter is an unsynchronised read-modify-write, so concurrent attempts get roughly worker-count
   tries per round trip rather than the configured limit.
+
 - `redemption_rate_limit.enabled: true` without `symfony/rate-limiter` installed now fails the
   container build instead of silently doing nothing, and an unparseable `interval` is rejected while
   the container is built rather than throwing on the first customer to type a code.
+
 - A failed redemption now says the same thing whatever went wrong. "There is no gift card with this
   code", "this gift card cannot be used - it may be expired, disabled or already spent" and "this
   gift card cannot be used in this store" were three answers to the question *does this code exist?*,
@@ -101,61 +64,111 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   translation keys are gone - a host that overrode them should override `cart.not_usable` and
   `cart.too_many_attempts` instead. See `docs/adr-log/0012-rate-limiting-gift-card-redemption.md`.
 
-### Added
+### Fixed
 
-- A channel can now be set to issue gift cards **by an administrator only**, so a shop that hands
-  cards out as goodwill or compensation is not forced to sell them as well. The setting lives on the
-  channel's gift card configuration as a mode rather than a flag - "sellable to logged-in customers
-  only" is the obvious next answer, and a boolean would need another column to say it. The mode is
-  shown in the configuration list, so an operator running several channels can see which of them
-  sell gift cards without opening each one.
+- **Validation on the admin gift card forms never ran.** `GiftCardType` and
+  `GiftCardConfigurationType` were registered with only the `madcoders_sylius_gift_card` validation
+  group while their constraints sat in `Default`, and Symfony evaluates a constraint only when the
+  two intersect - so the `NotBlank` and `Positive` on the initial amount, the `UniqueEntity` on the
+  code and the minimum code length were all skipped in silence. Both forms now validate with
+  `Default` as well, so every one of them is evaluated, without taking the resource group away from a
+  host that has declared constraints in it. See
+  `docs/adr-log/0017-resource-forms-validate-with-default-too.md`. Closes #44.
 
-  It is enforced at each of the three points where a customer can move from wanting a gift card to
-  holding one: adding one to the cart is refused, **completing checkout with one in the cart is
-  refused**, and paying such an order issues nothing. The checkout refusal is the one that matters,
-  because it is the last point at which the customer has not yet been charged - a cart outlives the
-  setting, so a check only at the cart would let every cart that predates the change through, for as
-  long as the oldest unpaid order lives. It also covers raising the quantity of a gift card already
-  in the cart, which Sylius does through a path that never runs the add-to-cart check at all.
+- The gift card configuration form no longer raises the code-length error twice. It carried a
+  hand-written `POST_SUBMIT` listener that reported a short code length itself, added on the belief
+  that the field's own `GreaterThanOrEqual` could never fire because the model raises a short value
+  to the minimum first. It can: a field constraint validates the submitted value, not the model. With
+  the group mismatch above fixed, both fired and the operator was shown the same sentence twice. The
+  listener is gone; the constraint does the job alone.
 
-  The guard at issue stays as a backstop and now **logs a warning** when it fires, naming the order
-  and the channel. Anything reaching it has been charged and has no card, and that needs reconciling
-  by hand rather than waiting for a complaint.
+- **A blank or zero initial amount gave the administrator a 500.** With the constraints inert, the
+  submitted value went straight to `GiftCard::setInitialAmount()`, which refuses both by throwing.
+  Symfony writes a submitted value onto the object before it validates it, so making the constraints
+  run was not enough on its own: the field now declines the write when the value is one the model
+  would refuse, and the administrator is told which field is wrong instead.
 
-  One rough edge: the add-to-cart button still renders, and still renders enabled, so in admin-only
-  mode the customer's first feedback is an error after clicking rather than a control that was never
-  offered. The refusal is correct, but late.
+- **A duplicate gift card code was refused by the unique index rather than by the form**, as a
+  driver-level integrity violation. It is now a field error naming the code, which is what somebody
+  importing a batch of pre-printed cards needs to see.
 
-  **Redeeming is untouched in either mode.** A card an administrator handed out is money the shop
-  has already promised; a mode that refused to take it back would turn a goodwill gesture into a
-  complaint. See `docs/adr-log/0013-gift-card-sale-mode.md`.
+- **An administrator could issue or edit a gift card into the past**, making a spendable balance
+  unspendable with no warning and no entry in the card's history - a customer's $200 quietly worth
+  nothing. The expiry date can no longer be moved into the past: a card cannot be issued already
+  expired, and a live card's date cannot be edited backwards. Bringing an expiry forward to a date
+  still in the future is untouched, and a card that had *already* expired stays editable, so the
+  cards the mandatory-expiry migration dated into the past can still be disabled or corrected.
+  Deliberate retirement goes through the balance instead - adjusting a card to zero takes it out of
+  circulation *and* writes a ledger entry, which backdating never did. See
+  `docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md`. Closes #45.
 
-  Existing shops are unaffected: the mode defaults to sellable, in the model, in the column default
-  and for a channel with no configuration at all. Closes #32.
+- The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's
+  `bg-secondary`, which sets a background but no foreground colour, so "Sold in the shop" rendered as
+  a blank grey pill. Now uses `text-bg-secondary`, as the rest of the plugin already did.
 
-- **Customers choose what a gift card is worth.** A channel's gift card configuration now decides how
-  the amount is picked: the product's price as before, a list of preset amounts, any amount within a
-  minimum and maximum, or presets plus a free amount. Presets and bounds are per channel and in that
-  channel's currency. The chosen amount becomes the order line's price, so the order total, the taxes
-  and the payment all reflect it, and the issued card is worth exactly that. Closes #34.
-- **Customers can leave a short message with a gift card.** Up to 255 characters, shown on the form,
-  enforced server side, stored on the cards issued for that line only, and shown with the code in the
-  delivery email, on the card's page in the customer's account and in the admin. It is untrusted text
-  and is rendered as text everywhere - with a test that proves it rather than assuming it. Closes #35.
-- Two gift cards bought in one order keep their own amount and message even when they are the same
-  product. Sylius merges cart lines whose variants match and discards the incoming one, so without
-  this the second card silently inherited the first card's amount and message - and the customer was
-  charged for two of whichever they picked first.
-- Both fields sit on the gift card product page inside Sylius' own add-to-cart form, as plain HTML:
-  the presets are radio buttons styled as cards, the free amount is a number input, the message is a
-  textarea. Nothing needs JavaScript to decide what gets submitted.
-- The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
-  shipping and payment steps and on the summary page. It existed only on the cart before, so a
-  customer already in checkout had to go back to find it - at exactly the moment they are looking at
-  what they are about to pay. Applying or removing a card returns them to the step they were on.
-  Not on the addressing step: applying is a post and redirect, so anything typed into that step's
-  form and not yet submitted would be lost, and on that step it is a whole hand-typed address.
-  Closes #30.
+- The gift card configuration index rendered its own translation key as the page heading, breadcrumb
+  and browser title: `madcoders_sylius_gift_card.ui.gift_card_configurations` was never defined.
+
+- The gift card show page rendered `sylius.ui.yes` and `sylius.ui.no` verbatim. Sylius 2 does not
+  ship those keys; the field now uses `sylius.ui.enabled` / `sylius.ui.disabled`, which it does, and
+  which read better for a field labelled Enabled.
+
+- `make serve-test` (and `make serve`) served the application with PHP's default 128M memory limit
+  and without `variables_order=EGPCS`. The first meant the shop 500s with a blank page on any request
+  that warms a cold container; the second meant `APP_ENV` never reached Symfony, so `make serve-test`
+  quietly booted `dev` against the dev database. Both are why the `@javascript` Behat suite could not
+  be run locally by following the documented workflow.
+
+- The gift card configuration form silently ignored a code length below the minimum. `setCodeLength()`
+  raises anything shorter to 12 as a backstop, so by the time the field was validated it held the
+  raised value and the constraint passed - an operator who asked for 4-character codes was given
+  12-character ones and told nothing, walking away believing their channel issues short codes. The
+  submitted value is now checked before the model rounds it up, and the form says so.
+
+- `make backend`, `make db-reset`, `make fixtures` and `make serve` failed on a clean checkout:
+  building the full Sylius container exceeds PHP's default 128M CLI limit, and only `lint-container`
+  lifted it. Every console call now does.
+
+- Naming a customer that does not exist as a gift card fixture's `purchaser` or `redeemer` silently
+  linked nobody, because Sylius' `LazyOption` yields null for an unknown email. It now fails with the
+  address it could not find - the previous behaviour produced demo data that claimed to show the
+  two-customer model while showing nothing.
+
+- **The plugin's migrations never ran in a host application.** They were registered under the
+  `DoctrineMigrations` namespace, which a Sylius application already maps to its own `migrations/`
+  directory - and the application's configuration beats anything the plugin prepends, so the path
+  was silently discarded. `doctrine:migrations:migrate` created no gift card tables at all. They now
+  register under `Madcoders\SyliusGiftCardPlugin\Migrations`, as every other Sylius plugin does.
+  The test application was unaffected, which is why nothing caught it until the plugin was installed
+  into a real Sylius.
+
+- **`docs/INSTALLATION.md` told you to create three files that already exist.** Sylius Standard ships
+  `src/Entity/Order/Order.php`, `src/Entity/Order/OrderItemUnit.php` and
+  `src/Entity/Product/Product.php`, and they already carry other plugins' interfaces and traits.
+  Following the guide literally replaced them, which stripped those traits and `Product`'s
+  `createTranslation()` - breaking product translations, and with them the fixtures and the shop.
+  Step 6 is now written as a modification of the existing classes.
+
+- **Validation messages no longer reach the user as raw translation keys.** Symfony resolves every
+  constraint violation in the `validators` catalogue, never in `messages`, so nine keys that lived in
+  `translations/messages.*.yaml` rendered as, for example,
+  `madcoders_sylius_gift_card.gift_card.amount.positive` where a sentence belonged. They have moved
+  to `translations/validators.en.yaml` and `validators.pl.yaml`: the gift card `code`,
+  `initial_amount` and `amount` messages, and the gift card configuration's `code_length`,
+  `amount_presets` and `bounds` ones. A host that overrode any of them in `messages` has to move its
+  override to `validators` too. Closes #37.
+
+- The gift card configuration form's own error messages are translated from `validators` as well,
+  rather than from the translator's default domain. Those are added as a `FormError` by hand, which
+  nothing translates on the way out, so the form has to do it - and doing it in `messages` is what
+  split the plugin's validation messages across two catalogues and hid the bug above: the one message
+  the plugin translated itself was the one message that worked, and the only one a test asserted.
+  There is now one rule, recorded in `ai/coding-rules.md`: a validation message lives in `validators`,
+  whoever raises it.
+
+- The admin balance-adjustment form renders with the admin form theme. It was falling back to Twig's
+  default theme, so a rejected adjustment showed its reason as an unstyled bare list in the middle of
+  the admin panel.
 
 ### Changed
 
@@ -220,6 +233,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `madcoders_sylius_gift_card.calculator.gift_card_expiry`. `GiftCardType` takes the calculator,
     the configuration provider and `sylius.repository.channel`, which is what pre-fills the expiry
     field. An out-of-date definition fails on arity rather than binding the wrong service.
+
 - **Breaking for hosts that redefine `madcoders_sylius_gift_card.operator.order_gift_card`
   positionally.** `OrderGiftCardOperator::__construct()` takes two more arguments: a
   `GiftCardPurchaseCheckerInterface` and an optional PSR-3 `LoggerInterface`. Both are **appended**,
@@ -227,6 +241,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   binding the entity manager into the checker's slot. A host that redefined the service needs to add
   `madcoders_sylius_gift_card.checker.gift_card_purchase` as the fifth argument; the logger may be
   omitted, and is passed with `on-invalid="null"` so the plugin still works without MonologBundle.
+
 - **A card's face value now excludes tax charged on top of the price.** It is what was paid for the
   unit, promotions included, minus any non-neutral tax adjustment. A tax-exclusive shop previously
   issued a 55 card to a customer who paid 50 plus tax - the mis-issue ADR 0010 named and did not fix
@@ -242,14 +257,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   may be holding an order confirmation quoting the larger figure. Cards already issued are not
   touched. Either settle outstanding gift card orders before upgrading, or expect to top up the
   affected cards by hand from the admin.
+
 - **Host applications must apply `OrderItemInterface` and `OrderItemTrait` to their `OrderItem`**, and
   register the override, exactly as they already do for `Order`, `OrderItemUnit` and `Product`. That
   is where the chosen amount and the message live. See `docs/INSTALLATION.md` step 6, and run the new
   migration.
+
 - Gift card messages are rendered by the panel itself, under plugin-owned flash types, rather than
   left to the page. Only the cart and the checkout summary step render flashes at all, so a refusal
   on the shipping or payment step was silent - and the unread message then surfaced on whichever
   later page did render flashes, attached to the wrong action.
+
 - The apply and remove endpoints accept an optional `_return_to` field naming where to send the
   customer afterwards. It is resolved through a whitelist of keys, never a submitted URL or the
   referer, so a forged value can only send them to their own cart. Anything already posting to these
@@ -257,72 +275,93 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), so a contributor can read
+  the mail the plugin sends. A gift card's code reaches the customer by email, and there was no way
+  to see it: `MAILER_DSN` is `null://null`. That default is unchanged, so CI still needs no mail
+  server - point the mailer at mailpit in `tests/TestApplication/.env.local` when you want to read
+  it. See `docs/CONTRIBUTING.md`.
+
+- A channel can now be set to issue gift cards **by an administrator only**, so a shop that hands
+  cards out as goodwill or compensation is not forced to sell them as well. The setting lives on the
+  channel's gift card configuration as a mode rather than a flag - "sellable to logged-in customers
+  only" is the obvious next answer, and a boolean would need another column to say it. The mode is
+  shown in the configuration list, so an operator running several channels can see which of them
+  sell gift cards without opening each one.
+
+  It is enforced at each of the three points where a customer can move from wanting a gift card to
+  holding one: adding one to the cart is refused, **completing checkout with one in the cart is
+  refused**, and paying such an order issues nothing. The checkout refusal is the one that matters,
+  because it is the last point at which the customer has not yet been charged - a cart outlives the
+  setting, so a check only at the cart would let every cart that predates the change through, for as
+  long as the oldest unpaid order lives. It also covers raising the quantity of a gift card already
+  in the cart, which Sylius does through a path that never runs the add-to-cart check at all.
+
+  The guard at issue stays as a backstop and now **logs a warning** when it fires, naming the order
+  and the channel. Anything reaching it has been charged and has no card, and that needs reconciling
+  by hand rather than waiting for a complaint.
+
+  One rough edge: the add-to-cart button still renders, and still renders enabled, so in admin-only
+  mode the customer's first feedback is an error after clicking rather than a control that was never
+  offered. The refusal is correct, but late.
+
+  **Redeeming is untouched in either mode.** A card an administrator handed out is money the shop
+  has already promised; a mode that refused to take it back would turn a goodwill gesture into a
+  complaint. See `docs/adr-log/0013-gift-card-sale-mode.md`.
+
+  Existing shops are unaffected: the mode defaults to sellable, in the model, in the column default
+  and for a channel with no configuration at all. Closes #32.
+
+- **Customers choose what a gift card is worth.** A channel's gift card configuration now decides how
+  the amount is picked: the product's price as before, a list of preset amounts, any amount within a
+  minimum and maximum, or presets plus a free amount. Presets and bounds are per channel and in that
+  channel's currency. The chosen amount becomes the order line's price, so the order total, the taxes
+  and the payment all reflect it, and the issued card is worth exactly that. Closes #34.
+
+- **Customers can leave a short message with a gift card.** Up to 255 characters, shown on the form,
+  enforced server side, stored on the cards issued for that line only, and shown with the code in the
+  delivery email, on the card's page in the customer's account and in the admin. It is untrusted text
+  and is rendered as text everywhere - with a test that proves it rather than assuming it. Closes #35.
+
+- Two gift cards bought in one order keep their own amount and message even when they are the same
+  product. Sylius merges cart lines whose variants match and discards the incoming one, so without
+  this the second card silently inherited the first card's amount and message - and the customer was
+  charged for two of whichever they picked first.
+
+- Both fields sit on the gift card product page inside Sylius' own add-to-cart form, as plain HTML:
+  the presets are radio buttons styled as cards, the free amount is a number input, the message is a
+  textarea. Nothing needs JavaScript to decide what gets submitted.
+
+- The gift card redeem field is now in the checkout, under the totals it changes, on the addressing,
+  shipping and payment steps and on the summary page. It existed only on the cart before, so a
+  customer already in checkout had to go back to find it - at exactly the moment they are looking at
+  what they are about to pay. Applying or removing a card returns them to the step they were on.
+  Not on the addressing step: applying is a post and redirect, so anything typed into that step's
+  form and not yet submitted would be lost, and on that step it is a whole hand-typed address.
+  Closes #30.
+
 - Behat coverage for a gift card that stops being redeemable *after* the customer applied it -
   expiring, or disabled by an administrator, mid-checkout. The processor re-checks every card on each
   pass and drops the ones that are no longer redeemable, so the payment goes back to the full amount
   and the card keeps its balance. That was untested, and it is the one path where the plugin could
   have handed over goods for money nobody paid.
 
-### Fixed
-
-- `make serve-test` (and `make serve`) served the application with PHP's default 128M memory limit
-  and without `variables_order=EGPCS`. The first meant the shop 500s with a blank page on any request
-  that warms a cold container; the second meant `APP_ENV` never reached Symfony, so `make serve-test`
-  quietly booted `dev` against the dev database. Both are why the `@javascript` Behat suite could not
-  be run locally by following the documented workflow.
-- The gift card configuration form silently ignored a code length below the minimum. `setCodeLength()`
-  raises anything shorter to 12 as a backstop, so by the time the field was validated it held the
-  raised value and the constraint passed - an operator who asked for 4-character codes was given
-  12-character ones and told nothing, walking away believing their channel issues short codes. The
-  submitted value is now checked before the model rounds it up, and the form says so.
-
-### Added
-
 - Behat coverage for the per-channel gift card configuration screens, which had none: creating a
   configuration through the admin, and refusing a code length below the minimum. That minimum is a
   security control - a guessable gift card code is money anybody can spend - and the form is the only
   place it is enforced against a human.
 
-### Fixed
-
-- `make backend`, `make db-reset`, `make fixtures` and `make serve` failed on a clean checkout:
-  building the full Sylius container exceeds PHP's default 128M CLI limit, and only `lint-container`
-  lifted it. Every console call now does.
-- Naming a customer that does not exist as a gift card fixture's `purchaser` or `redeemer` silently
-  linked nobody, because Sylius' `LazyOption` yields null for an unknown email. It now fails with the
-  address it could not find - the previous behaviour produced demo data that claimed to show the
-  two-customer model while showing nothing.
-
-### Added
-
 - `madcoders_gift_card_product`, a fixture that marks products as gift card products - by code, or
   simply by count for a demo whose catalogue is generated. Without it there was no way to show a
   gift card being *sold*, which is half the plugin.
+
 - The demo suite now covers every state a card can be in: spendable, partly spent, spent out,
   expired, disabled, expiring soon, never expiring, and all three shapes of the two-customer model
   (bought-not-used, bought-by-one-used-by-another, bought-and-used-by-the-same-person). It creates
   two known customers for those, since Sylius' own fixtures generate random addresses.
+
 - `expires_at: never` in the gift card fixtures, for a card that outlives the channel's configured
   validity period. A null previously meant "let the configuration decide", so this was impossible to
   express.
-
-### Fixed
-
-- **The plugin's migrations never ran in a host application.** They were registered under the
-  `DoctrineMigrations` namespace, which a Sylius application already maps to its own `migrations/`
-  directory - and the application's configuration beats anything the plugin prepends, so the path
-  was silently discarded. `doctrine:migrations:migrate` created no gift card tables at all. They now
-  register under `Madcoders\SyliusGiftCardPlugin\Migrations`, as every other Sylius plugin does.
-  The test application was unaffected, which is why nothing caught it until the plugin was installed
-  into a real Sylius.
-- **`docs/INSTALLATION.md` told you to create three files that already exist.** Sylius Standard ships
-  `src/Entity/Order/Order.php`, `src/Entity/Order/OrderItemUnit.php` and
-  `src/Entity/Product/Product.php`, and they already carry other plugins' interfaces and traits.
-  Following the guide literally replaced them, which stripped those traits and `Product`'s
-  `createTranslation()` - breaking product translations, and with them the fixtures and the shop.
-  Step 6 is now written as a modification of the existing classes.
-
-### Added
 
 - An `installation` CI job that installs the plugin into a fresh Sylius Standard by following
   `docs/INSTALLATION.md`, on Sylius 2.0 and 2.2, and asserts the result boots: migrations produce the
@@ -331,28 +370,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   itself, so a stale or wrong snippet fails CI. Runnable locally with `make install-test`. Both bugs
   above were found by writing it.
 
-### Fixed
-
-- **Validation messages no longer reach the user as raw translation keys.** Symfony resolves every
-  constraint violation in the `validators` catalogue, never in `messages`, so nine keys that lived in
-  `translations/messages.*.yaml` rendered as, for example,
-  `madcoders_sylius_gift_card.gift_card.amount.positive` where a sentence belonged. They have moved
-  to `translations/validators.en.yaml` and `validators.pl.yaml`: the gift card `code`,
-  `initial_amount` and `amount` messages, and the gift card configuration's `code_length`,
-  `amount_presets` and `bounds` ones. A host that overrode any of them in `messages` has to move its
-  override to `validators` too. Closes #37.
-- The gift card configuration form's own error messages are translated from `validators` as well,
-  rather than from the translator's default domain. Those are added as a `FormError` by hand, which
-  nothing translates on the way out, so the form has to do it - and doing it in `messages` is what
-  split the plugin's validation messages across two catalogues and hid the bug above: the one message
-  the plugin translated itself was the one message that worked, and the only one a test asserted.
-  There is now one rule, recorded in `ai/coding-rules.md`: a validation message lives in `validators`,
-  whoever raises it.
-- The admin balance-adjustment form renders with the admin form theme. It was falling back to Twig's
-  default theme, so a rejected adjustment showed its reason as an unstyled bare list in the middle of
-  the admin panel.
-
 ### Documentation
+
+- Corrected the README, which still described redemption in the pre-tender terms the plugin
+  abandoned: cards applied "against an order total" as "order adjustments" that "can never push a
+  total below zero". Under ADR 0010 the total is precisely what a gift card does not touch. It now
+  says the payment shrinks and the total does not, and links to the ADR.
+
+- The README's admin bullet now mentions the sale mode, amount modes, mandatory expiry and the
+  balance ledger, all of which shipped without it being updated.
 
 - Recorded the removal of the winzou state machine wiring as
   `docs/adr-log/0011-symfony-workflow-only.md`, and corrected the five documents that still described
@@ -361,6 +387,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   would have had the next change reintroduce it. `docs/INSTALLATION.md` told hosts the winzou
   callbacks were prepended for them, which was simply false, and it now also documents the two
   decorated Sylius payment services.
+
 - Replaced the remaining pre-tender language ("reduce the order total", "gift card discount",
   "redeem them against order totals") in the README, `composer.json`, `docs/PLAN.md` and
   `docs/INSTALLATION.md`. ADR 0004 is marked "do not implement from it" with its superseded sections
@@ -566,6 +593,7 @@ the order being placed also leaves its coverage on that order rather than the or
   separately from the cards you bought, plus a balance history page per card. A customer can only
   see cards they are linked to.
 
-[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.2...1.0
+[Unreleased]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.3...1.0
+[1.0.0-RC.3]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.2...v1.0.0-RC.3
 [1.0.0-RC.2]: https://github.com/mad-coders/sylius-giftcard-plugin/compare/v1.0.0-RC.1...v1.0.0-RC.2
 [1.0.0-RC.1]: https://github.com/mad-coders/sylius-giftcard-plugin/releases/tag/v1.0.0-RC.1
