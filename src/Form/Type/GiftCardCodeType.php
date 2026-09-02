@@ -22,6 +22,17 @@ final class GiftCardCodeType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        // This type is a plain AbstractType, not an AbstractResourceType, so it validates with
+        // `Default` and the constraint below does run - unlike the ones on the admin forms before
+        // issue #44. What it cannot do is put its own message in front of the customer: the panel in
+        // templates/shop/common/gift_card_panel.html.twig writes the input by hand rather than
+        // rendering a form view, and the controller answers with a redirect, so there is no rendered
+        // field to hang an error on. GiftCardCartController therefore flashes
+        // `madcoders_sylius_gift_card.cart.code_required`, which says the same sentence.
+        //
+        // The constraint stays because it is what a host rendering this form with form_widget gets,
+        // and because a form that reports itself valid on an empty code would be lying to every
+        // other caller.
         $builder->add('code', TextType::class, [
             'label' => 'madcoders_sylius_gift_card.ui.gift_card_code',
             'required' => true,

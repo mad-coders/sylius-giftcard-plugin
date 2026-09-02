@@ -51,8 +51,10 @@ final class GiftCardConfigurationType extends AbstractResourceType
                 'label' => 'madcoders_sylius_gift_card.ui.code_length',
                 'required' => true,
                 'help' => 'madcoders_sylius_gift_card.ui.code_length_help',
-                // Kept for anything that validates the object directly, but it cannot catch a short
-                // code on this form - see the listener below.
+                // Evaluated since issue #44 - this form validates with `Default` as well as the
+                // resource group - but it still cannot catch a short code, for a second and quite
+                // separate reason: the model has already raised the value by the time the field is
+                // validated. See the listener below.
                 'constraints' => [
                     new GreaterThanOrEqual(
                         value: GiftCardConfiguration::MINIMUM_CODE_LENGTH,

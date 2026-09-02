@@ -16,12 +16,15 @@ use Tests\Madcoders\SyliusGiftCardPlugin\Entity\GiftCard\GiftCardConfiguration;
  * The unit tests construct validators by hand, so they say nothing about wiring. Two things here are
  * implicit and both fail silently: FrameworkBundle finds `config/validation/*.xml` only because the
  * bundle's getPath() returns the repository root, and a constraint is only evaluated when its
- * **group** matches the one the form validates with. The plugin's resource forms use
- * `madcoders_sylius_gift_card`, not `Default` - a constraint declared in only one of them is skipped
- * outright by the other path, with every unit test still green and the form quietly accepting a card
- * that never expires.
+ * **group** matches the one the form validates with - a constraint declared in only one group is
+ * skipped outright by the other path, with every unit test still green and the form quietly
+ * accepting a card that never expires.
  *
- * See docs/adr-log/0015-every-gift-card-expires.md.
+ * Both groups are still asked here even though the plugin's forms now validate with both of them
+ * (issue #44). The two are separate paths: the form's, and a host validating the entity on its own.
+ *
+ * See docs/adr-log/0015-every-gift-card-expires.md and
+ * docs/adr-log/0017-resource-forms-validate-with-default-too.md.
  */
 final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
 {
@@ -79,6 +82,25 @@ final class GiftCardExpiryConstraintWiringTest extends KernelTestCase
         $violations = $this->validator->validate($giftCard, null, [$group]);
 
         self::assertSame([], $this->pluginMessagesOf($violations));
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]
+    public function testAGiftCardIssuedAlreadyExpiredIsRefused(string $group): void
+    {
+        // The rule added in docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md. This
+        // card has never been stored, so there is no previous date to compare against and the
+        // submitted one is judged on its own - which is what a creation is.
+        $giftCard = new GiftCard();
+        $giftCard->setCode('GIFT-WIRING-PAST-EXPIRY');
+        $giftCard->setInitialAmount(5_000);
+        $giftCard->setExpiresAt(new \DateTime('-1 day'));
+
+        $violations = $this->validator->validate($giftCard, null, [$group]);
+
+        self::assertSame(
+            ['madcoders_sylius_gift_card.gift_card.expires_at.not_in_the_past'],
+            $this->pluginMessagesOf($violations),
+        );
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('validationGroups')]

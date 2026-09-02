@@ -8,6 +8,8 @@ use Sylius\Behat\Page\Admin\Crud\UpdatePage as BaseUpdatePage;
 
 final class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
 {
+    use ReadsValidationMessagesTrait;
+
     public function isCodeEditable(): bool
     {
         $field = $this->getDocument()->findField('Code');
@@ -39,5 +41,15 @@ final class UpdatePage extends BaseUpdatePage implements UpdatePageInterface
     public function isInitialAmountEditable(): bool
     {
         return null !== $this->getDocument()->findField('Initial amount');
+    }
+
+    public function specifyExpiryDate(string $expiresAt): void
+    {
+        $this->getDocument()->fillField('Expires at', $expiresAt);
+    }
+
+    public function disable(): void
+    {
+        $this->getDocument()->uncheckField('Enabled');
     }
 }

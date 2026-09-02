@@ -54,11 +54,12 @@ produces one.**
      cannot write a card without one either. This is the layer nothing can talk its way past.
 
    **All three enforce the same narrow thing: that a date is present.** None of them says the date is
-   sensible. An administrator can still type `2020-01-01` into the create form, or edit a live card's
-   date backwards, and issue or kill a spendable balance with no warning and no ledger entry - the
-   field carries `NotNull` and nothing else. #31 asked only that the field be unclearable, so that is
-   what this delivers; a date in the past is a separate gap and needs its own ticket. Read "three
+   sensible. #31 asked only that the field be unclearable, so that is what this delivers. Read "three
    depths" as three places a *missing* date is caught, not as a claim that the value is validated.
+
+   The separate gap this left - an administrator typing `2020-01-01` into the create form, or editing
+   a live card's date backwards, and killing a spendable balance with no warning and no ledger entry -
+   was closed by [0018](0018-an-expiry-date-cannot-be-moved-into-the-past.md). Read the two together.
 5. **A channel must state a validity period, in words the plugin can act on.** The configuration
    form requires it (`NotBlank`) and refuses one that cannot produce a future date (`ValidityPeriod`,
    which asks the calculator rather than parsing again - a second parser would eventually disagree

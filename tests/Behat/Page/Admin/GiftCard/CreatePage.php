@@ -8,6 +8,8 @@ use Sylius\Behat\Page\Admin\Crud\CreatePage as BaseCreatePage;
 
 final class CreatePage extends BaseCreatePage implements CreatePageInterface
 {
+    use ReadsValidationMessagesTrait;
+
     public function specifyCode(string $code): void
     {
         $this->getDocument()->fillField('Code', $code);
@@ -35,16 +37,5 @@ final class CreatePage extends BaseCreatePage implements CreatePageInterface
     public function specifyExpiryDate(string $expiresAt): void
     {
         $this->getDocument()->fillField('Expires at', $expiresAt);
-    }
-
-    public function getValidationMessages(): string
-    {
-        $messages = [];
-
-        foreach ($this->getDocument()->findAll('css', '.invalid-feedback') as $error) {
-            $messages[] = trim($error->getText());
-        }
-
-        return implode(' ', $messages);
     }
 }

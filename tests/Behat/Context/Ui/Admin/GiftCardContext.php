@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Context\Ui\Admin;
 
 use Behat\Behat\Context\Context;
+use Doctrine\Persistence\ObjectManager;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardRepositoryInterface;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Page\Admin\Crud\IndexPageInterface;
@@ -13,6 +15,7 @@ use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\AdjustBalancePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\CreatePageInterface;
+use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\GiftCardFormPageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\ShowPageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard\UpdatePageInterface;
 use Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\Product\UpdatePageInterface as ProductUpdatePageInterface;
@@ -20,6 +23,15 @@ use Webmozart\Assert\Assert;
 
 final class GiftCardContext implements Context
 {
+    /**
+     * Whichever of the two gift card forms the scenario is currently on.
+     *
+     * The create and update pages render the same form type, so the steps about what it refuses are
+     * written once. Which page is open cannot be asked at the time - the update page's isOpen()
+     * needs the id it was opened with - so it is remembered as the scenario opens it.
+     */
+    private ?GiftCardFormPageInterface $giftCardFormPage = null;
+
     public function __construct(
         private readonly SharedStorageInterface $sharedStorage,
         private readonly IndexPageInterface $indexPage,
@@ -30,6 +42,7 @@ final class GiftCardContext implements Context
         private readonly ProductUpdatePageInterface $productUpdatePage,
         private readonly NotificationCheckerInterface $notificationChecker,
         private readonly GiftCardRepositoryInterface $giftCardRepository,
+        private readonly ObjectManager $giftCardManager,
     ) {
     }
 
@@ -47,6 +60,7 @@ final class GiftCardContext implements Context
     public function iWantToCreateANewGiftCard(): void
     {
         $this->createPage->open();
+        $this->giftCardFormPage = $this->createPage;
     }
 
     /**
@@ -194,6 +208,23 @@ final class GiftCardContext implements Context
     public function iWantToEditTheGiftCard(string $code): void
     {
         $this->updatePage->open(['id' => $this->getGiftCardIdByCode($code)]);
+        $this->giftCardFormPage = $this->updatePage;
+    }
+
+    /**
+     * @When I disable it
+     */
+    public function iDisableIt(): void
+    {
+        $this->updatePage->disable();
+    }
+
+    /**
+     * @When I save my changes to this gift card
+     */
+    public function iSaveMyChangesToThisGiftCard(): void
+    {
+        $this->updatePage->saveChanges();
     }
 
     /**
@@ -330,6 +361,35 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @When I leave its initial amount empty
+     */
+    public function iLeaveItsInitialAmountEmpty(): void
+    {
+        // Typed as empty rather than skipped, because that is what an administrator does: the field
+        // is on the form and they tab past it.
+        $this->createPage->specifyInitialAmount('');
+    }
+
+    /**
+     * @When I set its expiry date to :expiresAt
+     * @When I move its expiry date to :expiresAt
+     */
+    public function iSetItsExpiryDateTo(string $expiresAt): void
+    {
+        $this->giftCardForm()->specifyExpiryDate($expiresAt);
+    }
+
+    /**
+     * @When I move its expiry date to :days days from now
+     */
+    public function iMoveItsExpiryDateToDaysFromNow(int $days): void
+    {
+        $this->giftCardForm()->specifyExpiryDate(
+            (new \DateTimeImmutable(sprintf('+%d days', $days)))->format('Y-m-d H:i'),
+        );
+    }
+
+    /**
      * @Then I should be told the expiry date is required
      */
     public function iShouldBeToldTheExpiryDateIsRequired(): void
@@ -342,11 +402,159 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @Then I should be told on the initial amount that it is required
+     */
+    public function iShouldBeToldOnTheInitialAmountThatItIsRequired(): void
+    {
+        $this->assertFieldWasRefused(
+            'Initial amount',
+            'Please enter the amount the gift card is worth.',
+            'The form took a gift card with no initial amount.',
+        );
+    }
+
+    /**
+     * @Then I should be told on the initial amount that it must be greater than zero
+     */
+    public function iShouldBeToldOnTheInitialAmountThatItMustBeGreaterThanZero(): void
+    {
+        $this->assertFieldWasRefused(
+            'Initial amount',
+            'The amount must be greater than zero.',
+            'The form took a gift card worth nothing.',
+        );
+    }
+
+    /**
+     * @Then I should be told on the code that it is already taken
+     */
+    public function iShouldBeToldOnTheCodeThatItIsAlreadyTaken(): void
+    {
+        $this->assertFieldWasRefused(
+            'Code',
+            'A gift card with this code already exists.',
+            'The form took a code that is already in use, leaving the unique index to refuse it as a 500.',
+        );
+    }
+
+    /**
+     * @Then I should be told on the expiry date that it cannot be in the past
+     */
+    public function iShouldBeToldOnTheExpiryDateThatItCannotBeInThePast(): void
+    {
+        $this->assertFieldWasRefused(
+            'Expires at',
+            'The expiry date cannot be in the past',
+            'The form took an expiry date that makes the balance unspendable.',
+        );
+    }
+
+    /**
      * @Then no gift card should have been created
      */
     public function noGiftCardShouldHaveBeenCreated(): void
     {
         Assert::isEmpty($this->giftCardRepository->findAll(), 'A gift card was created despite the form being rejected.');
+    }
+
+    /**
+     * @Then there should still be only one gift card
+     */
+    public function thereShouldStillBeOnlyOneGiftCard(): void
+    {
+        Assert::count(
+            $this->giftCardRepository->findAll(),
+            1,
+            'A second gift card was created despite the form being rejected.',
+        );
+    }
+
+    /**
+     * @Then the gift card :code should still expire in the future
+     */
+    public function theGiftCardShouldStillExpireInTheFuture(string $code): void
+    {
+        $expiresAt = $this->storedGiftCard($code)->getExpiresAt();
+        Assert::notNull($expiresAt, 'The card lost its expiry date.');
+
+        Assert::true(
+            $expiresAt > new \DateTimeImmutable(),
+            sprintf('The card now expires at %s, which is in the past.', $expiresAt->format('c')),
+        );
+    }
+
+    /**
+     * @Then the gift card :code should expire in about :days days
+     */
+    public function theGiftCardShouldExpireInAboutDays(string $code, int $days): void
+    {
+        $expiresAt = $this->storedGiftCard($code)->getExpiresAt();
+        Assert::notNull($expiresAt, 'The card lost its expiry date.');
+
+        self::assertIsAboutDaysAway($expiresAt, $days);
+    }
+
+    /**
+     * @Then the gift card :code should still be expired
+     */
+    public function theGiftCardShouldStillBeExpired(string $code): void
+    {
+        Assert::true(
+            $this->storedGiftCard($code)->isExpired(),
+            'The card came back from the form no longer expired, so the save invented a new date.',
+        );
+    }
+
+    /**
+     * @Then the gift card :code should be disabled
+     */
+    public function theGiftCardShouldBeDisabled(string $code): void
+    {
+        // Also the proof that the save went through at all: a refused form leaves the card enabled.
+        Assert::false(
+            $this->storedGiftCard($code)->isEnabled(),
+            'The card is still enabled, so the edit was refused rather than saved.',
+        );
+    }
+
+    /**
+     * Asserts the form came back with a message, that it is the right one, and that it is attached
+     * to the field it is about.
+     *
+     * All three matter and they fail differently. Nothing at all is the constraint never running -
+     * issue #44. The wrong words are the message resolving in the wrong translation catalogue and
+     * rendering as its own key - issue #37. The right words in the wrong place is a class constraint
+     * that missed its `atPath` and landed at the top of the form, where an administrator with eight
+     * fields in front of them has to guess which one it means.
+     */
+    private function assertFieldWasRefused(string $field, string $message, string $whatWentWrong): void
+    {
+        Assert::contains($this->giftCardForm()->getFieldValidationMessage($field), $message, $whatWentWrong);
+    }
+
+    /** The form the scenario is on, whichever of the two it opened. */
+    private function giftCardForm(): GiftCardFormPageInterface
+    {
+        Assert::notNull($this->giftCardFormPage, 'No gift card form has been opened in this scenario.');
+
+        return $this->giftCardFormPage;
+    }
+
+    /**
+     * A gift card read back from the database, past anything the context is still holding.
+     *
+     * The admin request runs against the same entity manager as this context, so an object left in
+     * the identity map would answer with the values the scenario set up rather than the ones the
+     * form saved - and a step asserting a change was refused would pass whether it was or not.
+     */
+    private function storedGiftCard(string $code): GiftCardInterface
+    {
+        $this->giftCardManager->clear();
+
+        $giftCard = $this->giftCardRepository->findOneBy(['code' => $code]);
+        Assert::isInstanceOf($giftCard, GiftCardInterface::class, sprintf('There is no gift card "%s".', $code));
+
+        return $giftCard;
     }
 
     /**

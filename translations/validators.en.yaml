@@ -27,6 +27,10 @@ madcoders_sylius_gift_card:
             positive: The amount must be greater than zero.
         expires_at:
             not_blank: Please enter the date this gift card expires.
+            # Says what to do instead, because refusing without an alternative reads as the form
+            # being broken. Taking the balance off the card is the retirement path that leaves a
+            # ledger entry behind - see docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md.
+            not_in_the_past: The expiry date cannot be in the past - that would make the remaining balance unspendable without recording it anywhere. To take this card out of circulation, adjust its balance to zero.
     gift_card_configuration:
         amount_presets:
             invalid: 'Enter the preset amounts separated by commas, for example "25, 50, 100".'

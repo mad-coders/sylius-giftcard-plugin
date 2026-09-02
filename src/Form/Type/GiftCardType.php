@@ -55,9 +55,10 @@ final class GiftCardType extends AbstractResourceType
             ])
             // Required, because every card expires. The field arrives pre-filled - see
             // prefillExpiryDate() below - so an administrator normally has nothing to type. What
-            // they cannot do is empty it: the NotNull constraint lives on the model in
-            // config/validation/GiftCard.xml, so every write path is covered rather than only this
-            // form, and `required` here is what stops the browser submitting a blank at all.
+            // they cannot do is empty it, or move it into the past: NotNull and
+            // GiftCardExpiryNotInThePast both live on the model in config/validation/GiftCard.xml,
+            // so every write path is covered rather than only this form, and `required` here is
+            // what stops the browser submitting a blank at all.
             ->add('expiresAt', DateTimeType::class, [
                 'label' => 'madcoders_sylius_gift_card.ui.expires_at',
                 'required' => true,
@@ -111,8 +112,33 @@ final class GiftCardType extends AbstractResourceType
                 // The card's currency comes from its channel, so the widget shows no symbol
                 // rather than a hardcoded (and probably wrong) one.
                 'currency' => false,
-                // Without these, a blank or zero amount reaches setInitialAmount(), which throws -
-                // and the admin gets a 500 instead of being told what is wrong.
+                // Written through a callback rather than straight onto the property, and that is
+                // load-bearing rather than a style choice. Symfony maps a submitted value onto the
+                // object during submit() and validates it afterwards, so a plainly mapped field
+                // hands setInitialAmount() a zero *before* the Positive below is looked at - and the
+                // model, which refuses a non-positive amount by throwing, turns a field error into a
+                // 500. Declining to write leaves the constraint to report it, and leaves the card
+                // without a face value, which is what an invalid form should do.
+                //
+                // A blank survives a plainly mapped field only by accident: Symfony skips the write
+                // when the new value equals the current one, and on a new card both are null. That
+                // is not a guarantee worth depending on, so the callback covers it as well.
+                //
+                // Only the write is skipped: the field stays mapped, so the value the administrator
+                // typed is read back and re-rendered with the error against it.
+                'setter' => static function (GiftCardInterface $giftCard, ?int $initialAmount): void {
+                    if (null === $initialAmount || $initialAmount <= 0) {
+                        return;
+                    }
+
+                    $giftCard->setInitialAmount($initialAmount);
+                },
+                // These are what tells the administrator which of the two is wrong. They only run
+                // because this form validates with `Default` as well as the resource group
+                // (config/services/forms.xml): an inline constraint carries `Default` unless it is
+                // told otherwise, and until issue #44 the form named only the resource group, so
+                // neither of them was ever evaluated - see
+                // docs/adr-log/0017-resource-forms-validate-with-default-too.md.
                 'constraints' => [
                     new NotBlank(message: 'madcoders_sylius_gift_card.gift_card.initial_amount.not_blank'),
                     new Positive(message: 'madcoders_sylius_gift_card.gift_card.initial_amount.positive'),

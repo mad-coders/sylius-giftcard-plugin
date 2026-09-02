@@ -82,6 +82,11 @@ final readonly class GiftCardCartController
         $form = $this->formFactory->create(GiftCardCodeType::class);
         $form->handleRequest($request);
 
+        // A flash rather than the form's own errors, and deliberately so: this action answers with a
+        // redirect and the panel renders the input by hand, so there is no form view left to carry a
+        // field error. `cart.code_required` in `flashes` and `gift_card.code.not_blank` in
+        // `validators` therefore say the same sentence - one per rendering path, not a duplicate
+        // nobody noticed. See the note in GiftCardCodeType.
         if (!$form->isSubmitted() || !$form->isValid()) {
             $this->addFlash($request, self::FLASH_ERROR, 'madcoders_sylius_gift_card.cart.code_required');
 

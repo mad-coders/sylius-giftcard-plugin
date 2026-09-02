@@ -6,7 +6,7 @@ namespace Tests\Madcoders\SyliusGiftCardPlugin\Behat\Page\Admin\GiftCard;
 
 use Sylius\Behat\Page\Admin\Crud\CreatePageInterface as BaseCreatePageInterface;
 
-interface CreatePageInterface extends BaseCreatePageInterface
+interface CreatePageInterface extends BaseCreatePageInterface, GiftCardFormPageInterface
 {
     public function specifyCode(string $code): void;
 
@@ -16,9 +16,4 @@ interface CreatePageInterface extends BaseCreatePageInterface
 
     /** What the form offers as the expiry date, as an ISO-ish string the browser would submit. */
     public function getExpiryDate(): string;
-
-    public function specifyExpiryDate(string $expiresAt): void;
-
-    /** Every validation message on the form, joined. */
-    public function getValidationMessages(): string;
 }
