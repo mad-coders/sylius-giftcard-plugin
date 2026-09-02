@@ -90,7 +90,7 @@ pages and the cart panel all have something to show:
 | `GIFT-USED0001` | Partly spent, with the ledger entry explaining the balance |
 | `GIFT-EMPTY001` | Spent out: still listed, no longer redeemable |
 | `GIFT-EXPIRED1`, `GIFT-DISABLED` | The two ways a card stops being redeemable |
-| `GIFT-EXPSOON1`, `GIFT-NOEXPIRY` | Expiring in a week, and never expiring at all |
+| `GIFT-EXPSOON1`, `GIFT-LONGLIFE` | Expiring in a week, and in twenty-five years - there is no card without an expiry, because there is no way to make one |
 | `GIFT-GIFTED01` | Bought by one customer, not yet used by anybody |
 | `GIFT-SHARED01` | **The two-customer model**: bought by one, spent by another |
 | `GIFT-SELFUSE1` | Bought and used by the same person |

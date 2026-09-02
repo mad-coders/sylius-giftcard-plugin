@@ -13,14 +13,35 @@ Each channel gets a **gift card configuration** under *Marketing > Gift card con
 |---|---|
 | Code prefix | Prepended to every generated code, e.g. `GIFT-`. Optional. |
 | Code length | Number of random characters after the prefix. |
-| Validity period | How long a new card stays valid, as a relative date expression such as `1 year` or `6 months`. Leave empty for cards that never expire. |
+| Validity period | How long a new card stays valid, as a relative date expression such as `1 year` or `6 months`. **Required** - every gift card expires. |
 | Gift card sales | Whether customers may buy gift cards in this channel, or only an administrator may issue them. |
+| What a gift card pays for | Whether a gift card may be spent on another gift card. Defaults to everything except gift cards. |
 | How the amount is chosen | Whether a customer pays the product's price or picks the amount. See below. |
 | Preset amounts | The amounts offered as ready-made choices, comma separated, in the channel's currency - for example `25, 50, 100`. Used by the preset modes. |
 | Smallest amount / Largest amount | The bounds a customer may type within. Used by the free-amount modes. |
 
 A channel without a configuration still works - the defaults on the model apply (16 characters, no
-prefix, one year, gift cards sold in the shop at the product's price).
+prefix, one year, gift cards sold in the shop at the product's price, and not spendable on other
+gift cards).
+
+## How long a card lasts
+
+**Every gift card expires.** There is no way to issue one that does not - not from the admin, not
+from a purchase, not from a fixture, not from a host application's own code. An indefinite gift card
+is an indefinite liability on the shop's books, and several jurisdictions require the expiry to be
+stated to the customer at the point of sale.
+
+The date comes from the channel's **validity period**, measured from the moment the card is created.
+The period is required, and the configuration form refuses one it cannot act on - `1 yaer` and
+`0 days` both come back as errors rather than quietly issuing cards that never expire. A channel with
+no configuration at all issues cards valid for **one year**.
+
+A shop that wants a card to effectively never run out sets a long period, such as `25 years`. That is
+deliberately not the same as no expiry: the liability is still dated, still reportable, and still ages
+out. See [ADR 0015](adr-log/0015-every-gift-card-expires.md).
+
+Creating a card by hand in the admin pre-fills the expiry date, so an administrator can see the term
+they are issuing and change it for that one card. They cannot clear it.
 
 Generated codes avoid the characters people misread off a card or an email (`0`/`O`, `1`/`I`/`L`,
 `5`/`S`) and come from a cryptographically secure source, because a guessable gift card code is a
@@ -123,6 +144,28 @@ That distinction is not cosmetic:
 - **promotions** calculate against the real total, so paying with a card cannot switch off a
   "spend over X" promotion.
 
+### A gift card does not buy a gift card
+
+By default a gift card pays for everything on an order **except the gift cards on it**.
+
+- An ordinary basket redeems exactly as it always did.
+- A basket with a 180 pair of shoes and a 25 gift card redeems too: the card covers the shoes, and
+  the 25 gift card is payable in cash. The customer's card therefore covers less than its balance,
+  and the amount left to pay reflects that.
+- A basket of nothing but gift cards refuses redemption, with a message telling the customer to
+  remove the gift card from their basket. It is refused when the card is offered *and* again at
+  checkout, so a cart assembled before the setting changed cannot slip through. Shipping charged on
+  such a basket is refused with it: the postage is for the goods, and there are none.
+
+Without this rule a holder can buy a new card for exactly their remaining balance, pay nothing, and
+receive a fresh code with a fresh expiry - repeatable forever. The shop's liability never grows, but
+its duration becomes unbounded, which makes the expiry above meaningless, and the link between a card
+and whoever originally paid for it is lost after one hop.
+
+Set **What a gift card pays for** to *Anything, gift cards included* on a channel that genuinely
+wants the old behaviour. [ADR 0016](adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md) sets out
+what that channel gives up.
+
 Beyond that:
 
 - several cards **stack**;
@@ -158,9 +201,9 @@ Under *Marketing > Gift cards* an admin can:
 
 - **browse and filter** cards by code, channel and enabled state, seeing the remaining balance,
   expiry and both customer links at a glance;
-- **create a card by hand** - only a channel and an amount are needed; the code, currency and expiry
-  are filled in from the channel's configuration. Enter a code explicitly to import pre-printed
-  cards;
+- **create a card by hand** - only a channel and an amount are needed; the code and currency are
+  filled in from the channel's configuration, and the expiry date arrives pre-filled and editable.
+  Enter a code explicitly to import pre-printed cards;
 - **inspect a card**, including its full balance history;
 - **adjust a balance** for a goodwill top-up or to claw back a card issued in error.
 

@@ -13,3 +13,8 @@ madcoders_sylius_gift_card:
         not_usable: This gift card code cannot be used. Check it and try again.
         too_many_attempts: Too many gift card codes have been tried from here. Please wait a few minutes before trying again.
         code_required: Please enter a gift card code.
+        # Specific, unlike `not_usable`, and safe to be: the basket is checked before the code is
+        # looked up, so this answer comes back for every code alike and reveals none of them. It has
+        # to be specific, because the customer can fix it and "this code cannot be used" would send
+        # them looking at their card instead of their basket.
+        gift_card_cannot_pay_for_gift_card: A gift card cannot be used to pay for a gift card. Remove the gift card from your basket to pay with your card.

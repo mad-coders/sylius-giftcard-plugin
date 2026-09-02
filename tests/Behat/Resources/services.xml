@@ -11,6 +11,7 @@
             <argument type="service" id="madcoders_sylius_gift_card.manager.gift_card" />
             <argument type="service" id="madcoders_sylius_gift_card.fixture.example_factory.gift_card_configuration" />
             <argument type="service" id="madcoders_sylius_gift_card.applicator.gift_card" />
+            <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card_configuration" />
         </service>
 
         <service id="madcoders_sylius_gift_card.behat.context.hook.rate_limit"

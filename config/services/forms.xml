@@ -16,6 +16,10 @@
             <argument type="collection">
                 <argument>madcoders_sylius_gift_card</argument>
             </argument>
+            <!-- Pre-fills the expiry field, so the administrator sees the date they are issuing. -->
+            <argument type="service" id="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
+            <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <argument type="service" id="sylius.repository.channel" />
             <tag name="form.type" />
         </service>
 

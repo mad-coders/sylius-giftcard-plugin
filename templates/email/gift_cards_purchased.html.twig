@@ -22,11 +22,19 @@
             {{ 'madcoders_sylius_gift_card.ui.initial_amount'|trans({}, 'messages', localeCode) }}:
             {{ gift_card.initialAmount|default(0)|sylius_format_money(gift_card.currencyCode|default('USD'), localeCode) }}
 
-            {% if gift_card.expiresAt is not null %}
-                <br>
-                {{ 'madcoders_sylius_gift_card.ui.expires_at'|trans({}, 'messages', localeCode) }}:
-                {{ gift_card.expiresAt|date('d-m-Y') }}
-            {% endif %}
+            {#
+                Always shown. Every card the database accepts has an expiry date, and several
+                jurisdictions require it to reach the customer at the point of sale - see
+                docs/adr-log/0015-every-gift-card-expires.md.
+
+                Guarded all the same, and here most of all: `date` renders null as *today*, so a
+                card issued before Version20260902100000 ran would email its buyer a made-up date on
+                the one document the law cares about. Saying nothing is recorded is wrong too, but
+                it is wrong out loud.
+            #}
+            <br>
+            {{ 'madcoders_sylius_gift_card.ui.expires_at'|trans({}, 'messages', localeCode) }}:
+            {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.expires_at_not_recorded'|trans({}, 'messages', localeCode) }}
 
             {#
                 The buyer's own words back to them. Customer-supplied text, so it is printed as

@@ -21,6 +21,19 @@
             <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_order_purchase_allowed" />
         </service>
 
+        <service id="madcoders_sylius_gift_card.validator.gift_card_redemption_allowed"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardRedemptionAllowedValidator">
+            <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_tender" />
+            <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_redemption_allowed" />
+        </service>
+
+        <!-- Refuses a channel validity period that cannot produce a future expiry date. -->
+        <service id="madcoders_sylius_gift_card.validator.validity_period"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\ValidityPeriodValidator">
+            <argument type="service" id="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
+            <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_validity_period" />
+        </service>
+
         <!--
             Refuses an amount the channel does not offer, and says which of the two reasons it is so
             the customer is told the bounds rather than just "invalid".

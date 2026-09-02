@@ -20,6 +20,19 @@
                 <value>sylius_checkout_complete</value>
             </option>
         </constraint>
+
+        <!--
+            Same group, same reasoning, a different rule: an order that still carries gift cards
+            after its basket stopped having anything a gift card may pay for. The order processor
+            caps the coverage regardless, so no money is at stake here - what this adds is the
+            customer being told before they reach the pay button. See
+            docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
+        -->
+        <constraint name="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardRedemptionAllowed">
+            <option name="groups">
+                <value>sylius_checkout_complete</value>
+            </option>
+        </constraint>
     </class>
 
 </constraint-mapping>

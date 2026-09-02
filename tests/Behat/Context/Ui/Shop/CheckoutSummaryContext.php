@@ -141,6 +141,28 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
+     * @When I try to place my order
+     */
+    public function iTryToPlaceMyOrder(): void
+    {
+        $this->summaryPage->confirmOrder();
+    }
+
+    /**
+     * @Then I should be told at the checkout that a gift card cannot pay for a gift card
+     */
+    public function iShouldBeToldAtTheCheckoutThatAGiftCardCannotPayForAGiftCard(): void
+    {
+        // The `sylius_checkout_complete` group, which is the last point at which the customer has
+        // not been charged.
+        Assert::contains(
+            $this->summaryPage->getValidationErrors(),
+            'A gift card cannot be used to pay for a gift card.',
+            'The checkout let an order through whose gift cards could settle nothing.',
+        );
+    }
+
+    /**
      * @When I go to the payment step
      */
     public function iGoToThePaymentStep(): void

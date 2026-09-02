@@ -33,6 +33,7 @@
                  class="Madcoders\SyliusGiftCardPlugin\OrderProcessor\OrderGiftCardProcessor">
             <argument type="service" id="sylius.factory.adjustment" />
             <argument type="service" id="translator" />
+            <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_tender" />
             <tag name="sylius.order_processor" priority="-10" />
         </service>
 

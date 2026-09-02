@@ -4,6 +4,8 @@ madcoders_sylius_gift_card:
     cart:
         applied: Karta podarunkowa została zastosowana w koszyku.
         code_required: Wpisz kod karty podarunkowej.
+        gift_card_cannot_pay_for_gift_card: Kartą podarunkową nie można zapłacić za
+            kartę podarunkową. Usuń kartę podarunkową z koszyka, aby zapłacić swoją kartą.
         not_usable: Tego kodu karty podarunkowej nie można użyć. Sprawdź go i spróbuj ponownie.
         removed: Karta podarunkowa została usunięta z koszyka.
         too_many_attempts: Wpisano zbyt wiele kodów kart podarunkowych. Odczekaj kilka minut

@@ -28,6 +28,9 @@ default:
                 - sylius.behat.context.setup.cart
 
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card
+                # A basket containing a gift card product is the whole subject of
+                # features/paying_for_a_gift_card_with_a_gift_card.feature.
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card_product
 
                 # The checkout sidebar renders on the summary page, so getting there needs
                 # Sylius' own checkout setup on top of the cart the gift card was applied to.
@@ -97,6 +100,10 @@ default:
                 - sylius.behat.context.setup.order
 
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card_checkout
+                # Placing an order that carries a gift card product is how the settlement cap is
+                # proved against a real debit - see "A card on a mixed basket is only charged for
+                # the goods".
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card_product
 
             filters:
                 tags: "@madcoders_gift_card_checkout"

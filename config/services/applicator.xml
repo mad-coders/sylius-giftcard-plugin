@@ -9,6 +9,7 @@
                  class="Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicator">
             <argument type="service" id="madcoders_sylius_gift_card.repository.gift_card" />
             <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="madcoders_sylius_gift_card.checker.gift_card_tender" />
         </service>
 
         <service id="Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicatorInterface"

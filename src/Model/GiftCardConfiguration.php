@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Madcoders\SyliusGiftCardPlugin\Model;
 
+use Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculator;
+use Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculatorInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Resource\Model\TimestampableTrait;
 use Sylius\Resource\Model\ToggleableTrait;
@@ -32,7 +34,13 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
 
     protected ?string $codePrefix = null;
 
-    protected ?string $validityPeriod = '1 year';
+    /**
+     * The plugin's default period, spelled out here so a channel created in code and never opened
+     * in the admin still expires its cards after a year. Nullable only because the column is: rows
+     * that predate the rule can hold null, and {@see GiftCardExpiryCalculatorInterface} resolves
+     * that to the same default rather than to "never".
+     */
+    protected ?string $validityPeriod = GiftCardExpiryCalculator::DEFAULT_VALIDITY_PERIOD;
 
     /**
      * Sellable by default, so a shop upgrading into this feature keeps selling gift cards exactly
@@ -41,6 +49,14 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
     protected GiftCardSaleMode $saleMode = GiftCardSaleMode::Sellable;
 
     protected GiftCardAmountMode $amountMode = GiftCardAmountMode::Fixed;
+
+    /**
+     * Goods only by default, in the model and as the column default. Unlike the sale mode, this
+     * default deliberately changes what an upgrading shop does - the previous behaviour let a card
+     * buy a card and renew its own expiry forever, which is a hole rather than a feature. See
+     * docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
+     */
+    protected GiftCardTenderMode $tenderMode = GiftCardTenderMode::GoodsOnly;
 
     /**
      * Nullable only because the column is - MySQL refuses a default on a JSON column, so a channel
@@ -117,25 +133,14 @@ class GiftCardConfiguration implements GiftCardConfigurationInterface
         $this->saleMode = $saleMode;
     }
 
-    public function calculateExpiryDate(?\DateTimeImmutable $from = null): ?\DateTimeImmutable
+    public function getTenderMode(): GiftCardTenderMode
     {
-        if (null === $this->validityPeriod || '' === trim($this->validityPeriod)) {
-            return null;
-        }
+        return $this->tenderMode;
+    }
 
-        $from ??= new \DateTimeImmutable();
-
-        try {
-            $expiresAt = $from->add(\DateInterval::createFromDateString($this->validityPeriod));
-        } catch (\Throwable) {
-            // An unparseable validity period must not hand out an already-expired card. PHP raises
-            // this differently across versions - a DateMalformedIntervalStringException on 8.4, a
-            // false return (and so a TypeError here) on 8.3 - so catch the failure, not the class.
-            return null;
-        }
-
-        // A period that parses but moves nothing ("0 days") would expire the card on creation.
-        return $expiresAt > $from ? $expiresAt : null;
+    public function setTenderMode(GiftCardTenderMode $tenderMode): void
+    {
+        $this->tenderMode = $tenderMode;
     }
 
     public function getAmountMode(): GiftCardAmountMode

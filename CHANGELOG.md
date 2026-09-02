@@ -100,6 +100,67 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Every gift card now expires, and a gift card can no longer be paid for with a gift card.** The
+  two go together: an expiry date a holder can renew for free by rolling one card into the next is
+  not an expiry date. Closes #31 and #41. See
+  `docs/adr-log/0015-every-gift-card-expires.md` and
+  `docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md`.
+
+  **This changes behaviour for everyone on RC.2, including channels with no configuration at all.
+  Read the upgrade notes below before running the migration.**
+
+  What changed, in detail:
+
+  - `GiftCardExpiryCalculatorInterface` is now the only thing that produces an expiry date, and its
+    return type is **not nullable**. A channel with no configuration, a blank validity period, one
+    that cannot be parsed and one that does not move the date forward (`0 days`, `-1 year`) all fall
+    back to the plugin's documented default of **one year**. None of them can issue a card that never
+    expires, and none can issue one that is already expired.
+  - `GiftCardConfigurationInterface::calculateExpiryDate()` is **removed**. The configuration holds
+    the period; turning it into a date belongs to the calculator. A host that called it should call
+    `madcoders_sylius_gift_card.calculator.gift_card_expiry` instead.
+  - `expires_at` is **NOT NULL**, and `GiftCard::expiresAt` carries a `NotNull` constraint, so the
+    admin form refuses a cleared field with a message naming it rather than a driver-level error.
+  - A channel's **validity period is required** and is refused if it cannot produce a future date.
+    `1 yaer` used to save cleanly and quietly issue cards that never expired.
+  - **"Never expires" is no longer expressible anywhere** - not in a fixture, not on a form, not in
+    the database. The `expires_at: never` fixture option is gone, along with the `GIFT-NOEXPIRY` demo
+    card (replaced by `GIFT-LONGLIFE`, twenty-five years out) and the
+    `madcoders_sylius_gift_card.ui.never_expires` translation key. A shop that wants a card to
+    outlive everybody says so with a long validity period, which is still a dated liability.
+  - `GiftCardConfiguration` gains a **`tenderMode`** (`goods_only`, the default, or `anything`),
+    answering whether a gift card may pay for another gift card. Enforced in three places: when a
+    card is applied, at `sylius_checkout_complete`, and in the order processor, which caps what
+    applied cards may cover at the order total **less its gift card lines**.
+  - A **mixed basket still works**: a card pays for the shoes and not for the gift card next to
+    them. A gift-card-only basket refuses redemption outright - including any shipping on it, because
+    the postage is for goods this order does not have - with a message of its own explaining
+    why - safe to be specific because the basket is judged before the code is looked up, so it
+    reveals nothing about which codes exist.
+
+  **Upgrading:**
+
+  - Run `bin/console doctrine:migrations:migrate`. `Version20260902100000` gives every card without
+    an expiry date one, measured from **that card's own creation date** plus its channel's validity
+    period (a year where the channel has no usable one), then makes the column NOT NULL. A card
+    created three years ago in a channel with a one-year period comes out **already expired** - money
+    a holder can no longer spend - so tell them before you run it, not after. `docs/INSTALLATION.md`
+    gives the two queries that count the affected cards before and after.
+    `Version20260902110000` then adds the tender mode column.
+  - **Every channel loses the ability to buy gift cards with gift cards, including channels you
+    never configured.** Unlike the sale mode, this default deliberately does not preserve the old
+    behaviour: the old behaviour was the hole. A shop that wants it back sets *What a gift card pays
+    for* to *Anything, gift cards included* on that channel's configuration - and gives up
+    enforceable expiry dates and a traceable purchaser chain in it.
+  - Any channel whose validity period is blank or unparseable keeps working, on the default period,
+    but cannot be re-saved from the admin until the period is corrected.
+  - **Breaking for hosts that redefine these services positionally.** Each takes one appended
+    argument: `GiftCardApplicator` and `OrderGiftCardProcessor` take
+    `madcoders_sylius_gift_card.checker.gift_card_tender`; `GiftCardFactory`,
+    `PrepareGiftCardOnCreateListener` and `GiftCardExampleFactory` take
+    `madcoders_sylius_gift_card.calculator.gift_card_expiry`. `GiftCardType` takes the calculator,
+    the configuration provider and `sylius.repository.channel`, which is what pre-fills the expiry
+    field. An out-of-date definition fails on arity rather than binding the wrong service.
 - **Breaking for hosts that redefine `madcoders_sylius_gift_card.operator.order_gift_card`
   positionally.** `OrderGiftCardOperator::__construct()` takes two more arguments: a
   `GiftCardPurchaseCheckerInterface` and an optional PSR-3 `LoggerInterface`. Both are **appended**,

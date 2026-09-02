@@ -17,6 +17,26 @@
             </option>
             <option name="message">madcoders_sylius_gift_card.gift_card.code.unique</option>
         </constraint>
+
+        <!--
+            Every gift card expires - see docs/adr-log/0015-every-gift-card-expires.md. The column
+            is NOT NULL as well, so nothing at all can persist a card without a date; this is what
+            turns the database's refusal (a 500) into a form error naming the field.
+
+            Both groups are listed on purpose. The plugin's own admin form validates with
+            `madcoders_sylius_gift_card`, the group AbstractResourceType is given in
+            config/services/forms.xml, while a host validating the entity directly uses `Default`.
+            A constraint in only one of them is silently skipped by the other path.
+        -->
+        <property name="expiresAt">
+            <constraint name="NotNull">
+                <option name="message">madcoders_sylius_gift_card.gift_card.expires_at.not_blank</option>
+                <option name="groups">
+                    <value>Default</value>
+                    <value>madcoders_sylius_gift_card</value>
+                </option>
+            </constraint>
+        </property>
     </class>
 
 </constraint-mapping>

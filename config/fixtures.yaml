@@ -99,11 +99,14 @@ sylius_fixtures:
                                 initial_amount: 5000
                                 expires_at: '+7 days'
 
-                            # No expiry at all. A channel configuration with a validity period is
-                            # the usual case, so this is the one that proves a card can outlive it.
-                            -   code: 'GIFT-NOEXPIRY'
+                            # Expires a long way out. There is deliberately no card here without an
+                            # expiry date, because there is no longer any way to make one - see
+                            # docs/adr-log/0015-every-gift-card-expires.md. A shop that wants a card
+                            # to outlive everybody says so with a long period, which is honest: it
+                            # is still a dated liability rather than an open-ended one.
+                            -   code: 'GIFT-LONGLIFE'
                                 initial_amount: 5000
-                                expires_at: 'never'
+                                expires_at: '+25 years'
 
                             # --- The two-customer model -----------------------------------------
                             # The distinguishing feature of this plugin: a card knows both who

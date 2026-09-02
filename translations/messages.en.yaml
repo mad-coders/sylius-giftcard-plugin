@@ -11,8 +11,10 @@ madcoders_sylius_gift_card:
         initial_amount: Initial amount
         amount: Amount
         expires_at: Expires at
-        expires_at_help: Leave empty to use the channel's configured validity period.
-        never_expires: Never
+        expires_at_help: Pre-filled from the channel's validity period. Change it if this card should last a different length of time; it cannot be left empty.
+        # Only reachable on a card written before the mandatory-expiry migration ran. Shown rather
+        # than a fabricated date, which is what an unguarded `date` filter produces from null.
+        expires_at_not_recorded: Not recorded
         code: Code
         code_help: Leave empty to generate one from the channel's configuration.
         code_immutable_help: A code cannot be changed once the card is issued - the customer already has it, and orders paid with the card are linked to it.
@@ -21,7 +23,12 @@ madcoders_sylius_gift_card:
         code_length: Code length
         code_length_help: 'Number of random characters after the prefix. Minimum 12 - a shorter code is guessable, and a gift card code is money.'
         validity_period: Validity period
-        validity_period_help: How long a new card stays valid, for example "1 year". Leave empty for cards that never expire.
+        validity_period_help: 'How long a new card stays valid, for example "1 year" or "18 months". Required - every gift card expires.'
+        tender_mode: What a gift card pays for
+        tender_mode_help: Whether a gift card may be spent on another gift card. Allowing it lets a holder roll one card into the next indefinitely, which makes the expiry date unenforceable.
+        tender_mode_choice:
+            goods_only: Everything except gift cards
+            anything: Anything, gift cards included
         sale_mode: Gift card sales
         sale_mode_help: Whether customers can buy gift cards in this channel. Cards already issued can always be redeemed, whichever you choose.
         sale_mode_choice:

@@ -45,8 +45,9 @@ madcoders_sylius_gift_card:
         custom_message: Wiadomość
         enter_gift_card_code: Wpisz kod karty podarunkowej
         expires_at: Wygasa
-        expires_at_help: Pozostaw puste, aby użyć okresu ważności skonfigurowanego
-            dla kanału.
+        expires_at_help: Wypełnione na podstawie okresu ważności kanału. Zmień, jeśli
+            ta karta ma być ważna inaczej; pola nie można wyczyścić.
+        expires_at_not_recorded: Nie zapisano
         gift_card: Karta podarunkowa
         gift_card_code: Kod karty podarunkowej
         gift_card_message: Wiadomość
@@ -68,7 +69,6 @@ madcoders_sylius_gift_card:
             z dowolną kwotą. Gotowe kwoty są oferowane niezależnie od tego, czy się
             w nim mieszczą.
         my_gift_cards: Moje karty podarunkowe
-        never_expires: Nigdy
         no_gift_cards_bought: Nie kupiłeś jeszcze żadnej karty podarunkowej.
         no_gift_cards_used: Nie używasz jeszcze żadnej karty podarunkowej.
         no_transactions: Ta karta podarunkowa nie była jeszcze używana.
@@ -88,6 +88,13 @@ madcoders_sylius_gift_card:
             credit: Dodano
             debit: Wydano
         transactions: Historia salda
+        tender_mode: Za co można zapłacić kartą
+        tender_mode_choice:
+            anything: Za wszystko, łącznie z kartami podarunkowymi
+            goods_only: Za wszystko poza kartami podarunkowymi
+        tender_mode_help: Czy kartą podarunkową można zapłacić za inną kartę podarunkową.
+            Zgoda pozwala w nieskończoność przenosić środki na nową kartę, przez co
+            data ważności przestaje cokolwiek znaczyć.
         validity_period: Okres ważności
         validity_period_help: Jak długo nowa karta pozostaje ważna, na przykład "1
-            year". Pozostaw puste dla kart bezterminowych.
+            year" albo "18 months". Pole wymagane - każda karta podarunkowa wygasa.

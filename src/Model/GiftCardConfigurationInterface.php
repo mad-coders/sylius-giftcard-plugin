@@ -36,8 +36,14 @@ interface GiftCardConfigurationInterface extends ResourceInterface, Timestampabl
 
     /**
      * How long a newly created card stays valid, as a relative date expression understood by
-     * {@see \DateInterval::createFromDateString()}, e.g. "1 year" or "6 months". Null means the
-     * cards never expire.
+     * {@see \DateInterval::createFromDateString()}, e.g. "1 year" or "6 months".
+     *
+     * **Null does not mean "never expires".** Every card expires; a channel that has not set a
+     * usable period gets the plugin's default one. Nullable only because rows that predate the rule
+     * can hold null - the admin form refuses to save a blank period. See
+     * {@see \Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculatorInterface}, which is
+     * the only thing that reads this to produce a date, and
+     * docs/adr-log/0015-every-gift-card-expires.md.
      */
     public function getValidityPeriod(): ?string;
 
@@ -52,10 +58,14 @@ interface GiftCardConfigurationInterface extends ResourceInterface, Timestampabl
     public function setSaleMode(GiftCardSaleMode $saleMode): void;
 
     /**
-     * The expiry date a card created now would get, or null when cards in this channel do not
-     * expire.
+     * What a gift card may be spent on in this channel - specifically, whether it may pay for
+     * another gift card. Read through
+     * {@see \Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface}, which is the
+     * single decision point; see docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
      */
-    public function calculateExpiryDate(?\DateTimeImmutable $from = null): ?\DateTimeImmutable;
+    public function getTenderMode(): GiftCardTenderMode;
+
+    public function setTenderMode(GiftCardTenderMode $tenderMode): void;
 
     /** How a customer buying a gift card in this channel chooses what it is worth. */
     public function getAmountMode(): GiftCardAmountMode;

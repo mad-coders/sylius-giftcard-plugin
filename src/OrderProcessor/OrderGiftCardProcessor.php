@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Madcoders\SyliusGiftCardPlugin\OrderProcessor;
 
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\AdjustmentInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -35,6 +36,7 @@ final readonly class OrderGiftCardProcessor implements OrderProcessorInterface
     public function __construct(
         private AdjustmentFactoryInterface $adjustmentFactory,
         private TranslatorInterface $translator,
+        private GiftCardTenderCheckerInterface $giftCardTenderChecker,
     ) {
     }
 
@@ -52,8 +54,20 @@ final readonly class OrderGiftCardProcessor implements OrderProcessorInterface
 
         $label = $this->translator->trans('madcoders_sylius_gift_card.ui.gift_card');
 
-        // The full price of the goods. This runs after taxes, so it is the real amount owed.
+        // The full price of the goods. This runs after taxes, so it is the real amount owed, and it
+        // is what the payment is settled against below.
         $amountToPay = $order->getTotal();
+
+        // How much of that gift cards are allowed to cover, which under the default per-channel
+        // rule excludes the gift card lines on the order: a gift card does not buy a gift card. The
+        // two numbers are kept apart on purpose - capping the coverage must never shrink the
+        // payment, or the shop would hand over a card it was never paid for. See
+        // docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
+        //
+        // This is the guard that actually protects the money, the way the issue-time guard does in
+        // ADR 0013: the applicator and the checkout constraint refuse the customer politely, this
+        // one runs on server state no request can skip.
+        $settleable = $this->giftCardTenderChecker->settleableTotalOf($order);
         $covered = 0;
 
         foreach ($order->getGiftCards() as $giftCard) {
@@ -61,7 +75,7 @@ final readonly class OrderGiftCardProcessor implements OrderProcessorInterface
                 continue;
             }
 
-            $remainingToPay = $amountToPay - $covered;
+            $remainingToPay = $settleable - $covered;
             if ($remainingToPay <= 0) {
                 break;
             }

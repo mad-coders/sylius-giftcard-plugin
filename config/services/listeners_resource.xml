@@ -14,6 +14,7 @@
                  class="Madcoders\SyliusGiftCardPlugin\EventListener\PrepareGiftCardOnCreateListener">
             <argument type="service" id="madcoders_sylius_gift_card.generator.gift_card_code" />
             <argument type="service" id="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+            <argument type="service" id="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
             <tag name="kernel.event_listener" event="madcoders_sylius_gift_card.gift_card.pre_create" method="__invoke" />
         </service>
     </services>

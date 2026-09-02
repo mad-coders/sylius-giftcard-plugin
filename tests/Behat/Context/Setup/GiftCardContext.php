@@ -11,6 +11,8 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
+use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardConfigurationRepositoryInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -30,6 +32,7 @@ final class GiftCardContext implements Context
         private readonly ObjectManager $giftCardManager,
         private readonly ExampleFactoryInterface $giftCardConfigurationExampleFactory,
         private readonly GiftCardApplicatorInterface $giftCardApplicator,
+        private readonly GiftCardConfigurationRepositoryInterface $giftCardConfigurationRepository,
     ) {
     }
 
@@ -66,18 +69,21 @@ final class GiftCardContext implements Context
     }
 
     /**
-     * @Given the channel's gift cards are valid for the unparseable period :period
+     * @Given the channel lets a gift card pay for another gift card
      */
-    public function theChannelsGiftCardsAreValidForTheUnparseablePeriod(string $period): void
+    public function theChannelLetsAGiftCardPayForAnotherGiftCard(): void
     {
-        // A misconfigured period must not hand out a card that is already expired - a card issued
-        // dead is worse than one that never expires, because the customer only finds out at the
-        // till.
-        //
-        // The prefix rides along so the scenario can prove the configuration was actually consulted.
-        // Without it, "no expiry date" would also be the answer if the configuration were ignored
-        // altogether, and the test would pass while testing nothing.
-        $this->createConfiguration(['validity_period' => $period, 'code_prefix' => 'BADCFG-']);
+        $this->setTenderMode(GiftCardTenderMode::Anything);
+    }
+
+    /**
+     * @Given the channel stops letting a gift card pay for another gift card
+     */
+    public function theChannelStopsLettingAGiftCardPayForAnotherGiftCard(): void
+    {
+        // Deliberately a change to an existing configuration rather than a fresh one: the case
+        // worth testing is the cart that was filled and paid for on either side of the change.
+        $this->setTenderMode(GiftCardTenderMode::GoodsOnly);
     }
 
     /**
@@ -125,6 +131,27 @@ final class GiftCardContext implements Context
             'minimum_amount' => self::toMinorUnits($minimum),
             'maximum_amount' => self::toMinorUnits($maximum),
         ]);
+    }
+
+    /**
+     * Sets the channel's tender mode, creating a configuration for it only if it has none.
+     *
+     * At most one configuration exists per channel, so a scenario that changes the mode partway
+     * through has to update the row rather than add a second one.
+     */
+    private function setTenderMode(GiftCardTenderMode $tenderMode): void
+    {
+        $configuration = $this->giftCardConfigurationRepository->findOneByChannel($this->getChannel());
+
+        if (null === $configuration) {
+            $this->createConfiguration(['tender_mode' => $tenderMode->value]);
+
+            return;
+        }
+
+        $configuration->setTenderMode($tenderMode);
+
+        $this->giftCardManager->flush();
     }
 
     /** @param array<string, mixed> $options */

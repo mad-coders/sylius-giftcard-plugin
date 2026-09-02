@@ -27,7 +27,12 @@
 
             <dt class="col-4">{{ 'madcoders_sylius_gift_card.ui.expires_at'|trans }}</dt>
             <dd class="col-8">
-                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.never_expires'|trans }}
+                {#
+                    Guarded, because `date` renders null as *today*: a card that predates
+                    Version20260902100000 would otherwise show a fabricated expiry rather than an
+                    admission that it has none. See docs/adr-log/0015-every-gift-card-expires.md.
+                #}
+                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.expires_at_not_recorded'|trans }}
             </dd>
 
             {# The two customer links are the point of the model: who paid, and who is spending it. #}

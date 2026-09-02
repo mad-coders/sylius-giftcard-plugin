@@ -64,6 +64,40 @@ final readonly class GiftCardConfigurationContext implements Context
     }
 
     /**
+     * @When I clear the validity period
+     */
+    public function iClearTheValidityPeriod(): void
+    {
+        $this->createPage->specifyValidityPeriod('');
+    }
+
+    /**
+     * @Then I should be told the validity period is required
+     */
+    public function iShouldBeToldTheValidityPeriodIsRequired(): void
+    {
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'how long a new gift card stays valid',
+            'The form accepted a channel with no validity period, which used to issue cards that never expire.',
+        );
+    }
+
+    /**
+     * @Then I should be told the validity period is not a period
+     */
+    public function iShouldBeToldTheValidityPeriodIsNotAPeriod(): void
+    {
+        // Also pins the translation domain: a constraint's message is looked up in `validators`, so
+        // the same key sitting in messages.en.yaml would render as the raw key on the page.
+        Assert::contains(
+            $this->createPage->getValidationMessages(),
+            'not a period the shop understands',
+            'The form accepted a validity period that cannot expire a card.',
+        );
+    }
+
+    /**
      * @When I set gift cards to be issued by an administrator only
      */
     public function iSetGiftCardsToBeIssuedByAnAdministratorOnly(): void

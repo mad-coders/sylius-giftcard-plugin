@@ -13,6 +13,8 @@ madcoders_sylius_gift_card:
         code:
             not_blank: Wpisz kod karty podarunkowej.
             unique: Karta podarunkowa o tym kodzie już istnieje.
+        expires_at:
+            not_blank: Podaj datę wygaśnięcia karty podarunkowej.
         initial_amount:
             not_blank: Podaj wartość karty podarunkowej.
             positive: Kwota musi być większa od zera.
@@ -28,6 +30,13 @@ madcoders_sylius_gift_card:
         code_length:
             too_short: Długość kodu musi wynosić co najmniej 12 znaków - krótszy kod
                 da się odgadnąć.
+        validity_period:
+            not_blank: Podaj, jak długo nowa karta pozostaje ważna, na przykład "1 year".
+            unparseable: To nie jest okres, który sklep rozumie. Użyj wyrażenia względnego,
+                na przykład "1 year", "18 months" albo "30 days".
     order:
+        gift_card_cannot_pay_for_gift_card: Kartą podarunkową nie można zapłacić za
+            kartę podarunkową. Usuń kartę podarunkową z koszyka albo zrezygnuj z płatności
+            kartą, aby kontynuować.
         gift_card_not_sold_in_channel: Twój koszyk zawiera kartę podarunkową, a karty podarunkowe
             nie są sprzedawane w tym kanale. Usuń ją, aby kontynuować.

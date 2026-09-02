@@ -241,12 +241,66 @@ so they run on MySQL, MariaDB and PostgreSQL alike.
 There is more than one migration, and a plugin upgrade can add another - always run
 `doctrine:migrations:migrate` after updating the package, not only on first install.
 
+> **Upgrading from RC.2: deploy the code before you migrate, and stop the shop while you do.**
+> MySQL and MariaDB do not run DDL inside a transaction. The migration reads the cards with no expiry
+> date, writes a date to each, and only then makes the column `NOT NULL` - so if any instance still
+> running the old code issues a card in between, the `ALTER` fails on the new null while the `UPDATE`s
+> stay committed, and the migration is recorded as failed with the schema half changed. Roll the new
+> code out first (it never writes a card without a date), or take maintenance mode for the migration.
+> PostgreSQL is transactional here and rolls the whole thing back, so this is a MySQL and MariaDB
+> instruction specifically.
+>
+> `Version20260902100000` gives every gift card that has no expiry date one,
+> measured from that card's own creation date plus its channel's validity period, and then makes the
+> column NOT NULL. A card created three years ago in a channel with a one-year period therefore comes
+> out **already expired**, which is money its holder can no longer spend. Tell the holders before you
+> run it, not after.
+>
+> Count them **before** upgrading, while the nulls are still there:
+>
+> ```sql
+> SELECT COUNT(*) FROM madcoders_gift_card__gift_card WHERE expires_at IS NULL;
+> ```
+>
+> and afterwards, to see which of those are now dead:
+>
+> ```sql
+> SELECT code, created_at, expires_at
+> FROM madcoders_gift_card__gift_card
+> WHERE expires_at < NOW() AND amount > 0
+> ORDER BY expires_at;
+> ```
+>
+> Anything that comes back is a card with money on it that can no longer be spent. Re-dating those by
+> hand, or topping up replacements from the admin, is a decision only you can make.
+
 ## 8. Configure a channel
 
 Gift cards are channel-scoped. Give each channel a configuration under
-*Marketing > Gift card configuration* in the admin - code prefix, code length, validity period, and
-whether the channel sells gift cards or only issues them from the back office. A channel without one
-still works; the model defaults apply, which include selling gift cards.
+*Marketing > Gift card configuration* in the admin - code prefix, code length, validity period,
+whether the channel sells gift cards or only issues them from the back office, and what a gift card
+may be spent on. A channel without one still works; the model defaults apply, which include selling
+gift cards.
+
+Two of those defaults are worth knowing before you go live:
+
+- **Validity period: `1 year`, and it is required.** Every gift card expires - there is no way to
+  issue one that does not, in any channel, by any route. A channel with no configuration at all, or
+  one whose period is blank or cannot be parsed, issues cards valid for one year. Set the period to
+  whatever your jurisdiction and your accounting need; a shop that wants cards to effectively outlive
+  everybody sets a long period (`25 years`) rather than none, so the liability stays dated. The form
+  refuses a period it cannot act on, so `1 yaer` comes back as an error instead of silently issuing
+  cards that never expire. See
+  [ADR 0015](adr-log/0015-every-gift-card-expires.md).
+- **What a gift card pays for: everything except gift cards.** A gift card cannot be used to buy
+  another gift card. Without this, a holder can buy a new card for exactly their remaining balance,
+  pay nothing, and receive a fresh code with a fresh expiry - forever - which makes the expiry date
+  above unenforceable. An order containing both goods and a gift card still redeems: the card covers
+  the goods and the gift card is payable in cash. A basket of nothing but gift cards refuses
+  redemption and says why, and that includes any shipping charged on it: with no goods on the order
+  there is nothing a gift card may pay for, postage included. Set it to *Anything, gift cards included* per channel if you genuinely
+  want the old behaviour, and read what that costs in
+  [ADR 0016](adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md).
 
 ## What the plugin registers for you
 

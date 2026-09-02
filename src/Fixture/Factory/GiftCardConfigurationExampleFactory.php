@@ -8,6 +8,7 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardAmountMode;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfiguration;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardConfigurationInterface;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardSaleMode;
+use Madcoders\SyliusGiftCardPlugin\Model\GiftCardTenderMode;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\AbstractExampleFactory;
 use Sylius\Bundle\CoreBundle\Fixture\Factory\ExampleFactoryInterface;
 use Sylius\Bundle\CoreBundle\Fixture\OptionsResolver\LazyOption;
@@ -61,6 +62,9 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
         $saleMode = $options['sale_mode'];
         Assert::string($saleMode);
 
+        $tenderMode = $options['tender_mode'];
+        Assert::string($tenderMode);
+
         $amountMode = $options['amount_mode'];
         Assert::isInstanceOf($amountMode, GiftCardAmountMode::class);
 
@@ -81,6 +85,7 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
         $configuration->setValidityPeriod($validityPeriod);
         $configuration->setEnabled($enabled);
         $configuration->setSaleMode(GiftCardSaleMode::from($saleMode));
+        $configuration->setTenderMode(GiftCardTenderMode::from($tenderMode));
         $configuration->setAmountMode($amountMode);
         $configuration->setAmountPresets($amountPresets);
         $configuration->setMinimumAmount($minimumAmount);
@@ -114,6 +119,13 @@ class GiftCardConfigurationExampleFactory extends AbstractExampleFactory impleme
             ->setAllowedValues('sale_mode', array_map(
                 static fn (GiftCardSaleMode $mode): string => $mode->value,
                 GiftCardSaleMode::cases(),
+            ))
+
+            // Same convention, so a YAML fixture can say `tender_mode: anything`.
+            ->setDefault('tender_mode', GiftCardTenderMode::GoodsOnly->value)
+            ->setAllowedValues('tender_mode', array_map(
+                static fn (GiftCardTenderMode $mode): string => $mode->value,
+                GiftCardTenderMode::cases(),
             ))
 
             // Fixed by default, so a fixture that says nothing about amounts describes a channel

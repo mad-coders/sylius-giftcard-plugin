@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tests\Madcoders\SyliusGiftCardPlugin\Unit\Applicator;
 
 use Madcoders\SyliusGiftCardPlugin\Applicator\GiftCardApplicator;
+use Madcoders\SyliusGiftCardPlugin\Checker\GiftCardTenderCheckerInterface;
 use Madcoders\SyliusGiftCardPlugin\Exception\ChannelMismatchException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotFoundException;
 use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardNotRedeemableException;
+use Madcoders\SyliusGiftCardPlugin\Exception\GiftCardsNotAcceptedOnOrderException;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCard;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Repository\GiftCardRepositoryInterface;
@@ -160,16 +162,69 @@ final class GiftCardApplicatorTest extends TestCase
         self::assertCount(0, $order->getGiftCards());
     }
 
+    public function testAnOrderThatTakesNoGiftCardsRefusesEveryCard(): void
+    {
+        // The gift-card-only basket from #41. Nothing is applied, and the order is not reprocessed.
+        $order = $this->createOrder('WEB');
+        $giftCard = $this->createGiftCard('GIFT-A', 5_000, 'WEB');
+
+        $processor = $this->createMock(OrderProcessorInterface::class);
+        $processor->expects(self::never())->method('process');
+
+        $applicator = $this->createApplicator($processor, tenderChecker: $this->createRefusingTenderChecker());
+
+        $this->expectException(GiftCardsNotAcceptedOnOrderException::class);
+
+        try {
+            $applicator->apply($order, $giftCard);
+        } finally {
+            self::assertFalse($order->hasGiftCard($giftCard));
+        }
+    }
+
+    public function testAnOrderThatTakesNoGiftCardsIsRefusedBeforeTheCodeIsLookedUp(): void
+    {
+        // Load-bearing, not incidental. This refusal carries a specific message; if it only
+        // happened for codes that exist, the specific message would tell an anonymous caller which
+        // codes are real - the exact leak the single "cannot be used" message exists to avoid.
+        $repository = $this->createMock(GiftCardRepositoryInterface::class);
+        $repository->expects(self::never())->method('findOneByCode');
+
+        $applicator = $this->createApplicator(
+            repository: $repository,
+            tenderChecker: $this->createRefusingTenderChecker(),
+        );
+
+        $this->expectException(GiftCardsNotAcceptedOnOrderException::class);
+
+        $applicator->apply($this->createOrder('WEB'), 'NO-SUCH-CODE');
+    }
+
     private function createApplicator(
         ?OrderProcessorInterface $processor = null,
         ?GiftCardRepositoryInterface $repository = null,
+        ?GiftCardTenderCheckerInterface $tenderChecker = null,
     ): GiftCardApplicator {
         $repository ??= $this->createMock(GiftCardRepositoryInterface::class);
+
+        if (null === $tenderChecker) {
+            $tenderChecker = $this->createMock(GiftCardTenderCheckerInterface::class);
+            $tenderChecker->method('allowsRedemptionOn')->willReturn(true);
+        }
 
         return new GiftCardApplicator(
             $repository,
             $processor ?? $this->createMock(OrderProcessorInterface::class),
+            $tenderChecker,
         );
+    }
+
+    private function createRefusingTenderChecker(): GiftCardTenderCheckerInterface
+    {
+        $tenderChecker = $this->createMock(GiftCardTenderCheckerInterface::class);
+        $tenderChecker->method('allowsRedemptionOn')->willReturn(false);
+
+        return $tenderChecker;
     }
 
     private function createOrder(string $channelCode): Order
