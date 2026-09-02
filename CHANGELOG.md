@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), so a contributor can read
+  the mail the plugin sends. A gift card's code reaches the customer by email, and there was no way
+  to see it: `MAILER_DSN` is `null://null`. That default is unchanged, so CI still needs no mail
+  server - point the mailer at mailpit in `tests/TestApplication/.env.local` when you want to read
+  it. See `docs/CONTRIBUTING.md`.
+
 ### Fixed
 
 - The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's

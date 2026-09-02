@@ -5,10 +5,15 @@
 # Behat @javascript suite.
 #
 #   docker compose up -d mysql     # database only (unit + non-JS Behat)
-#   docker compose up -d           # database + chrome (for @javascript Behat)
+#   docker compose up -d           # database + chrome (for @javascript Behat) + mailpit
 #
 # MySQL is published on host port 3307 (not 3306) so it does not clash with a MySQL already
 # installed on the host; tests/TestApplication/.env points DATABASE_URL at that port.
+#
+# Mailpit catches the mail the plugin sends. This matters more here than in most plugins: a gift
+# card's code is delivered by email, so with the default MAILER_DSN of null://null there is no way
+# to see the one artefact a customer actually receives. Point MAILER_DSN at it and read the mail at
+# http://127.0.0.1:8025.
 services:
     mysql:
         image: mysql:8.4
@@ -39,6 +44,22 @@ services:
             - --window-size=1920,1080
         ports:
             - "${CHROME_PORT:-9222}:9222"
+
+    mailpit:
+        image: axllent/mailpit:v1.21
+        environment:
+            # Keep everything in memory - this is a development mailbox, not an archive.
+            MP_MAX_MESSAGES: 500
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+        ports:
+            - "${MAILPIT_SMTP_PORT:-1025}:1025"
+            - "${MAILPIT_UI_PORT:-8025}:8025"
+        healthcheck:
+            test: ["CMD", "/mailpit", "readyz"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
 
 volumes:
     mysql_data: {}
