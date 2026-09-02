@@ -89,6 +89,31 @@ final class GiftCardExpiryNotInThePastValidatorTest extends ConstraintValidatorT
         $this->assertNoViolation();
     }
 
+    public function testItDoesNotRefuseAStoredCardWhosePreviousDateCannotBeSeen(): void
+    {
+        // An importer or a Messenger handler that clears its entity manager every few thousand rows
+        // hands the validator a detached card: it is in the database, but nothing can say what date
+        // it holds. Judging that as a creation would refuse a legacy card being edited only to
+        // disable it - the exact case this rule promises to leave alone, failing on the batch jobs
+        // least able to explain themselves.
+        $this->storedExpiryDate = null;
+
+        $this->validator->validate($this->storedCard($this->giftCardExpiring('-1 day')), new GiftCardExpiryNotInThePast());
+
+        $this->assertNoViolation();
+    }
+
+    public function testItStillRefusesAStoredCardWhosePreviousDateWasLive(): void
+    {
+        // The mirror image, and the reason the fallback above is a tiebreak rather than an escape
+        // hatch: when the previous date *can* be seen and it was live, an identity changes nothing.
+        $this->storedExpiryDate = new \DateTimeImmutable('+6 months');
+
+        $this->validator->validate($this->storedCard($this->giftCardExpiring('-1 day')), new GiftCardExpiryNotInThePast());
+
+        $this->buildViolation(self::MESSAGE)->atPath('property.path.expiresAt')->assertRaised();
+    }
+
     public function testItLeavesAMissingDateToNotBlank(): void
     {
         // Two constraints, two messages. "Not in the past" is the wrong answer to an empty field,
@@ -115,6 +140,21 @@ final class GiftCardExpiryNotInThePastValidatorTest extends ConstraintValidatorT
     {
         $giftCard = new GiftCard();
         $giftCard->setExpiresAt(new \DateTimeImmutable($expiresAt));
+
+        return $giftCard;
+    }
+
+    /**
+     * The same card, as one the database has already given an id.
+     *
+     * Reflection because a gift card's id is Doctrine's to assign and the model rightly offers no
+     * setter. "Has an identity" is the only thing available to tell a card that exists from one
+     * being issued when the stored date cannot be read, so a test of that branch has to be able to
+     * say which it is looking at.
+     */
+    private function storedCard(GiftCardInterface $giftCard): GiftCardInterface
+    {
+        (new \ReflectionProperty(GiftCard::class, 'id'))->setValue($giftCard, 42);
 
         return $giftCard;
     }

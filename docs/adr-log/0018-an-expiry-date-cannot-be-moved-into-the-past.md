@@ -78,6 +78,20 @@ The constraint judges the value, not the intent. It cannot tell a card dated `20
 from one dated `2020-01-01` on purpose, and does not try to - it refuses both and points at the
 action that expresses the intent properly.
 
+**A date one minute in the future is waved through, and sixty seconds later the card is in the state
+described at the top of this ADR.** The widget is minute-granular, so an administrator can set a live
+$200 card to expire almost immediately, save, and produce a balance that is on the books, visible and
+unspendable, with nothing in the history. That is not an oversight to be fixed later; it is the
+unavoidable other side of #45's criterion 5, which requires shortening to a future date to stay
+frictionless. A rule that closed it would have to refuse *every* shortening, or write a ledger entry
+on every one - and both were considered and rejected, because they punish the ordinary case of a
+shop correcting its own terms in order to catch an adversary who could simply wait a minute.
+
+**So what this delivers is a speed bump, not an invariant.** It closes the case an administrator
+reaches by accident and the case that leaves no trace at all in a form submission; it does not stop
+somebody determined to strand a balance. Read the rules below as what the code enforces, not as a
+guarantee about balances.
+
 A zero-balance card also still shows its original expiry date, because that date is a true statement
 about the card's terms. What changed is the balance, and the ledger explains it.
 
@@ -92,15 +106,27 @@ about the card's terms. What changed is the balance, and the ledger explains it.
 - The constraint costs one identity-map lookup per validation and no query.
 - `StoredGiftCardExpiryProviderInterface` is a new extension point. A host on a different persistence
   arrangement can answer the question its own way; answering `null` means "no previous date to
-  compare against", which makes the rule fall back to judging the submitted date on its own.
+  compare against", never "the card had no expiry".
+- **`null` does not mean "refuse".** A detached card - an importer or a Messenger handler clearing
+  its entity manager every few thousand rows - is indistinguishable from a card being created, and
+  Doctrine's `getEntityState()` reports the assumption it is given rather than going to the database.
+  Judging that as a creation would refuse a legacy card being edited only to disable it, in exactly
+  the batch jobs least able to explain themselves. The constraint therefore falls back to the card's
+  identity: no id, no history, judge the submitted date on its own; an id and no readable previous
+  date, leave it alone.
 - ADR 0015's fourth point said a date in the past "is a separate gap and needs its own ticket". This
   is that ticket, and 0015 should now be read with this alongside it.
 
 ## Rules
 
-1. Nothing may make a spendable balance unspendable without writing to the card's history. Changing
-   the date is not exempt because it does not touch the number.
+1. **An expiry date may not be moved into the past.** This is what the code enforces, and it is
+   deliberately narrower than "nothing may make a spendable balance unspendable without writing to
+   the card's history" - see *What this does not do*. A future date, however near, is allowed.
+   Do not quote the wider version as though it held.
 2. Taking a card out of circulation on purpose means taking its balance to zero, not backdating it.
    A new retirement mechanism that leaves the balance sitting on the card reopens exactly this.
 3. The rule is about the past. Do not turn it into "the expiry may never be shortened" - that is a
    different rule, it was not asked for, and it would stop a shop correcting its own terms.
+4. Any *new* way to strand a balance - a bulk expiry action, an import that re-dates, a scheduled
+   sweep - has to write to the card's history, because none of them has criterion 5 to answer to and
+   none of them is a single administrator making one visible edit.

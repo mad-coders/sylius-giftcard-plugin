@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Madcoders\SyliusGiftCardPlugin\Form\Type;
 
 use Madcoders\SyliusGiftCardPlugin\Calculator\GiftCardExpiryCalculatorInterface;
+use Madcoders\SyliusGiftCardPlugin\Exception\InvalidGiftCardAmountException;
 use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 use Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
@@ -124,14 +125,28 @@ final class GiftCardType extends AbstractResourceType
                 // when the new value equals the current one, and on a new card both are null. That
                 // is not a guarantee worth depending on, so the callback covers it as well.
                 //
+                // The model's refusal is caught rather than restated. setInitialAmount() has two
+                // preconditions - a positive amount, and a face value not already set - and a
+                // condition written here to mirror them would have to be kept in step with a rule
+                // that lives in another file. Catching what it throws cannot drift, and it holds
+                // whichever precondition the model grows next.
+                //
                 // Only the write is skipped: the field stays mapped, so the value the administrator
-                // typed is read back and re-rendered with the error against it.
+                // typed is read back and re-rendered with the error against it. Anything caught here
+                // is reported by the constraints below, bar the already-set case, which this form
+                // makes unreachable by adding the field only to a card that has no face value - and
+                // where swallowing is the right answer anyway, because invariant 1 says a face value
+                // never changes.
                 'setter' => static function (GiftCardInterface $giftCard, ?int $initialAmount): void {
-                    if (null === $initialAmount || $initialAmount <= 0) {
+                    if (null === $initialAmount) {
                         return;
                     }
 
-                    $giftCard->setInitialAmount($initialAmount);
+                    try {
+                        $giftCard->setInitialAmount($initialAmount);
+                    } catch (InvalidGiftCardAmountException) {
+                        // Left to the constraints below to put in front of the administrator.
+                    }
                 },
                 // These are what tells the administrator which of the two is wrong. They only run
                 // because this form validates with `Default` as well as the resource group

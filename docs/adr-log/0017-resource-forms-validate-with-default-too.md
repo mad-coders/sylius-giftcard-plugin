@@ -73,12 +73,22 @@ constraint as validated per object), so listing both cannot produce the same err
   change to be any use. Symfony maps a submitted value onto the object during `submit()` and
   validates it *afterwards*, so `NotBlank` and `Positive` on the initial amount were still reached
   too late: `GiftCard::setInitialAmount()` had already been handed the zero and thrown. The field now
-  declines the write through a `setter` callback when the value is one the model would refuse, which
-  leaves the constraints to report it. Any constraint guarding a setter that throws needs the same
+  declines the write through a `setter` callback that catches what the model refuses, which leaves
+  the constraints to report it. Any constraint guarding a setter that throws needs the same
   treatment - running the constraint is necessary and not sufficient.
-- `codeLength` on the configuration form is reachable now and still cannot catch a short code, for an
-  unrelated reason: the model raises the value to the minimum before the field is validated, and the
-  form raises that error itself in a `POST_SUBMIT` listener.
+- **One hand-written workaround had to be deleted, or the operator saw the same error twice.**
+  `GiftCardConfigurationType` carried a `PRE_SUBMIT`/`POST_SUBMIT` pair that captured the raw code
+  length and raised the too-short message itself, on the belief that the inline
+  `GreaterThanOrEqual` could never fire because `setCodeLength()` raises a short value to the
+  minimum before validation. **That belief was wrong.** A field constraint validates the *child
+  form's* own reverse-transformed value - the 4 that was typed - and never looks at the model, so
+  the constraint sees the raw input and the backstop is irrelevant to it. It was inert only for the
+  group reason above. Making it run turned one message into two identical ones, so the workaround is
+  gone and the constraint does the job alone.
+
+  The lesson generalises: **before writing a listener to raise an error a constraint "cannot", check
+  what the constraint is actually given.** A field constraint is handed the child form's data, not
+  the model's property, and the two differ whenever a setter normalises.
 
 ## Rules
 
@@ -87,5 +97,7 @@ constraint as validated per object), so listing both cannot produce the same err
 2. A form type that extends `AbstractResourceType` is registered with both groups. A new one with
    only the resource group is the bug in this ADR, reintroduced.
 3. Wiring like this is proved in a booted container, not in a unit test.
-   `tests/Functional/Validator/` is where that belongs: a constraint built by hand says nothing
-   about the group the form runs with.
+   `tests/Functional/Validator/` and `tests/Functional/Form/` are where that belongs: a constraint
+   built by hand says nothing about the group the form runs with.
+4. A test for a refusal asserts the **exact list** of messages, not that one appeared. "Contains"
+   passes just as happily on a doubled error, which is how the code length went out twice.

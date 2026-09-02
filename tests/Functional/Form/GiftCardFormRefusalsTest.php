@@ -83,6 +83,24 @@ final class GiftCardFormRefusalsTest extends KernelTestCase
         );
     }
 
+    public function testAnAcceptedAmountIsActuallyWrittenOntoTheCard(): void
+    {
+        // The other half of the setter, and the half a validity assertion cannot see. The callback
+        // declines to write a value the model would refuse; a callback that declined to write
+        // *anything* would leave this form perfectly valid and issue every card with a null face
+        // value and a zero balance - silently, which is the whole class of bug this change exists to
+        // close. Read the money back, in minor units, or nothing is testing the write at all.
+        $form = $this->submitCreateForm(['initialAmount' => '75.00']);
+        self::assertTrue($form->isValid(), $this->allErrorTemplates($form));
+
+        $giftCard = $form->getData();
+        self::assertInstanceOf(GiftCard::class, $giftCard);
+        self::assertSame(7_500, $giftCard->getInitialAmount());
+
+        // A card is issued with its full value available, so the balance has to have moved with it.
+        self::assertSame(7_500, $giftCard->getAmount());
+    }
+
     /**
      * Submits the create form, with anything the test did not name filled in acceptably.
      *

@@ -470,6 +470,38 @@ final class GiftCardContext implements Context
     }
 
     /**
+     * @Then the gift card :code should be worth :amount
+     */
+    public function theGiftCardShouldBeWorth(string $code, string $amount): void
+    {
+        Assert::same(
+            $this->storedGiftCard($code)->getInitialAmount(),
+            self::toMinorUnits($amount),
+            'The card was issued without the face value the administrator typed.',
+        );
+    }
+
+    /**
+     * @Then the gift card :code should have :amount left
+     */
+    public function theGiftCardShouldHaveLeft(string $code, string $amount): void
+    {
+        // Read separately from the face value, because they are set by one call and a card whose
+        // balance did not follow its face value is unspendable however right the face value looks.
+        Assert::same(
+            $this->storedGiftCard($code)->getAmount(),
+            self::toMinorUnits($amount),
+            'The card was issued with a balance that does not match its face value.',
+        );
+    }
+
+    /** A written price such as "$75.00" as the minor units the model stores. */
+    private static function toMinorUnits(string $amount): int
+    {
+        return (int) round(((float) (preg_replace('/[^0-9.]/', '', $amount) ?? '')) * 100);
+    }
+
+    /**
      * @Then the gift card :code should still expire in the future
      */
     public function theGiftCardShouldStillExpireInTheFuture(string $code): void
@@ -546,13 +578,18 @@ final class GiftCardContext implements Context
      * The admin request runs against the same entity manager as this context, so an object left in
      * the identity map would answer with the values the scenario set up rather than the ones the
      * form saved - and a step asserting a change was refused would pass whether it was or not.
+     *
+     * `refresh()` on the one card, not `clear()` on the manager. Clearing would detach everything
+     * the Sylius setup contexts and SharedStorage are still holding - the channel, the admin user,
+     * the order - which is harmless only for as long as every caller happens to be a terminal
+     * `Then`. That is a landmine for whoever writes the next step, not a design.
      */
     private function storedGiftCard(string $code): GiftCardInterface
     {
-        $this->giftCardManager->clear();
-
         $giftCard = $this->giftCardRepository->findOneBy(['code' => $code]);
         Assert::isInstanceOf($giftCard, GiftCardInterface::class, sprintf('There is no gift card "%s".', $code));
+
+        $this->giftCardManager->refresh($giftCard);
 
         return $giftCard;
     }

@@ -17,6 +17,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `Default` as well, so every one of them is evaluated, without taking the resource group away from a
   host that has declared constraints in it. See
   `docs/adr-log/0017-resource-forms-validate-with-default-too.md`. Closes #44.
+- The gift card configuration form no longer raises the code-length error twice. It carried a
+  hand-written `POST_SUBMIT` listener that reported a short code length itself, added on the belief
+  that the field's own `GreaterThanOrEqual` could never fire because the model raises a short value
+  to the minimum first. It can: a field constraint validates the submitted value, not the model. With
+  the group mismatch above fixed, both fired and the operator was shown the same sentence twice. The
+  listener is gone; the constraint does the job alone.
 - **A blank or zero initial amount gave the administrator a 500.** With the constraints inert, the
   submitted value went straight to `GiftCard::setInitialAmount()`, which refuses both by throwing.
   Symfony writes a submitted value onto the object before it validates it, so making the constraints

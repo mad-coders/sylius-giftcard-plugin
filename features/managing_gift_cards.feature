@@ -16,11 +16,19 @@ Feature: Managing gift cards
 
     @ui
     Scenario: Creating a gift card by hand
+        # The card has to be worth what was typed, and the assertion has to say so out loud. The
+        # amount reaches the model through a setter callback - the field cannot be plainly mapped,
+        # because the model refuses a bad amount by throwing and Symfony writes before it validates -
+        # and a callback that declined to write anything at all would still leave a card in the list,
+        # with a null face value and a zero balance. Appearing in the list is not the same as being
+        # worth something.
         When I want to create a new gift card
         And I specify its code as "GIFT-NEW001"
         And I specify its initial amount as "75.00"
         And I add this gift card
         Then the gift card "GIFT-NEW001" should appear in the list
+        And the gift card "GIFT-NEW001" should be worth "$75.00"
+        And the gift card "GIFT-NEW001" should have "$75.00" left
 
     @ui
     Scenario: Seeing a gift card's balance and who uses it

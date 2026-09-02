@@ -41,14 +41,25 @@ final class GiftCardExpiryNotInThePastValidator extends ConstraintValidator
             return;
         }
 
+        $storedExpiryDate = $this->storedGiftCardExpiryProvider->getStoredExpiryDate($value);
+
         // The card was already expired before this write, so nothing spendable is being destroyed:
         // there is no balance to lose that today has not taken already. This is what keeps a card
         // the #31 migration dated into the past editable, and what lets a legacy card be disabled or
         // have its message corrected without its own stored date being thrown back at the
         // administrator.
-        $storedExpiryDate = $this->storedGiftCardExpiryProvider->getStoredExpiryDate($value);
-
         if (null !== $storedExpiryDate && $storedExpiryDate < $now) {
+            return;
+        }
+
+        // No previous date to compare against, on a card that has one in the database somewhere.
+        // That is not a card being issued in the past; it is a card whose previous date could not be
+        // *seen* - detached because an importer clears its manager every few thousand rows, or
+        // mapped to a manager this cannot read. Refusing on that would lock exactly the legacy cards
+        // this rule promises stay editable, and it would do it to the batch jobs least able to
+        // report why. A guess in the safe direction: only a card with no identity is judged as a
+        // creation.
+        if (null === $storedExpiryDate && null !== $value->getId()) {
             return;
         }
 

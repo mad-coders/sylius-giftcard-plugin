@@ -17,9 +17,15 @@ use Madcoders\SyliusGiftCardPlugin\Model\GiftCardInterface;
 interface StoredGiftCardExpiryProviderInterface
 {
     /**
-     * Null when the card has never been stored, or when nothing is known about it - a card being
-     * created, or one detached from its manager. Callers must read null as "no previous date to
-     * compare against", never as "the card had no expiry".
+     * Null when the card has never been stored, and null again when nothing can be seen about it -
+     * a card detached from its manager, or one mapped to a manager the implementation cannot read.
+     * The two are indistinguishable here on purpose: telling them apart would need the caller's
+     * knowledge of what it is doing, not the store's.
+     *
+     * So null means "no previous date to compare against" and never "the card had no expiry". A
+     * caller that treats it as a fact about the card, rather than as the absence of an answer, will
+     * quietly punish every batch job that clears its entity manager. `GiftCardExpiryNotInThePast`
+     * falls back to the card's identity, which is the honest tiebreak: no identity, no history.
      */
     public function getStoredExpiryDate(GiftCardInterface $giftCard): ?\DateTimeInterface;
 }

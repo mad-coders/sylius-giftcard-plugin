@@ -51,13 +51,19 @@ final class CreatePage extends BaseCreatePage implements CreatePageInterface
 
     public function getValidationMessages(): string
     {
+        return implode(' ', $this->getValidationMessageList());
+    }
+
+    /** @return list<string> */
+    public function getValidationMessageList(): array
+    {
         $messages = [];
 
         foreach ($this->getDocument()->findAll('css', '.invalid-feedback') as $error) {
             $messages[] = trim($error->getText());
         }
 
-        return implode(' ', $messages);
+        return $messages;
     }
 
     public function getCodeLengthValidationMessage(): string

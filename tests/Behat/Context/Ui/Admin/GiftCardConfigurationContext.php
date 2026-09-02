@@ -202,6 +202,15 @@ final readonly class GiftCardConfigurationContext implements Context
             'at least 12 characters',
             'The form did not object to a code length below the minimum.',
         );
+
+        // Once. The form used to raise this itself as well as carrying the constraint, and the two
+        // together put the same sentence on the page twice - which reads as a broken form and which
+        // every "contains" assertion above is blind to.
+        Assert::count(
+            $this->createPage->getValidationMessageList(),
+            1,
+            'The form said the same thing more than once.',
+        );
     }
 
     /**
