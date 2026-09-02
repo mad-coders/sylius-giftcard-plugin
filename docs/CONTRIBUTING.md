@@ -12,7 +12,6 @@ git clone git@github.com:mad-coders/sylius-giftcard-plugin.git
 cd sylius-giftcard-plugin
 make setup          # deps + MySQL container (host port 3307) + assets + database
 make app            # fresh schema + demo data
-docker compose up -d mailpit   # read the mail the plugin sends, at http://127.0.0.1:8025
 make install-hooks  # pre-commit gate + commit message template
 ```
 
@@ -21,6 +20,19 @@ make install-hooks  # pre-commit gate + commit message template
 
 If port 3307 is taken, or you want to point at a database you already run, override `DATABASE_URL`
 in `tests/TestApplication/.env.local` (git-ignored).
+
+### Reading the mail the plugin sends
+
+A gift card's code reaches the customer by email, so it is worth being able to read one. The
+committed `MAILER_DSN` is `null://null` - mail is discarded, and CI needs no mail server. To see it,
+start mailpit and point the mailer at it in the same git-ignored override:
+
+```bash
+docker compose up -d mailpit
+echo 'MAILER_DSN=smtp://127.0.0.1:1025' >> tests/TestApplication/.env.local
+```
+
+Mail then arrives at http://127.0.0.1:8025.
 
 ## Working on a change
 

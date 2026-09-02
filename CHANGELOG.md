@@ -9,10 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), with `MAILER_DSN` pointed at
-  it. The plugin delivers a gift card's code by email, and until now `MAILER_DSN` was `null://null`,
-  so there was no way for a contributor to see the one artefact a customer actually receives. Run
-  `docker compose up -d mailpit` and read the mail at http://127.0.0.1:8025.
+- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), so a contributor can read
+  the mail the plugin sends. A gift card's code reaches the customer by email, and there was no way
+  to see it: `MAILER_DSN` is `null://null`. That default is unchanged, so CI still needs no mail
+  server - point the mailer at mailpit in `tests/TestApplication/.env.local` when you want to read
+  it. See `docs/CONTRIBUTING.md`.
 
 ### Fixed
 
