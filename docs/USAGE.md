@@ -154,7 +154,8 @@ By default a gift card pays for everything on an order **except the gift cards o
   and the amount left to pay reflects that.
 - A basket of nothing but gift cards refuses redemption, with a message telling the customer to
   remove the gift card from their basket. It is refused when the card is offered *and* again at
-  checkout, so a cart assembled before the setting changed cannot slip through.
+  checkout, so a cart assembled before the setting changed cannot slip through. Shipping charged on
+  such a basket is refused with it: the postage is for the goods, and there are none.
 
 Without this rule a holder can buy a new card for exactly their remaining balance, pay nothing, and
 receive a fresh code with a fresh expiry - repeatable forever. The shop's liability never grows, but

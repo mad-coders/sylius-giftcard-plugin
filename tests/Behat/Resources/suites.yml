@@ -100,6 +100,10 @@ default:
                 - sylius.behat.context.setup.order
 
                 - madcoders_sylius_gift_card.behat.context.setup.gift_card_checkout
+                # Placing an order that carries a gift card product is how the settlement cap is
+                # proved against a real debit - see "A card on a mixed basket is only charged for
+                # the goods".
+                - madcoders_sylius_gift_card.behat.context.setup.gift_card_product
 
             filters:
                 tags: "@madcoders_gift_card_checkout"

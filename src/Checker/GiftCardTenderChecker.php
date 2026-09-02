@@ -29,18 +29,37 @@ final readonly class GiftCardTenderChecker implements GiftCardTenderCheckerInter
             return max(0, $total);
         }
 
+        $giftCardLinesTotal = 0;
+        $hasGiftCardLines = false;
+
+        foreach ($this->giftCardLinesOf($order) as $item) {
+            $giftCardLinesTotal += $item->getTotal();
+            $hasGiftCardLines = true;
+        }
+
+        if (!$hasGiftCardLines) {
+            return max(0, $total);
+        }
+
+        // Nothing but gift cards on the order: nothing here a gift card may pay for, including the
+        // cost of delivering them. Everything below leaves shipping settleable on the reasoning
+        // that the postage is for the goods - and on this order there are no goods, so that
+        // reasoning has nothing left to stand on.
+        //
+        // Without this the rule contradicts itself between two screens: the cart refuses redemption
+        // outright, and the checkout, two clicks later, lets a card cover the $10 postage on the
+        // same basket. No money is at stake either way; a rule that is refused in one place and
+        // honoured in the next is the problem.
+        if (!$this->hasNonGiftCardLines($order)) {
+            return 0;
+        }
+
         // Order total less what the gift card lines are worth. Deliberately arithmetic on Sylius'
         // own numbers rather than an attribution of shipping, tax and order promotions between
         // "gift card" and "goods": an item total already carries the promotions and taxes that
         // landed on that line, so subtracting it removes the gift card's own value and its own tax
         // and nothing else. Everything that is not a line - shipping, order-level adjustments -
         // stays settleable, which is right: a gift card is emailed, so the postage is for the goods.
-        $giftCardLinesTotal = 0;
-
-        foreach ($this->giftCardLinesOf($order) as $item) {
-            $giftCardLinesTotal += $item->getTotal();
-        }
-
         return max(0, $total - $giftCardLinesTotal);
     }
 
@@ -77,6 +96,24 @@ final readonly class GiftCardTenderChecker implements GiftCardTenderCheckerInter
     {
         foreach ($this->giftCardLinesOf($order) as $item) {
             return true;
+        }
+
+        return false;
+    }
+
+    /** Whether anything on this order is not a gift card - that is, whether there are goods. */
+    private function hasNonGiftCardLines(BaseOrderInterface $order): bool
+    {
+        foreach ($order->getItems() as $item) {
+            if (!$item instanceof OrderItemInterface) {
+                continue;
+            }
+
+            $product = $item->getProduct();
+
+            if (!$product instanceof GiftCardProductInterface || !$product->isGiftCard()) {
+                return true;
+            }
         }
 
         return false;

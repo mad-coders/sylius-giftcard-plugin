@@ -163,21 +163,6 @@ final readonly class CheckoutSummaryContext implements Context
     }
 
     /**
-     * @Then the checkout should not have objected to my gift card
-     */
-    public function theCheckoutShouldNotHaveObjectedToMyGiftCard(): void
-    {
-        // This constraint runs on every checkout in the shop. An over-eager violation would stop
-        // the shop taking any order at all, so the ordinary case is asserted as loudly as the
-        // refusal.
-        Assert::notContains(
-            $this->summaryPage->getValidationErrors(),
-            'gift card',
-            'The checkout refused an order it had no business refusing.',
-        );
-    }
-
-    /**
      * @When I go to the payment step
      */
     public function iGoToThePaymentStep(): void

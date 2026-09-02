@@ -94,6 +94,30 @@ final class GiftCardTenderCheckerTest extends TestCase
         self::assertSame(10_000, $this->createChecker()->settleableTotalOf($order));
     }
 
+    public function testAGiftCardOnlyOrderDoesNotEvenLetACardPayThePostage(): void
+    {
+        // Shipping is an order-level adjustment, not a line, so subtracting the gift card lines
+        // leaves it settleable - which is right when there are goods being posted and wrong when
+        // the only thing on the order is the gift cards. Without this the cart refuses redemption
+        // and the checkout, two clicks later, lets a card cover the postage on the same basket.
+        $order = $this->createOrder(giftCards: 41_237);
+        $order->addAdjustment($this->createShippingCharge(1_000));
+
+        self::assertSame(42_237, $order->getTotal());
+        self::assertSame(0, $this->createChecker()->settleableTotalOf($order));
+        self::assertFalse($this->createChecker()->allowsRedemptionOn($order));
+    }
+
+    public function testAMixedBasketStillLetsACardPayThePostage(): void
+    {
+        // The other side of it: there are goods here, and the postage is for them.
+        $order = $this->createOrder(goods: 18_000, giftCards: 2_500);
+        $order->addAdjustment($this->createShippingCharge(1_000));
+
+        self::assertSame(21_500, $order->getTotal());
+        self::assertSame(19_000, $this->createChecker()->settleableTotalOf($order));
+    }
+
     public function testAGiftCardLinePricedAtZeroStillCountsAsAGiftCardLine(): void
     {
         // The rule keys on the *presence* of a gift card product, not on what it is worth. Reading
@@ -189,6 +213,16 @@ final class GiftCardTenderCheckerTest extends TestCase
         $variant->setProduct($product);
 
         return $variant;
+    }
+
+    private function createShippingCharge(int $amount): \Sylius\Component\Core\Model\Adjustment
+    {
+        $adjustment = new \Sylius\Component\Core\Model\Adjustment();
+        $adjustment->setType(\Sylius\Component\Core\Model\AdjustmentInterface::SHIPPING_ADJUSTMENT);
+        $adjustment->setLabel('Shipping');
+        $adjustment->setAmount($amount);
+
+        return $adjustment;
     }
 
     private function createOrderDiscount(int $amount): \Sylius\Component\Core\Model\Adjustment

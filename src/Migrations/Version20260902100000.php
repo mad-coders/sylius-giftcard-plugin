@@ -66,10 +66,22 @@ final class Version20260902100000 extends AbstractMigration
     /**
      * Gives every card that has no expiry date one, before the column stops accepting null.
      *
-     * Safe to run on a populated table, and safe to run on an empty one: the rows are read in
-     * batches so a shop with a large card table does not have to hold all of them in memory, and
-     * every write goes through addSql() with bound parameters, so the migration is still one
-     * transaction and still shows its work under --dry-run.
+     * Safe to run on a populated table, and safe to run on an empty one. Every write goes through
+     * addSql() with bound parameters, so the migration still shows its work under --dry-run.
+     *
+     * **The batching bounds the reads, not the memory.** Rows come back 500 at a time so no single
+     * result set is enormous, but every UPDATE is queued in AbstractMigration::$plannedSql and none
+     * of them is executed until up() returns - so a table with a million null expiry dates holds a
+     * million statements before anything runs. That is a real ceiling; it is just far above any
+     * plausible number of gift cards, which is why this is written the simple way and said out loud
+     * rather than solved.
+     *
+     * **Timezones.** created_at is read as a string, parsed in PHP's default timezone and written
+     * back the same way, so the arithmetic is wall-clock and never converts between zones: a card
+     * created at 09:00 gets an expiry at 09:00, whatever PHP and the database each think that
+     * instant is. A PHP/database timezone mismatch therefore cannot shift a back-filled date. It
+     * can shift the already-expired *count* below, which compares against PHP's idea of now - that
+     * number is a report, and the operator's own query in docs/INSTALLATION.md is the authority.
      *
      * It reports what it did through the migration logger, including how many cards it dated into
      * the past. That number matters: a card issued three years ago in a channel with a one-year

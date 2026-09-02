@@ -133,7 +133,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     card is applied, at `sylius_checkout_complete`, and in the order processor, which caps what
     applied cards may cover at the order total **less its gift card lines**.
   - A **mixed basket still works**: a card pays for the shoes and not for the gift card next to
-    them. A gift-card-only basket refuses redemption outright, with a message of its own explaining
+    them. A gift-card-only basket refuses redemption outright - including any shipping on it, because
+    the postage is for goods this order does not have - with a message of its own explaining
     why - safe to be specific because the basket is judged before the code is looked up, so it
     reveals nothing about which codes exist.
 

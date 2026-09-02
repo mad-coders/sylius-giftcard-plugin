@@ -170,3 +170,43 @@ Feature: Paying for an order with a gift card
         When the customer chose "Free" shipping method to "United States" with "Offline" payment
         Then the payment for this order should be "$100.00"
         And the gift card "GIFT-40" should be worth "$40.00"
+
+    @ui
+    Scenario: A card on a mixed basket is only charged for the goods
+        # The settlement cap, followed all the way to the ledger. The cap decides one number and
+        # four things read it: the coverage adjustment, the payment, the balance debited when the
+        # order is placed, and what is given back on cancellation. Asserting only the payment would
+        # miss the case that costs real money - a card debited $150 for $100 of coverage - because
+        # OrderGiftCardAmountModifier debits from the adjustments, not from the payment.
+        #
+        # See docs/adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md.
+        Given the store has a product "Gift Card" priced at "$50.00"
+        And the product "Gift Card" is a gift card product
+        And there is a customer "holder@example.com" that placed an order "#00015"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer bought a single "Gift Card"
+        And the gift card "GIFT-500" worth "$500.00" is applied to this order
+        When the customer chose "Free" shipping method to "United States" with "Offline" payment
+        # The order is worth the shirt plus the gift card, as it always was.
+        Then the total of this order should be "$150.00"
+        # The card covered the shirt only, so the gift card is still payable in cash...
+        And the payment for this order should be "$50.00"
+        # ...and exactly $100 left the card, not $150.
+        And the gift card "GIFT-500" should be worth "$400.00"
+        And the gift card "GIFT-500" should have 1 entry in its balance history
+
+    @ui
+    Scenario: Cancelling a mixed basket gives back only the capped amount
+        # The fourth reader of that number. A refund computed from the order total rather than the
+        # coverage would hand the customer back $150 of a $100 debit - free money, and the kind
+        # that only shows up in a reconciliation months later.
+        Given the store has a product "Gift Card" priced at "$50.00"
+        And the product "Gift Card" is a gift card product
+        And there is a customer "holder@example.com" that placed an order "#00016"
+        And the customer bought a single "PHP T-Shirt"
+        And the customer bought a single "Gift Card"
+        And the gift card "GIFT-500" worth "$500.00" is applied to this order
+        And the customer chose "Free" shipping method to "United States" with "Offline" payment
+        When the order "#00016" was cancelled
+        Then the gift card "GIFT-500" should be worth "$500.00"
+        And the gift card "GIFT-500" should have 2 entries in its balance history

@@ -12,6 +12,9 @@ madcoders_sylius_gift_card:
         amount: Amount
         expires_at: Expires at
         expires_at_help: Pre-filled from the channel's validity period. Change it if this card should last a different length of time; it cannot be left empty.
+        # Only reachable on a card written before the mandatory-expiry migration ran. Shown rather
+        # than a fabricated date, which is what an unguarded `date` filter produces from null.
+        expires_at_not_recorded: Not recorded
         code: Code
         code_help: Leave empty to generate one from the channel's configuration.
         code_immutable_help: A code cannot be changed once the card is issued - the customer already has it, and orders paid with the card are linked to it.

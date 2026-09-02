@@ -35,8 +35,13 @@
                                 {{ gift_card.amount|sylius_format_money(gift_card.currencyCode|default('USD')) }}
                             </td>
                             <td>
-                                {# Every card expires - see docs/adr-log/0015-every-gift-card-expires.md. #}
-                                {{ gift_card.expiresAt|date('d-m-Y') }}
+                                {#
+                                    Guarded, because `date` renders null as *today*. A card that
+                                    predates Version20260902100000 must not tell its holder it
+                                    expires this afternoon. See
+                                    docs/adr-log/0015-every-gift-card-expires.md.
+                                #}
+                                {{ gift_card.expiresAt ? gift_card.expiresAt|date('d-m-Y') : 'madcoders_sylius_gift_card.ui.expires_at_not_recorded'|trans }}
                             </td>
                             <td class="text-end">
                                 <a href="{{ path('madcoders_sylius_gift_card_shop_account_show', {'id': gift_card.id}) }}"

@@ -48,7 +48,14 @@ it defaults to on, and one service answers it for everybody.**
    taxes that landed on that line, so subtracting it removes the gift card's value and its own tax
    and nothing else. Everything that is not a line - shipping, order-level adjustments - stays
    settleable, which is right: a gift card is emailed, so the postage is for the goods.
-4. **Enforced at three points**, again following 0013:
+4. **A basket of nothing but gift cards settles nothing at all, postage included.** The reasoning in
+   point 3 is that the shipping is for the goods; on an order with no goods it has nothing left to
+   stand on. Without this carve-out the rule contradicts itself across two screens - the cart refuses
+   redemption outright, and the checkout, two clicks later, lets a card cover the shipping charge on
+   the same basket. No money is at stake either way (a $10 postage cover is not a rollover), but a
+   rule that is refused in one place and honoured in the next is not a rule anybody can reason about,
+   and it made three paragraphs of our own documentation false as written.
+5. **Enforced at three points**, again following 0013:
    - **At the point the card is applied.** `GiftCardApplicator` throws
      `GiftCardsNotAcceptedOnOrderException` before it looks the code up (see below), and the cart
      controller turns that into a flash message of its own.
@@ -59,11 +66,11 @@ it defaults to on, and one service answers it for everybody.**
    - **In the order processor.** The coverage is capped at the settleable total on every processing
      run. This is the one that protects the money, the way the issue-time guard does in 0013: it
      runs on server state no request can skip.
-5. **Capping the coverage never shrinks the payment.** The processor keeps the order total and the
+6. **Capping the coverage never shrinks the payment.** The processor keeps the order total and the
    settleable total apart and settles the payment against the first. Conflating them would reduce
    what the shop is paid by the amount the cards were *not* allowed to cover - handing over a gift
    card nobody paid for, which is a far worse bug than the one being fixed.
-6. **The refusal is checked before the code is resolved.** It carries a specific message, and any
+7. **The refusal is checked before the code is resolved.** It carries a specific message, and any
    specific answer that arrives only for codes that exist is an oracle telling an anonymous caller
    which codes are real - the exact leak the single "this code cannot be used" message in
    [0012](0012-rate-limiting-gift-card-redemption.md) exists to avoid. Asked about the basket first,
@@ -87,9 +94,9 @@ Refusing the whole basket was the alternative, and it is simpler. It was rejecte
   *line totals* from the order total is exact, uses Sylius' own numbers, and never over-credits,
   because a line total already includes that line's tax.
 
-The gift-card-only basket is the same rule, not an exception to it: its settleable total is zero,
-and rather than let a card "apply" and cover nothing, the applicator and the checkout constraint
-refuse it and say why.
+The gift-card-only basket is the same rule, not an exception to it: its settleable total is zero -
+shipping included, see decision 4 - and rather than let a card "apply" and cover nothing, the
+applicator and the checkout constraint refuse it and say why.
 
 ### What a shop that wants this loses by turning it on
 

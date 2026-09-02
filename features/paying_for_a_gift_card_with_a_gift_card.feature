@@ -90,15 +90,17 @@ Feature: A gift card does not buy a gift card
 
     @ui
     Scenario: A mixed basket reaches the pay button with the right split
-        # The other half of the rule, and the one that would take the whole shop down if it were
-        # wrong: the constraint runs on every checkout, gift card or not.
+        # What the customer is shown at the last moment before paying: the card covers the shirt,
+        # the gift card next to it is still theirs to pay for.
         #
         # Deliberately stops at the summary rather than pressing confirm. Confirming here would
         # complete a *guest* order, and Sylius' own SaveCustomerAddressesListener fatals on one
         # under Symfony 6.4 - a crash in Sylius' completion path that has nothing to say about gift
-        # cards. That the constraint lets this order through is asserted where it can be asserted
-        # cleanly on every database: GiftCardTenderConstraintWiringTest validates a real mixed
-        # basket in the real `sylius_checkout_complete` group.
+        # cards. The two things that stop at the summary therefore leave uncovered are covered
+        # elsewhere, on purpose: that the constraint lets such an order through is asserted by
+        # GiftCardTenderConstraintWiringTest in the real `sylius_checkout_complete` group, and that
+        # placing it debits the card the *capped* amount is asserted end to end by
+        # features/paying_with_a_gift_card.feature.
         Given the store ships everywhere for free
         And the store allows paying offline
         And I have product "PHP T-Shirt" added to the cart
@@ -108,4 +110,3 @@ Feature: A gift card does not buy a gift card
         When I look at the checkout summary
         Then the summary should show "-$100.00" covered by my gift cards
         And the summary should tell me I will be charged "$50.00"
-        And the checkout should not have objected to my gift card

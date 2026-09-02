@@ -241,7 +241,16 @@ so they run on MySQL, MariaDB and PostgreSQL alike.
 There is more than one migration, and a plugin upgrade can add another - always run
 `doctrine:migrations:migrate` after updating the package, not only on first install.
 
-> **Upgrading from RC.2:** `Version20260902100000` gives every gift card that has no expiry date one,
+> **Upgrading from RC.2: deploy the code before you migrate, and stop the shop while you do.**
+> MySQL and MariaDB do not run DDL inside a transaction. The migration reads the cards with no expiry
+> date, writes a date to each, and only then makes the column `NOT NULL` - so if any instance still
+> running the old code issues a card in between, the `ALTER` fails on the new null while the `UPDATE`s
+> stay committed, and the migration is recorded as failed with the schema half changed. Roll the new
+> code out first (it never writes a card without a date), or take maintenance mode for the migration.
+> PostgreSQL is transactional here and rolls the whole thing back, so this is a MySQL and MariaDB
+> instruction specifically.
+>
+> `Version20260902100000` gives every gift card that has no expiry date one,
 > measured from that card's own creation date plus its channel's validity period, and then makes the
 > column NOT NULL. A card created three years ago in a channel with a one-year period therefore comes
 > out **already expired**, which is money its holder can no longer spend. Tell the holders before you
@@ -288,7 +297,8 @@ Two of those defaults are worth knowing before you go live:
   pay nothing, and receive a fresh code with a fresh expiry - forever - which makes the expiry date
   above unenforceable. An order containing both goods and a gift card still redeems: the card covers
   the goods and the gift card is payable in cash. A basket of nothing but gift cards refuses
-  redemption and says why. Set it to *Anything, gift cards included* per channel if you genuinely
+  redemption and says why, and that includes any shipping charged on it: with no goods on the order
+  there is nothing a gift card may pay for, postage included. Set it to *Anything, gift cards included* per channel if you genuinely
   want the old behaviour, and read what that costs in
   [ADR 0016](adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md).
 

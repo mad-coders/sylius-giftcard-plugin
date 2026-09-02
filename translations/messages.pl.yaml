@@ -47,6 +47,7 @@ madcoders_sylius_gift_card:
         expires_at: Wygasa
         expires_at_help: Wypełnione na podstawie okresu ważności kanału. Zmień, jeśli
             ta karta ma być ważna inaczej; pola nie można wyczyścić.
+        expires_at_not_recorded: Nie zapisano
         gift_card: Karta podarunkowa
         gift_card_code: Kod karty podarunkowej
         gift_card_message: Wiadomość

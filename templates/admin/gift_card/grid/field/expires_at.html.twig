@@ -1,6 +1,15 @@
-{# Every card expires - see docs/adr-log/0015-every-gift-card-expires.md - so the only question
-   left is whether it already has. #}
-{% if data.isExpired() %}
+{#
+    Every card the database will accept has an expiry date - see
+    docs/adr-log/0015-every-gift-card-expires.md - and the NOT NULL column is what enforces that.
+    This branch is for the one window where it is not yet true: the package upgraded but
+    Version20260902100000 not yet run, or a rolling deploy part way through.
+
+    It has to exist, because `date` renders null as *today*. Dropping it does not show "no expiry",
+    it fabricates one, in the not-expired style, on a screen an operator makes decisions from.
+#}
+{% if data.expiresAt is null %}
+    <span class="text-secondary">{{ 'madcoders_sylius_gift_card.ui.expires_at_not_recorded'|trans }}</span>
+{% elseif data.isExpired() %}
     <span class="text-danger" {{ sylius_test_html_attribute('gift-card-expired') }}>
         {{ data.expiresAt|date('d-m-Y') }}
     </span>
