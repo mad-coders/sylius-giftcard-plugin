@@ -1,9 +1,10 @@
 # Selling gift cards
 
-> **No screenshots on this page.** The documentation crawl covered the admin and eight ordinary
-> shop products; the demo data it ran against had no gift card product, so no gift card product
-> page, cart or checkout screen was captured. Everything below is read from the plugin's forms,
-> templates and order processors.
+> **The shop side was replayed on 2 September 2026**; the admin side was not. The two screenshots
+> below were taken on a running shop. The product form in the admin, and what happens when an order
+> is paid or cancelled, are read from the plugin's forms, templates and order processors.
+> Walkthroughs: [Buy a gift card as a guest](../journeys/buy-a-gift-card-as-a-guest.md) and
+> [Buy a gift card while signed in](../journeys/buy-a-gift-card-while-signed-in.md).
 
 A gift card is sold as an ordinary Sylius product. There is no separate catalogue for them.
 
@@ -21,6 +22,12 @@ decided per channel by **Gift card sales** on the
 
 Two extra fields appear on the add-to-cart form of a gift card product, between the variant table
 and the quantity.
+
+![A gift card product page, showing Choose an amount with three preset buttons, an Other amount box reading "Type anything between $10.00 and $500.00.", and a Message box](../assets/journeys/guest-buys-a-gift-card-03-the-shop-decides-which-amounts-it-offers-and-wheth.jpeg)
+
+This channel is in **Preset amounts, or any amount within a range** mode, so both the presets and
+the **Other amount** box are on the page. The $61.04 above the form is the product's own price; it
+is not what a customer buying a gift card pays.
 
 ### The amount
 
@@ -109,3 +116,9 @@ that does and where the refusal appears.
 Buying gift cards sends the email registered as `madcoders_gift_cards_purchased`, listing every code
 bought on the order. Its default subject is "Your gift cards". A host application overrides the
 subject or the template by redefining that code under `sylius_mailer.emails`.
+
+![The gift card email opened in mailpit, headed "Your gift cards are ready", with a code, an initial amount of $50.00 and an expiry date](../assets/journeys/the-gift-card-email-02-the-message-carries-the-code-what-the-card-is-wort.jpeg)
+
+For a guest buyer this email is the only place the code exists. See
+[The email that carries the code](../journeys/the-gift-card-email.md), which also covers reading it
+in development.

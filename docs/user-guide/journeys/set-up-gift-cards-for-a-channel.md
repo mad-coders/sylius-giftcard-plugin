@@ -1,9 +1,9 @@
 # Journey: set up gift cards for a channel
 
-> **Not verified against a running app.** The development server stopped responding before the
-> journey capture could run, so this walkthrough has no journey screenshots and no recorded step
-> results. It is written from the plugin's routes, form definitions and templates. The one
-> screenshot below is a page the crawl did capture; every step after it is unverified.
+> **Not replayed.** These steps were never run against a running shop, so this walkthrough has no
+> journey screenshots and no recorded step results. It is written from the plugin's routes, form
+> definitions and templates. The one screenshot below is an admin page the crawl captured on its
+> own; every step after it is unverified.
 
 **Who:** an operator setting the shop up.
 **Goal:** decide how codes are generated, how long cards last, whether customers may buy them, and
@@ -36,17 +36,36 @@ step. A channel can only have one configuration.
 
 ## 5. Decide how long cards last
 
-**Validity period** takes a relative expression such as `1 year` or `6 months`. Leave it empty for
-cards that never expire.
+**Validity period** takes a relative expression such as `1 year` or `18 months`, and is **required**:
+every gift card expires. Its help text reads "How long a new card stays valid, for example \"1 year\"
+or \"18 months\". Required - every gift card expires." An expression the plugin cannot parse is
+refused. See [ADR 0015](../../adr-log/0015-every-gift-card-expires.md).
 
-## 6. Decide whether customers may buy gift cards
+## 6. Decide what a gift card pays for
+
+**What a gift card pays for** decides whether a card may be spent on another gift card:
+
+| Choice | What it means |
+|---|---|
+| **Everything except gift cards** | The default. A basket holding nothing but gift cards refuses a code. |
+| **Anything, gift cards included** | A card may settle the gift card lines too. |
+
+The help text reads "Whether a gift card may be spent on another gift card. Allowing it lets a
+holder roll one card into the next indefinitely, which makes the expiry date unenforceable."
+
+Leave it on the default unless you have a reason not to. See
+[Why a gift card will not pay for a gift card](why-a-gift-card-will-not-pay-for-a-gift-card.md) for
+what a customer sees, and
+[ADR 0016](../../adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md) for the reasoning.
+
+## 7. Decide whether customers may buy gift cards
 
 **Gift card sales**:
 
 - **Sold in the shop** - customers can buy gift card products in this channel.
 - **Issued by an administrator only** - they cannot. Cards you issue by hand are still spendable.
 
-## 7. Decide how the amount is chosen
+## 8. Decide how the amount is chosen
 
 **How the amount is chosen**, then fill in what that mode needs:
 
@@ -60,7 +79,7 @@ cards that never expire.
 The form refuses a mode without the values it needs, naming the field. Money is entered in major
 units in the channel's currency, with no currency symbol on the box.
 
-## 8. Tick Enabled, then Create
+## 9. Tick Enabled, then Create
 
 ## What you should see afterwards
 

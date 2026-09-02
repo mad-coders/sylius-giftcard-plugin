@@ -11,6 +11,8 @@ with `The engine "node" is incompatible with this module`, and every Behat scena
 git clone git@github.com:mad-coders/sylius-giftcard-plugin.git
 cd sylius-giftcard-plugin
 make setup          # deps + MySQL container (host port 3307) + assets + database
+make app            # fresh schema + demo data
+docker compose up -d mailpit   # read the mail the plugin sends, at http://127.0.0.1:8025
 make install-hooks  # pre-commit gate + commit message template
 ```
 

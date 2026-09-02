@@ -70,7 +70,7 @@ captured; the form itself was not.
 | **Channel** | Select | Yes | - |
 | **Code prefix** | Text | No | "Prepended to every generated code, for example \"GIFT-\"." |
 | **Code length** | Integer | Yes | "Number of random characters after the prefix. Minimum 12 - a shorter code is guessable, and a gift card code is money." |
-| **Validity period** | Text | No | "How long a new card stays valid, for example \"1 year\". Leave empty for cards that never expire." |
+| **Validity period** | Text | Yes | "How long a new card stays valid, for example \"1 year\". Required - every gift card expires." |
 | **Gift card sales** | Select | Yes | "Whether customers can buy gift cards in this channel. Cards already issued can always be redeemed, whichever you choose." |
 | **How the amount is chosen** | Select | Yes | "Whether a customer buying a gift card in this channel pays the product's price or picks the amount themselves." |
 | **Preset amounts** | Text | No | "The amounts offered as ready-made choices, separated by commas, in this channel's currency - for example \"25, 50, 100\". Used by the preset modes." |

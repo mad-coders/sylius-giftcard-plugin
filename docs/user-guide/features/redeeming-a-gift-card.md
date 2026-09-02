@@ -1,9 +1,10 @@
 # Redeeming a gift card
 
-> **No shop screenshots on this page.** The documentation crawl reached the homepage, a taxon page,
-> eight product pages, the login page and the contact page. It never reached the cart or any
-> checkout step, so the redeem panel was not captured. Everything below is read from the plugin's
-> routes, controller and templates.
+> **The basket panel was replayed; the checkout sidebar was not.** The screenshot below was taken on
+> a running shop on 2 September 2026. The checkout version of the same panel has no picture, for the
+> reason given in
+> [Apply a gift card during checkout](../journeys/apply-a-gift-card-during-checkout.md). Everything
+> else here is read from the plugin's routes, controller and templates.
 
 ## What redeeming does
 
@@ -16,6 +17,12 @@ Applying a gift card does **not** reduce the order. It reduces what the customer
 A 100 order paid with a 40 card is still a 100 order, and the customer pays 60. See
 [ADR 0010](../../adr-log/0010-gift-card-as-tender.md) for why this matters to tax, refunds,
 reporting and promotions.
+
+![The basket after a card is applied: Order total $96.10, Gift cards -$96.10, Left to pay $0.00, with the applied card listed at a remaining balance of $1,000.00](../assets/journeys/guest-redeems-a-gift-card-in-the-cart-08-the-order-total-does-not-move-what-you-pay-is-what.jpeg)
+
+The order total is untouched at $96.10. **Left to pay** is what moved. The card's own **Remaining
+balance** is still its full $1,000.00, because applying a card to a basket does not debit it.
+Walkthrough: [Spend a gift card on an order](../journeys/spend-a-gift-card-on-an-order.md).
 
 Consequences worth knowing:
 
@@ -65,6 +72,7 @@ action.
 | "The gift card has been applied to your cart." | The code was accepted. |
 | "The gift card has been removed from your cart." | A card was removed. |
 | "Please enter a gift card code." | The box was empty. |
+| "A gift card cannot be used to pay for a gift card. Remove the gift card from your basket to pay with your card." | The basket holds nothing but gift cards. See [Why a gift card will not pay for a gift card](../journeys/why-a-gift-card-will-not-pay-for-a-gift-card.md). |
 | "This gift card code cannot be used. Check it and try again." | Every other refusal. |
 | "Too many gift card codes have been tried from here. Please wait a few minutes before trying again." | The rate limit was hit. |
 

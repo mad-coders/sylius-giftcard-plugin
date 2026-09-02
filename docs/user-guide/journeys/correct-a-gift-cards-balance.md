@@ -1,10 +1,10 @@
 # Journey: correct a gift card's balance
 
-> **Not verified against a running app.** The development server stopped responding before the
-> journey capture could run, so this walkthrough has no journey screenshots and no recorded step
-> results. It is written from the plugin's routes, form definitions and templates. The card page
-> below is a captured page; **the Adjust balance page itself was never captured** - the crawl ran
-> out of budget before reaching it - so its fields are read from the form definition.
+> **Not replayed.** These steps were never run against a running shop, so this walkthrough has no
+> journey screenshots and no recorded step results. It is written from the plugin's routes, form
+> definitions and templates. The card page below is an admin page the crawl captured on its own;
+> **the Adjust balance page itself was never captured**, so its fields are read from the form
+> definition.
 
 **Who:** an administrator handling a customer query.
 **Goal:** add goodwill to a partly spent card, or claw back a card issued in error, with the change

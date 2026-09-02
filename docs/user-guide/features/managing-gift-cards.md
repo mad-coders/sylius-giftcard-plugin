@@ -19,7 +19,7 @@ How the list renders values:
 - **Remaining balance** is bold, and greyed once the card is spent out. `GIFT-EMPTY001` at `$0.00`
   in the screenshot is greyed.
 - **Expires at** is red when the card has already expired. `GIFT-EXPIRED1` at `01-01-2020` is red.
-  A card with no expiry shows **Never**.
+  Every card has an expiry date, so this column is never empty.
 - **Bought by** and **Used by** show the customer's email address, or `-` when there is no link.
 
 Cards default to newest first. **Code**, **Initial amount**, **Remaining balance**, **Expires at**,
@@ -64,7 +64,7 @@ The header carries the code and an **Adjust balance** button. Below it:
 | **Remaining balance** | What is left on the card. Emphasised, because it is the number you are looking for. |
 | **Initial amount** | What the card was worth when it was issued. |
 | **Channel** | The channel the card belongs to and can be spent in. |
-| **Expires at** | The expiry date, or **Never**. |
+| **Expires at** | The date the card stops being spendable. Every card has one. |
 | **Bought by** | The purchaser's email, or `-`. |
 | **Used by** | The redeemer's email, or `-`. |
 | **Enabled** | Whether the card can be applied to an order. |

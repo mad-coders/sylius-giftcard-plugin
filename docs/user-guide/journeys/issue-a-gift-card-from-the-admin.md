@@ -1,10 +1,9 @@
 # Journey: issue a gift card from the admin
 
-> **Not verified against a running app.** The development server stopped responding before the
-> journey capture could run, so this walkthrough has no journey screenshots and no recorded step
-> results. It is written from the plugin's routes, form definitions and templates. The two
-> screenshots below are pages the crawl did capture; the result of submitting the form was never
-> observed.
+> **Not replayed.** These steps were never run against a running shop, so this walkthrough has no
+> journey screenshots and no recorded step results. It is written from the plugin's routes, form
+> definitions and templates. The screenshots below are admin pages the crawl captured on their own;
+> the result of submitting the form was never observed.
 
 **Who:** a shop administrator.
 **Goal:** create a gift card without a customer buying one, for goodwill or compensation.

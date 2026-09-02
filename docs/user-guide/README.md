@@ -20,7 +20,7 @@ That is not a wording preference. Tax is owed on the value of the goods, reporti
 the real sale value, and a "spend over X" promotion cannot be switched off by paying with a card.
 See [ADR 0010](../adr-log/0010-gift-card-as-tender.md).
 
-Every screen that shows a customer or an operator what is owed carries two numbers:
+Every screen that shows a customer or an operator what is owed carries three lines:
 
 | Line | What it is |
 |---|---|
@@ -28,31 +28,46 @@ Every screen that shows a customer or an operator what is owed carries two numbe
 | **Gift cards** | What the applied cards cover, shown as a negative figure. |
 | **Left to pay** | What the customer is actually charged. |
 
+![A basket summary reading Order total $96.10, Gift cards -$96.10, Left to pay $0.00](assets/journeys/guest-redeems-a-gift-card-in-the-cart-08-the-order-total-does-not-move-what-you-pay-is-what.jpeg)
+
+Captured on a running shop. The goods are still worth $96.10 after the card is applied.
+
 ## Features
 
 | Guide | Covers |
 |---|---|
 | [Gift card configuration](features/gift-card-configuration.md) | Per-channel setup: code format, validity, whether cards are sold, how a customer picks the amount. |
 | [Managing gift cards in the admin](features/managing-gift-cards.md) | The **Gift cards** list, issuing a card by hand, the card page, balance history and balance adjustments. |
-| [Selling gift cards](features/selling-gift-cards.md) | Marking a product as a gift card, the amount and message a customer chooses, and what happens when the order is paid or cancelled. |
+| [Selling gift cards](features/selling-gift-cards.md) | Marking a product as a gift card, the amount and message a customer chooses, what happens when the order is paid or cancelled, and the email that carries the code. |
 | [Redeeming a gift card](features/redeeming-a-gift-card.md) | The redeem panel on the cart and in checkout, stacking, refusals, rate limiting, and what an operator sees on the order. |
 | [My gift cards in the customer account](features/customer-account.md) | The two lists a customer sees, and the per-card balance history. |
 
 ## Journeys
 
-**None of the journeys below were replayed against a running app.** The development server stopped
-responding before the journey capture ran, so there are no journey screenshots and no recorded step
-results. Each walkthrough is written from the plugin's routes, controllers, forms and templates, and
-every one of them says so at the top. Treat them as instructions to follow, not as evidence that the
-flow was observed working.
+Each journey says at the top whether it was replayed. A replayed journey was carried out step by
+step on a running shop and photographed as it went; the pictures are what happened, not mock-ups. A
+journey marked **not replayed** is written from the plugin's routes, forms and templates: follow it
+as instructions, but do not read it as evidence the flow was observed working.
+
+### Replayed on a running shop
 
 | Journey | Who it is for |
 |---|---|
-| [Set up gift cards for a channel](journeys/set-up-gift-cards-for-a-channel.md) | Operator setting the shop up. |
-| [Issue a gift card from the admin](journeys/issue-a-gift-card-from-the-admin.md) | Administrator handing out goodwill or compensation. |
-| [Correct a gift card's balance](journeys/correct-a-gift-cards-balance.md) | Administrator handling a customer query. |
+| [Buy a gift card as a guest](journeys/buy-a-gift-card-as-a-guest.md) | Someone with no account, choosing an amount and writing a message. |
+| [Buy a gift card while signed in](journeys/buy-a-gift-card-while-signed-in.md) | A registered customer, recorded as the card's purchaser. |
 | [Spend a gift card on an order](journeys/spend-a-gift-card-on-an-order.md) | Customer holding a gift card. |
-| [Apply a gift card during checkout](journeys/apply-a-gift-card-during-checkout.md) | Customer part-way through checkout. |
+| [Why a gift card will not pay for a gift card](journeys/why-a-gift-card-will-not-pay-for-a-gift-card.md) | Anyone who has met the refusal, and any operator asked to explain it. |
+| [See your gift cards and where the balance went](journeys/see-your-gift-cards.md) | Customer checking a balance or an expiry date. |
+| [The email that carries the code](journeys/the-gift-card-email.md) | Whoever the card was bought for, and anyone setting up a development mailbox. |
+
+### Not replayed
+
+| Journey | Who it is for | Why |
+|---|---|---|
+| [Set up gift cards for a channel](journeys/set-up-gift-cards-for-a-channel.md) | Operator setting the shop up. | The admin forms were never driven. |
+| [Issue a gift card from the admin](journeys/issue-a-gift-card-from-the-admin.md) | Administrator handing out goodwill or compensation. | The admin forms were never driven. |
+| [Correct a gift card's balance](journeys/correct-a-gift-cards-balance.md) | Administrator handling a customer query. | The admin forms were never driven. |
+| [Apply a gift card during checkout](journeys/apply-a-gift-card-during-checkout.md) | Customer part-way through checkout. | Reaching the first step that shows the panel means filling the whole address form. The panel itself is photographed on the basket page. |
 
 ## Reference
 

@@ -54,8 +54,23 @@ off a card or an email: `0`/`O`, `1`/`I`/`L`, `5`/`S`.
 ### Validity
 
 **Validity period** is a relative date expression such as `1 year` or `6 months`, applied when a
-card is created. Leave it empty for cards that never expire; those show **Never** in the expiry
-column.
+card is created. It is required, and it cannot be left empty: every gift card expires. A shop that
+wants cards to last effectively forever sets a long period, such as `25 years`, which keeps the
+liability dated and reportable rather than open-ended. See
+[ADR 0015](../../adr-log/0015-every-gift-card-expires.md).
+
+### What a gift card is allowed to pay for
+
+**What a gift card pays for** decides whether stored value may be spent on another gift card.
+
+- **Everything except gift cards** (the default) - a card pays for goods, and a basket of nothing
+  but gift cards is refused.
+- **Anything, gift cards included** - no restriction.
+
+The default is not arbitrary. Letting a card buy a card lets a holder move a balance into a fresh
+code with a fresh expiry date, indefinitely, and breaks the link back to whoever originally bought
+it. See [ADR 0016](../../adr-log/0016-a-gift-card-does-not-buy-a-gift-card.md) and the journey
+[Why a gift card will not pay for a gift card](../journeys/why-a-gift-card-will-not-pay-for-a-gift-card.md).
 
 ### Whether the channel sells gift cards
 

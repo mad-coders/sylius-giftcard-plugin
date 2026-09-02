@@ -1,8 +1,10 @@
 # My gift cards in the customer account
 
-> **No screenshots on this page.** The documentation crawl ran as an administrator and never signed
-> in as a customer, so no account page was captured. Everything below is read from the plugin's
-> routes and templates.
+> **The list page was replayed on 2 September 2026**; the single card page was not. Everything about
+> the single card page below is read from the plugin's routes and templates. Walkthrough:
+> [See your gift cards and where the balance went](../journeys/see-your-gift-cards.md).
+
+![My gift cards, showing a Gift cards I use table and a Gift cards I bought table](../assets/journeys/customer-views-their-gift-cards-06-open-my-gift-cards-cards-you-spend-and-cards-you-b.jpeg)
 
 The plugin adds **My gift cards** to the shop account menu. It is behind a login: a customer sees
 only cards they are linked to.
@@ -24,7 +26,7 @@ Listed first, because this is the list with a balance somebody is watching.
 |---|---|
 | **Code** | The gift card code. |
 | **Remaining balance** | What is left on the card. |
-| **Expires at** | The expiry date, or **Never**. |
+| **Expires at** | The date the card stops being spendable. Every card has one. |
 | (unlabelled) | A **Balance history** link to the card's own page. |
 
 When there is nothing to show: "You are not using any gift cards yet."

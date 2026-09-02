@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A mailpit container in `compose.yml` (SMTP 1025, web interface 8025), with `MAILER_DSN` pointed at
+  it. The plugin delivers a gift card's code by email, and until now `MAILER_DSN` was `null://null`,
+  so there was no way for a contributor to see the one artefact a customer actually receives. Run
+  `docker compose up -d mailpit` and read the mail at http://127.0.0.1:8025.
+
 ### Fixed
 
 - The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's
