@@ -51,8 +51,19 @@ final class GiftCardConfigurationType extends AbstractResourceType
                 'label' => 'madcoders_sylius_gift_card.ui.code_length',
                 'required' => true,
                 'help' => 'madcoders_sylius_gift_card.ui.code_length_help',
-                // Kept for anything that validates the object directly, but it cannot catch a short
-                // code on this form - see the listener below.
+                // This is the only thing that tells the operator their code length was too short,
+                // and it was inert until issue #44: an inline constraint carries `Default`, and the
+                // form named only the resource group - see
+                // docs/adr-log/0017-resource-forms-validate-with-default-too.md.
+                //
+                // It was long believed unable to catch a short code anyway, because
+                // GiftCardConfiguration::setCodeLength() raises anything below the minimum to it as
+                // a backstop, so no caller can leave a channel issuing guessable codes. That
+                // reasoning is wrong, and the form used to carry a hand-made FormError built on it.
+                // A field constraint validates the *child form's* own reverse-transformed value -
+                // the 4 the operator typed - and never looks at the model at all, so the constraint
+                // sees the raw input and the backstop is irrelevant to it. The two together showed
+                // the same sentence twice.
                 'constraints' => [
                     new GreaterThanOrEqual(
                         value: GiftCardConfiguration::MINIMUM_CODE_LENGTH,
@@ -120,39 +131,6 @@ final class GiftCardConfigurationType extends AbstractResourceType
         );
 
         $this->addAmountConsistencyChecks($builder);
-
-        // The constraint above never fires. GiftCardConfiguration::setCodeLength() raises anything
-        // below the minimum to it - a deliberate backstop, so no caller can leave a channel issuing
-        // guessable codes - and by the time the field is validated it is holding the raised value.
-        //
-        // Silently giving an operator something other than what they typed is its own bug: they
-        // walk away believing this channel issues 4-character codes. So the raw input is captured
-        // before the model rounds it up, and the error is raised after the form has submitted -
-        // an error added during PRE_SUBMIT would be discarded when the child submits.
-        $submittedCodeLength = null;
-        $tooShort = $this->validationMessage('madcoders_sylius_gift_card.gift_card_configuration.code_length.too_short');
-
-        $builder->addEventListener(
-            FormEvents::PRE_SUBMIT,
-            static function (FormEvent $event) use (&$submittedCodeLength): void {
-                $data = $event->getData();
-
-                $submittedCodeLength = is_array($data) && isset($data['codeLength']) && is_numeric($data['codeLength'])
-                    ? (int) $data['codeLength']
-                    : null;
-            },
-        );
-
-        $builder->addEventListener(
-            FormEvents::POST_SUBMIT,
-            static function (FormEvent $event) use (&$submittedCodeLength, $tooShort): void {
-                if (null === $submittedCodeLength || $submittedCodeLength >= GiftCardConfiguration::MINIMUM_CODE_LENGTH) {
-                    return;
-                }
-
-                $event->getForm()->get('codeLength')->addError(new FormError($tooShort));
-            },
-        );
     }
 
     /**

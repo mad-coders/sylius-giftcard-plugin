@@ -35,6 +35,16 @@
         </service>
 
         <!--
+            Refuses an expiry date that would make a spendable balance unspendable - a card issued
+            already dead, or a live one edited backwards.
+        -->
+        <service id="madcoders_sylius_gift_card.validator.gift_card_expiry_not_in_the_past"
+                 class="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardExpiryNotInThePastValidator">
+            <argument type="service" id="madcoders_sylius_gift_card.provider.stored_gift_card_expiry" />
+            <tag name="validator.constraint_validator" alias="madcoders_sylius_gift_card_expiry_not_in_the_past" />
+        </service>
+
+        <!--
             Refuses an amount the channel does not offer, and says which of the two reasons it is so
             the customer is told the bounds rather than just "invalid".
 

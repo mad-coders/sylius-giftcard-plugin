@@ -10,11 +10,24 @@
             <tag name="form.type" />
         </service>
 
+        <!--
+            Both groups, and the order does not matter - see docs/adr-log/0017-resource-forms-validate-with-default-too.md.
+
+            `madcoders_sylius_gift_card` alone is what issue #44 was: Symfony's FormValidator only
+            evaluates a constraint whose groups intersect the form's, so every constraint the plugin
+            declares in `Default` - the inline ones on the fields, and the UniqueEntity on the model -
+            was skipped in silence. Adding `Default` makes them run without taking the resource group
+            away from a host that has declared constraints in it.
+
+            A constraint listed in both groups is still evaluated once: Symfony deduplicates
+            constraints that belong to more than one of the groups being validated.
+        -->
         <service id="madcoders_sylius_gift_card.form.type.gift_card"
                  class="Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardType">
             <argument>%madcoders_sylius_gift_card.model.gift_card.class%</argument>
             <argument type="collection">
                 <argument>madcoders_sylius_gift_card</argument>
+                <argument>Default</argument>
             </argument>
             <!-- Pre-fills the expiry field, so the administrator sees the date they are issuing. -->
             <argument type="service" id="madcoders_sylius_gift_card.calculator.gift_card_expiry" />
@@ -23,11 +36,13 @@
             <tag name="form.type" />
         </service>
 
+        <!-- The same reconciliation, for the same reason: this form had the same mismatch. -->
         <service id="madcoders_sylius_gift_card.form.type.gift_card_configuration"
                  class="Madcoders\SyliusGiftCardPlugin\Form\Type\GiftCardConfigurationType">
             <argument>%madcoders_sylius_gift_card.model.gift_card_configuration.class%</argument>
             <argument type="collection">
                 <argument>madcoders_sylius_gift_card</argument>
+                <argument>Default</argument>
             </argument>
             <argument type="service" id="translator" />
             <tag name="form.type" />

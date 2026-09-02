@@ -25,3 +25,5 @@ Consequences / Rules).
 | [0014](0014-customer-chosen-gift-card-amount.md) | The customer chooses the amount; the order processor is what makes it a price |
 | [0015](0015-every-gift-card-expires.md) | Every gift card expires, and one service decides when |
 | [0016](0016-a-gift-card-does-not-buy-a-gift-card.md) | A gift card does not buy a gift card (completes 0015) |
+| [0017](0017-resource-forms-validate-with-default-too.md) | Resource forms validate with `Default` as well as their own group |
+| [0018](0018-an-expiry-date-cannot-be-moved-into-the-past.md) | An expiry date cannot be moved into the past; retirement goes through the balance |

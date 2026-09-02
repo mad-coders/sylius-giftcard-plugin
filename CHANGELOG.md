@@ -17,6 +17,37 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Validation on the admin gift card forms never ran.** `GiftCardType` and
+  `GiftCardConfigurationType` were registered with only the `madcoders_sylius_gift_card` validation
+  group while their constraints sat in `Default`, and Symfony evaluates a constraint only when the
+  two intersect - so the `NotBlank` and `Positive` on the initial amount, the `UniqueEntity` on the
+  code and the minimum code length were all skipped in silence. Both forms now validate with
+  `Default` as well, so every one of them is evaluated, without taking the resource group away from a
+  host that has declared constraints in it. See
+  `docs/adr-log/0017-resource-forms-validate-with-default-too.md`. Closes #44.
+- The gift card configuration form no longer raises the code-length error twice. It carried a
+  hand-written `POST_SUBMIT` listener that reported a short code length itself, added on the belief
+  that the field's own `GreaterThanOrEqual` could never fire because the model raises a short value
+  to the minimum first. It can: a field constraint validates the submitted value, not the model. With
+  the group mismatch above fixed, both fired and the operator was shown the same sentence twice. The
+  listener is gone; the constraint does the job alone.
+- **A blank or zero initial amount gave the administrator a 500.** With the constraints inert, the
+  submitted value went straight to `GiftCard::setInitialAmount()`, which refuses both by throwing.
+  Symfony writes a submitted value onto the object before it validates it, so making the constraints
+  run was not enough on its own: the field now declines the write when the value is one the model
+  would refuse, and the administrator is told which field is wrong instead.
+- **A duplicate gift card code was refused by the unique index rather than by the form**, as a
+  driver-level integrity violation. It is now a field error naming the code, which is what somebody
+  importing a batch of pre-printed cards needs to see.
+- **An administrator could issue or edit a gift card into the past**, making a spendable balance
+  unspendable with no warning and no entry in the card's history - a customer's $200 quietly worth
+  nothing. The expiry date can no longer be moved into the past: a card cannot be issued already
+  expired, and a live card's date cannot be edited backwards. Bringing an expiry forward to a date
+  still in the future is untouched, and a card that had *already* expired stays editable, so the
+  cards the mandatory-expiry migration dated into the past can still be disabled or corrected.
+  Deliberate retirement goes through the balance instead - adjusting a card to zero takes it out of
+  circulation *and* writes a ledger entry, which backdating never did. See
+  `docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md`. Closes #45.
 - The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's
   `bg-secondary`, which sets a background but no foreground colour, so "Sold in the shop" rendered as
   a blank grey pill. Now uses `text-bg-secondary`, as the rest of the plugin already did.

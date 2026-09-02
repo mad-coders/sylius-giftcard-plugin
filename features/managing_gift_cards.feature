@@ -16,11 +16,19 @@ Feature: Managing gift cards
 
     @ui
     Scenario: Creating a gift card by hand
+        # The card has to be worth what was typed, and the assertion has to say so out loud. The
+        # amount reaches the model through a setter callback - the field cannot be plainly mapped,
+        # because the model refuses a bad amount by throwing and Symfony writes before it validates -
+        # and a callback that declined to write anything at all would still leave a card in the list,
+        # with a null face value and a zero balance. Appearing in the list is not the same as being
+        # worth something.
         When I want to create a new gift card
         And I specify its code as "GIFT-NEW001"
         And I specify its initial amount as "75.00"
         And I add this gift card
         Then the gift card "GIFT-NEW001" should appear in the list
+        And the gift card "GIFT-NEW001" should be worth "$75.00"
+        And the gift card "GIFT-NEW001" should have "$75.00" left
 
     @ui
     Scenario: Seeing a gift card's balance and who uses it
@@ -145,6 +153,86 @@ Feature: Managing gift cards
         And I add this gift card
         Then I should be told the expiry date is required
         And no gift card should have been created
+
+    @ui
+    Scenario: A card cannot be created without an initial amount
+        # Nothing stopped this before issue #44. The form validated with the plugin's resource group
+        # while its constraints sat in `Default`, so neither of them was evaluated and the blank went
+        # straight to setInitialAmount() - a 500 where a field error belongs.
+        When I want to create a new gift card
+        And I specify its code as "GIFT-BLANK1"
+        And I leave its initial amount empty
+        And I add this gift card
+        Then I should be told on the initial amount that it is required
+        And no gift card should have been created
+
+    @ui
+    Scenario: A card cannot be created worth nothing
+        # A card worth zero is unspendable the moment it is issued. The model refuses it by throwing,
+        # which is the right answer in the wrong place: the administrator got a 500.
+        When I want to create a new gift card
+        And I specify its initial amount as "0"
+        And I add this gift card
+        Then I should be told on the initial amount that it must be greater than zero
+        And no gift card should have been created
+
+    @ui
+    Scenario: A code that is already in use is refused on the form
+        # Codes are unique in the database, so before this the administrator met a driver-level
+        # integrity violation instead of being told the code is taken - easy to hit when importing a
+        # batch of pre-printed cards.
+        Given the store has a gift card "GIFT-TAKEN1" worth "$50.00"
+        When I want to create a new gift card
+        And I specify its code as "GIFT-TAKEN1"
+        And I specify its initial amount as "75.00"
+        And I add this gift card
+        Then I should be told on the code that it is already taken
+        And there should still be only one gift card
+
+    @ui
+    Scenario: A card cannot be issued already expired
+        # A card dated last year is dead the moment it is issued, and nothing said so.
+        # See docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md.
+        When I want to create a new gift card
+        And I specify its initial amount as "75.00"
+        And I set its expiry date to "2020-01-01 12:00"
+        And I add this gift card
+        Then I should be told on the expiry date that it cannot be in the past
+        And no gift card should have been created
+
+    @ui
+    Scenario: A live card's expiry cannot be moved into the past
+        # The balance stays on the books and stays visible; it just stops being spendable, with
+        # nothing in the card's history to explain it. Refused, and the message names the audited
+        # alternative: take the balance to zero instead.
+        Given the store has a gift card "GIFT-LIVE01" worth "$50.00"
+        When I want to edit the gift card "GIFT-LIVE01"
+        And I move its expiry date to "2020-01-01 12:00"
+        And I save my changes to this gift card
+        Then I should be told on the expiry date that it cannot be in the past
+        And the gift card "GIFT-LIVE01" should still expire in the future
+
+    @ui
+    Scenario: Bringing an expiry forward to a date still in the future is allowed
+        # This rule is about the past, not about all reductions. A shop that decides a card should
+        # run out sooner is entitled to say so, and the balance is spendable until it does.
+        Given the store has a gift card "GIFT-SHORT1" worth "$50.00"
+        When I want to edit the gift card "GIFT-SHORT1"
+        And I move its expiry date to 3 days from now
+        And I save my changes to this gift card
+        Then the gift card "GIFT-SHORT1" should expire in about 3 days
+
+    @ui
+    Scenario: A card that has already expired can still be edited
+        # The path the #31 migration leaves behind: it deliberately dates some existing cards into
+        # the past. A rule of "the expiry must be in the future" would make every one of those cards
+        # unsaveable, so an administrator could not even disable one.
+        Given the store has an expired gift card "GIFT-DEAD01" worth "$50.00"
+        When I want to edit the gift card "GIFT-DEAD01"
+        And I disable it
+        And I save my changes to this gift card
+        Then the gift card "GIFT-DEAD01" should be disabled
+        And the gift card "GIFT-DEAD01" should still be expired
 
     @ui
     Scenario: A validity period is required on the configuration

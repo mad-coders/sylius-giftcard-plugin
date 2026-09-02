@@ -12,6 +12,15 @@
 
         <service id="Madcoders\SyliusGiftCardPlugin\Provider\GiftCardConfigurationProviderInterface"
                  alias="madcoders_sylius_gift_card.provider.gift_card_configuration" />
+
+        <!-- The expiry date a card still has in the database, so a validator can tell an edit from a creation. -->
+        <service id="madcoders_sylius_gift_card.provider.stored_gift_card_expiry"
+                 class="Madcoders\SyliusGiftCardPlugin\Provider\DoctrineStoredGiftCardExpiryProvider">
+            <argument type="service" id="doctrine" />
+        </service>
+
+        <service id="Madcoders\SyliusGiftCardPlugin\Provider\StoredGiftCardExpiryProviderInterface"
+                 alias="madcoders_sylius_gift_card.provider.stored_gift_card_expiry" />
     </services>
 
 </container>

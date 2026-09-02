@@ -28,5 +28,15 @@ interface CreatePageInterface extends BaseCreatePageInterface
     /** Every validation message on the form, joined - the amount rules can fail on several fields. */
     public function getValidationMessages(): string;
 
+    /**
+     * The same messages, unjoined, so a scenario can count them.
+     *
+     * Joining hides a duplicate, and a duplicate is a real failure here: two sources raising one
+     * rule show the operator the same sentence twice.
+     *
+     * @return list<string>
+     */
+    public function getValidationMessageList(): array;
+
     public function getCodeLengthValidationMessage(): string;
 }

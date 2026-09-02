@@ -272,7 +272,11 @@ There is more than one migration, and a plugin upgrade can add another - always 
 > ```
 >
 > Anything that comes back is a card with money on it that can no longer be spent. Re-dating those by
-> hand, or topping up replacements from the admin, is a decision only you can make.
+> hand, or topping up replacements from the admin, is a decision only you can make. Re-dating them
+> works: the admin form refuses an expiry date **in the past**, not one on a card that is already
+> expired, so a card this migration killed can be given a new date and brought back. What you cannot
+> do is push a live card's date backwards - see
+> [ADR 0018](adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md).
 
 ## 8. Configure a channel
 
@@ -292,6 +296,12 @@ Two of those defaults are worth knowing before you go live:
   refuses a period it cannot act on, so `1 yaer` comes back as an error instead of silently issuing
   cards that never expire. See
   [ADR 0015](adr-log/0015-every-gift-card-expires.md).
+- **An expiry date cannot be moved into the past.** A card cannot be issued already expired, and a
+  live card's date cannot be edited backwards - either would leave a balance on your books that
+  nobody can spend, with nothing in the card's history to say why. Bringing a date forward to one
+  still in the future is untouched. To take a card out of circulation deliberately, adjust its
+  balance to zero: that stops it being redeemable *and* writes a ledger entry, which backdating never
+  did. See [ADR 0018](adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md).
 - **What a gift card pays for: everything except gift cards.** A gift card cannot be used to buy
   another gift card. Without this, a holder can buy a new card for exactly their remaining balance,
   pay nothing, and receive a fresh code with a fresh expiry - forever - which makes the expiry date

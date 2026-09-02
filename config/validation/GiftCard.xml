@@ -6,27 +6,48 @@
                                         https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
     <!--
-        Codes are unique in the database. Without this the admin gets a driver-level integrity
-        violation - a 500 - instead of being told the code is taken, which is easy to hit when
-        importing pre-printed cards.
+        Every constraint here names both groups on purpose, and it is belt and braces rather than
+        duplication. The plugin's admin form validates with `madcoders_sylius_gift_card` *and*
+        `Default` since issue #44 - see docs/adr-log/0017-resource-forms-validate-with-default-too.md
+        - so `Default` alone would now be enough for every path the plugin itself has. Naming the
+        resource group as well keeps a host that validates with only that group covered. Symfony
+        evaluates a constraint once however many of the validated groups it belongs to, so listing
+        both cannot produce the same error twice.
     -->
     <class name="Madcoders\SyliusGiftCardPlugin\Model\GiftCard">
+        <!--
+            Codes are unique in the database. Without this the admin gets a driver-level integrity
+            violation - a 500 - instead of being told the code is taken, which is easy to hit when
+            importing pre-printed cards.
+        -->
         <constraint name="Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity">
             <option name="fields">
                 <value>code</value>
             </option>
             <option name="message">madcoders_sylius_gift_card.gift_card.code.unique</option>
+            <option name="groups">
+                <value>Default</value>
+                <value>madcoders_sylius_gift_card</value>
+            </option>
+        </constraint>
+
+        <!--
+            An expiry date may not be moved into the past, because that makes a spendable balance
+            unspendable with nothing in the card's history to explain it. A class constraint, not a
+            field one: whether a past date is a problem depends on the date the card already had.
+            See docs/adr-log/0018-an-expiry-date-cannot-be-moved-into-the-past.md.
+        -->
+        <constraint name="Madcoders\SyliusGiftCardPlugin\Validator\Constraints\GiftCardExpiryNotInThePast">
+            <option name="groups">
+                <value>Default</value>
+                <value>madcoders_sylius_gift_card</value>
+            </option>
         </constraint>
 
         <!--
             Every gift card expires - see docs/adr-log/0015-every-gift-card-expires.md. The column
             is NOT NULL as well, so nothing at all can persist a card without a date; this is what
             turns the database's refusal (a 500) into a form error naming the field.
-
-            Both groups are listed on purpose. The plugin's own admin form validates with
-            `madcoders_sylius_gift_card`, the group AbstractResourceType is given in
-            config/services/forms.xml, while a host validating the entity directly uses `Default`.
-            A constraint in only one of them is silently skipped by the other path.
         -->
         <property name="expiresAt">
             <constraint name="NotNull">
