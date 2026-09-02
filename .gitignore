@@ -31,3 +31,7 @@
 # Local Claude Code settings (personal, not shared)
 /.claude/settings.local.json
 /.claude/worktrees/
+
+# documentation-maker
+.documentation-maker.ini
+.documentation-maker/

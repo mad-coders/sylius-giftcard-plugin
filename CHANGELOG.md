@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The sale mode badge in the gift card configuration grid was invisible. It used Bootstrap's
+  `bg-secondary`, which sets a background but no foreground colour, so "Sold in the shop" rendered as
+  a blank grey pill. Now uses `text-bg-secondary`, as the rest of the plugin already did.
+- The gift card configuration index rendered its own translation key as the page heading, breadcrumb
+  and browser title: `madcoders_sylius_gift_card.ui.gift_card_configurations` was never defined.
+- The gift card show page rendered `sylius.ui.yes` and `sylius.ui.no` verbatim. Sylius 2 does not
+  ship those keys; the field now uses `sylius.ui.enabled` / `sylius.ui.disabled`, which it does, and
+  which read better for a field labelled Enabled.
+
+### Documentation
+
+- Corrected the README, which still described redemption in the pre-tender terms the plugin
+  abandoned: cards applied "against an order total" as "order adjustments" that "can never push a
+  total below zero". Under ADR 0010 the total is precisely what a gift card does not touch. It now
+  says the payment shrinks and the total does not, and links to the ADR.
+- The README's admin bullet now mentions the sale mode, amount modes, mandatory expiry and the
+  balance ledger, all of which shipped without it being updated.
+
 ### Security
 
 - Redeeming a gift card is rate limited. A client that keeps submitting codes that do not work is
