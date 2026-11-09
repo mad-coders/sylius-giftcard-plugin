@@ -51,7 +51,7 @@
         "symfony/dotenv": "^6.4 || ^7.4",
         "symfony/http-client": "^6.4 || ^7.4",
         "symfony/intl": "^6.4 || ^7.4",
-        "symfony/lock": "^6.4 || ^7.4",
+        "symfony/lock": "^8.1.11",
         "symfony/rate-limiter": "^6.4 || ^7.4",
         "symfony/runtime": "^6.4 || ^7.4",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4",
